@@ -13,6 +13,8 @@ async function bootstrap() {
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
       const frontendUrl = configService.get<string>('FRONTEND_BASE_URL');
+      console.log('CORS origin:', origin);
+      console.log('Allowed frontend URL:', frontendUrl);
       if (!origin || origin === frontendUrl) {
         callback(null, true);
         return;
