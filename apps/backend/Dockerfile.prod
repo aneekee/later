@@ -24,6 +24,11 @@ RUN npx turbo run build --filter=backend
 FROM node:20-alpine
 WORKDIR /app
 
+# Install only production dependencies for the backend workspace.
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/package-lock.json ./package-lock.json
+RUN npm ci --omit=dev --workspace=backend --include-workspace-root=false
+
 COPY --from=installer /app/apps/backend/dist ./dist
 
 EXPOSE 3000
