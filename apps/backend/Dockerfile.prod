@@ -1,0 +1,30 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Copy repo
+COPY . .
+
+# Prune repo to only backend dependencies
+RUN npx turbo prune backend --docker
+
+FROM node:20-alpine AS installer
+WORKDIR /app
+
+# Copy pruned dependency graph
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/package-lock.json ./package-lock.json
+
+RUN npm ci
+
+# Copy source
+COPY --from=builder /app/out/full/ .
+
+RUN npx turbo run build --filter=backend
+
+FROM node:20-alpine
+WORKDIR /app
+
+COPY --from=installer /app/apps/backend/dist ./dist
+
+EXPOSE 3000
+CMD ["node", "dist/main.js"]
