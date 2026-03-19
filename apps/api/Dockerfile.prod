@@ -4,8 +4,8 @@ WORKDIR /app
 # Copy repo
 COPY . .
 
-# Prune repo to only backend dependencies
-RUN npx turbo prune backend --docker
+# Prune repo to only api dependencies
+RUN npx turbo prune api --docker
 
 FROM node:20-alpine AS installer
 WORKDIR /app
@@ -19,17 +19,17 @@ RUN npm ci
 # Copy source
 COPY --from=builder /app/out/full/ .
 
-RUN npx turbo run build --filter=backend
+RUN npx turbo run build --filter=api
 
 FROM node:20-alpine
 WORKDIR /app
 
-# Install only production dependencies for the backend workspace.
+# Install only production dependencies for the api workspace.
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/package-lock.json ./package-lock.json
-RUN npm ci --omit=dev --workspace=backend --include-workspace-root=false
+RUN npm ci --omit=dev --workspace=api --include-workspace-root=false
 
-COPY --from=installer /app/apps/backend/dist ./dist
+COPY --from=installer /app/apps/api/dist ./dist
 
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
