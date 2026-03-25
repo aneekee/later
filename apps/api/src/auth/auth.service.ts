@@ -62,6 +62,32 @@ export class AuthService {
     );
   }
 
+  async refresh(refreshToken: string | undefined) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('No refresh token provided');
+    }
+
+    let userId: string;
+    try {
+      const payload = this.jwtService.verify<{ sub: string }>(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+      userId = payload.sub;
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const accessToken = this.signAccessToken(user.id, user.username);
+    const newRefreshToken = this.signRefreshToken(user.id);
+
+    return { accessToken, refreshToken: newRefreshToken };
+  }
+
   async register({ username, password }: RegisterServiceDto) {
     const exists = await this.usersService.findByUsername(username);
     if (exists) {

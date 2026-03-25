@@ -108,12 +108,13 @@ export class AuthController {
     schema: { example: { message: 'Refresh successful' } },
   })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
-  refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const accessToken = this.authService.signAccessToken(
-      'req.user.id',
-      'req.user.username',
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken } = await this.authService.refresh(
+      (req.cookies as Record<string, string | undefined>)['refresh_token'],
     );
-    const refreshToken = this.authService.signRefreshToken('req.user.id');
 
     res.cookie('access_token', accessToken, {
       ...COOKIE_OPTS_BASE,
