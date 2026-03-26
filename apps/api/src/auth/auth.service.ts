@@ -10,7 +10,14 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 import { UsersService } from 'src/users/users.service';
-import { LoginServiceDto, RegisterServiceDto } from './auth.types';
+import {
+  AccessTokenPayload,
+  AuthTokenSecretKey,
+  LoginServiceDto,
+  RefreshTokenPayload,
+  RegisterServiceDto,
+  TokenPayload,
+} from './auth.types';
 
 @Injectable()
 export class AuthService {
@@ -20,22 +27,41 @@ export class AuthService {
     private usersService: UsersService,
   ) {}
 
-  async getMe(accessToken: string | undefined) {
-    if (!accessToken) {
-      throw new UnauthorizedException('No access token provided');
+  private getTokenPayload<T extends TokenPayload>(
+    token: string | null | undefined,
+    secretKey: AuthTokenSecretKey,
+  ): T {
+    if (!token) {
+      console.error('No token provided');
+      throw new UnauthorizedException('No token provided');
     }
 
-    let userId: string;
     try {
-      const payload = this.jwtService.verify<{ sub: string }>(accessToken, {
-        secret: process.env.JWT_ACCESS_SECRET,
+      const payload = this.jwtService.verify<T>(token, {
+        secret: this.configService.get(secretKey),
       });
-      userId = payload.sub;
-    } catch {
-      throw new UnauthorizedException('Invalid or expired access token');
-    }
 
-    const user = await this.usersService.findById(userId);
+      return payload;
+    } catch (error) {
+      console.error('Error verifying token:', error);
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+  }
+
+  getAccessTokenPayload(token?: string) {
+    return this.getTokenPayload<AccessTokenPayload>(token, 'JWT_ACCESS_SECRET');
+  }
+
+  getRefreshTokenPayload(token?: string) {
+    return this.getTokenPayload<RefreshTokenPayload>(
+      token,
+      'JWT_REFRESH_SECRET',
+    );
+  }
+
+  async getMe(accessToken: string | undefined) {
+    const payload = this.getAccessTokenPayload(accessToken);
+    const user = await this.usersService.findById(payload.id);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
@@ -50,34 +76,21 @@ export class AuthService {
 
   signAccessToken(userId: string, username: string) {
     return this.jwtService.sign(
-      { sub: userId, username },
+      { id: userId, username },
       { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
     );
   }
 
   signRefreshToken(userId: string) {
     return this.jwtService.sign(
-      { sub: userId },
+      { id: userId },
       { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '7d' },
     );
   }
 
   async refresh(refreshToken: string | undefined) {
-    if (!refreshToken) {
-      throw new UnauthorizedException('No refresh token provided');
-    }
-
-    let userId: string;
-    try {
-      const payload = this.jwtService.verify<{ sub: string }>(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
-      });
-      userId = payload.sub;
-    } catch {
-      throw new UnauthorizedException('Invalid or expired refresh token');
-    }
-
-    const user = await this.usersService.findById(userId);
+    const payload = this.getRefreshTokenPayload(refreshToken);
+    const user = await this.usersService.findById(payload.id);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }

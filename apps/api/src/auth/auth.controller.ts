@@ -10,6 +10,7 @@ import {
   FIFTEEN_MINUTES_MS,
   SEVEN_DAYS_MS,
 } from './auth.constants';
+import { Public } from './decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -36,6 +37,7 @@ export class AuthController {
     );
   }
 
+  @Public()
   @Post('login')
   @ApiOperation({ summary: 'Login with username and password' })
   @ApiBody({ type: LoginDto })
@@ -68,6 +70,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({ type: RegisterDto })
@@ -100,6 +103,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token using refresh_token cookie' })
   @ApiResponse({
