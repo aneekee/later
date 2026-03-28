@@ -19,6 +19,9 @@ RUN npm ci
 # Copy source
 COPY --from=builder /app/out/full/ .
 
+# Generate Prisma client
+RUN npx prisma generate --schema=apps/api/prisma/schema.prisma
+
 RUN npx turbo run build --filter=api
 
 FROM node:20-alpine
@@ -30,6 +33,7 @@ COPY --from=builder /app/out/package-lock.json ./package-lock.json
 RUN npm ci --omit=dev --workspace=api --include-workspace-root=false
 
 COPY --from=installer /app/apps/api/dist ./dist
+COPY --from=installer /app/apps/api/generated ./generated
 
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
