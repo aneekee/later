@@ -36,4 +36,4 @@ COPY --from=installer /app/apps/api/dist ./dist
 COPY --from=installer /app/apps/api/generated ./generated
 
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main"]
