@@ -11,11 +11,11 @@ import {
 } from './auth.constants';
 import { Public } from './decorators/public.decorator';
 
-@Controller('auth')
+@Controller('v1/auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Get('v1/me')
+  @Get('me')
   getCurrrentUser(@Req() req: Request) {
     return this.authService.getMe(
       (req.cookies as Record<string, string | undefined>)['access_token'],
@@ -23,7 +23,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('v1/login')
+  @Post('login')
   async login(
     @Body() body: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -48,7 +48,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('v1/register')
+  @Post('register')
   async register(@Body() body: RegisterDto) {
     const user = await this.authService.register({
       username: body.username,
@@ -65,7 +65,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('v1/refresh')
+  @Post('refresh')
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -88,8 +88,8 @@ export class AuthController {
     };
   }
 
-  @Post('v1/signout')
-  signOut(@Res({ passthrough: true }) res: Response) {
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('access_token', COOKIE_OPTS_BASE);
     res.clearCookie('refresh_token', COOKIE_OPTS_BASE);
 
