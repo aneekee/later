@@ -28,15 +28,16 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.setGlobalPrefix('api', { exclude: ['health'] });
+
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle('Cats example')
-    .setDescription('The cats API description')
+    .setTitle('Later')
+    .setDescription('Later API documentation')
     .setVersion('1.0')
-    .addTag('cats')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+  SwaggerModule.setup('api/docs', app, documentFactory);
 
   await app.listen(port);
 }

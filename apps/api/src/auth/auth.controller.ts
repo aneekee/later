@@ -1,5 +1,4 @@
 import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { type Request, type Response } from 'express';
 
 import { AuthService } from './auth.service';
@@ -16,21 +15,7 @@ import { Public } from './decorators/public.decorator';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Get('/me')
-  @ApiOperation({ summary: 'Get current authenticated user' })
-  @ApiResponse({
-    status: 200,
-    description: 'Current user data',
-    schema: {
-      example: {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        username: 'johndoe',
-        isVerified: true,
-        createdAt: '2026-03-24T12:00:00.000Z',
-      },
-    },
-  })
-  @ApiResponse({ status: 401, description: 'Missing or invalid access token' })
+  @Get('v1/me')
   getCurrrentUser(@Req() req: Request) {
     return this.authService.getMe(
       (req.cookies as Record<string, string | undefined>)['access_token'],
@@ -38,15 +23,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('login')
-  @ApiOperation({ summary: 'Login with username and password' })
-  @ApiBody({ type: LoginDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Login successful',
-    schema: { example: { message: 'Login successful' } },
-  })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @Post('v1/login')
   async login(
     @Body() body: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -71,23 +48,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('register')
-  @ApiOperation({ summary: 'Register a new user' })
-  @ApiBody({ type: RegisterDto })
-  @ApiResponse({
-    status: 201,
-    description: 'User registered successfully, waiting for admin approval',
-    schema: {
-      example: {
-        message: 'User registered successfully, waiting for admin approval',
-        data: {
-          id: '123e4567-e89b-12d3-a456-426614174000',
-          username: 'johndoe',
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 409, description: 'Username already exists' })
+  @Post('v1/register')
   async register(@Body() body: RegisterDto) {
     const user = await this.authService.register({
       username: body.username,
@@ -104,14 +65,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('refresh')
-  @ApiOperation({ summary: 'Refresh access token using refresh_token cookie' })
-  @ApiResponse({
-    status: 200,
-    description: 'Tokens refreshed successfully',
-    schema: { example: { message: 'Refresh successful' } },
-  })
-  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
+  @Post('v1/refresh')
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -134,13 +88,7 @@ export class AuthController {
     };
   }
 
-  @Post('signout')
-  @ApiOperation({ summary: 'Sign out and clear auth cookies' })
-  @ApiResponse({
-    status: 200,
-    description: 'Signed out successfully',
-    schema: { example: { message: 'Signed out successfully' } },
-  })
+  @Post('v1/signout')
   signOut(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('access_token', COOKIE_OPTS_BASE);
     res.clearCookie('refresh_token', COOKIE_OPTS_BASE);
