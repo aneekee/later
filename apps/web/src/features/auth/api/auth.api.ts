@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
-import { baseQueryWithCookies } from '../../shared/api/api';
+import { baseQueryWithCookies } from '../../../shared/api/api';
 
 export const authApi = createApi({
   reducerPath: 'api',
