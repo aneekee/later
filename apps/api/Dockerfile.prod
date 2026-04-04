@@ -1,36 +1,39 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+RUN corepack enable pnpm
+
 # Copy repo
 COPY . .
 
 # Prune repo to only api dependencies
-RUN npx turbo prune api --docker
+RUN pnpm dlx turbo prune api --docker
 
 FROM node:20-alpine AS installer
 WORKDIR /app
 
-# Copy pruned dependency graph
-COPY --from=builder /app/out/json/ .
-COPY --from=builder /app/out/package-lock.json ./package-lock.json
+RUN corepack enable pnpm
 
-RUN npm ci
-
-# Copy source
+# Copy full pruned source so workspace:* links can be resolved during install
 COPY --from=builder /app/out/full/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+
+RUN pnpm install --frozen-lockfile
 
 # Generate Prisma client
-RUN npx prisma generate --schema=apps/api/prisma/schema.prisma
+RUN pnpm exec prisma generate --schema=apps/api/prisma/schema.prisma
 
-RUN npx turbo run build --filter=api
+RUN pnpm turbo run build --filter=api
 
 FROM node:20-alpine
 WORKDIR /app
 
+RUN corepack enable pnpm
+
 # Install only production dependencies for the api workspace.
 COPY --from=builder /app/out/json/ .
-COPY --from=builder /app/out/package-lock.json ./package-lock.json
-RUN npm ci --omit=dev --workspace=api --include-workspace-root=false
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+RUN pnpm install --frozen-lockfile --prod --filter=api
 
 COPY --from=installer /app/apps/api/dist ./dist
 COPY --from=installer /app/apps/api/generated ./generated
