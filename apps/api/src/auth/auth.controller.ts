@@ -1,6 +1,13 @@
 import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 
+import type {
+  LoginSuccessResponse,
+  LogoutSuccessResponse,
+  RefreshSuccessResponse,
+  RegisterSuccessResponse,
+} from '@repo/types';
+
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -27,7 +34,7 @@ export class AuthController {
   async login(
     @Body() body: LoginDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<LoginSuccessResponse> {
     const { accessToken, refreshToken } = await this.authService.login({
       username: body.username,
       password: body.password,
@@ -43,19 +50,21 @@ export class AuthController {
     });
 
     return {
+      success: true,
       message: 'Login successful',
     };
   }
 
   @Public()
   @Post('register')
-  async register(@Body() body: RegisterDto) {
+  async register(@Body() body: RegisterDto): Promise<RegisterSuccessResponse> {
     const user = await this.authService.register({
       username: body.username,
       password: body.password,
     });
 
     return {
+      success: true,
       message: 'User registered successfully, waiting for admin approval',
       data: {
         id: user.id,
@@ -69,7 +78,7 @@ export class AuthController {
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<RefreshSuccessResponse> {
     const { accessToken, refreshToken } = await this.authService.refresh(
       (req.cookies as Record<string, string | undefined>)['refresh_token'],
     );
@@ -84,16 +93,18 @@ export class AuthController {
     });
 
     return {
+      success: true,
       message: 'Refresh successful',
     };
   }
 
   @Post('logout')
-  logout(@Res({ passthrough: true }) res: Response) {
+  logout(@Res({ passthrough: true }) res: Response): LogoutSuccessResponse {
     res.clearCookie('access_token', COOKIE_OPTS_BASE);
     res.clearCookie('refresh_token', COOKIE_OPTS_BASE);
 
     return {
+      success: true,
       message: 'Signed out successfully',
     };
   }

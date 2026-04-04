@@ -1,7 +1,9 @@
 import { IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class RegisterDto {
+import { RegisterRequestBody } from '@repo/types';
+
+export class RegisterDto implements RegisterRequestBody {
   @ApiProperty({
     example: 'johndoe',
     description: 'The username of the new user',

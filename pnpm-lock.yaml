@@ -44,6 +44,9 @@ importers:
       '@prisma/client':
         specifier: ^7.5.0
         version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -159,6 +162,9 @@ importers:
       '@reduxjs/toolkit':
         specifier: ^2.11.2
         version: 2.11.2(react-redux@9.2.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.2.2(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@24.12.2)(jiti@2.6.1)(terser@5.46.1))
@@ -283,6 +289,12 @@ importers:
       typescript-eslint:
         specifier: ^8.50.0
         version: 8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
+
+  packages/types:
+    devDependencies:
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.2
 
   packages/typescript-config: {}
 
@@ -5660,6 +5672,11 @@ packages:
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
+  typescript@6.0.2:
+    resolution: {integrity: sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -12004,6 +12021,8 @@ snapshots:
   typescript@5.9.2: {}
 
   typescript@5.9.3: {}
+
+  typescript@6.0.2: {}
 
   uglify-js@3.19.3:
     optional: true
