@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
 
@@ -9,14 +9,7 @@ import { useLoginMutation, useRegisterMutation } from '../api/auth.api';
 import { LoginForm } from '../components/LoginForm';
 import { useLoginFormSchema } from '../hooks/useLoginFormSchema';
 import type { LoginFormValues } from '../types/login';
-
-/**
- *
- * - [ ] Add register
- * - [ ] Add error toasts
- * - [ ] Add registration success toast
- *
- */
+import { LOGIN_FORM_DEFAULT_VALUES } from '../const/auth.constants';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -24,14 +17,11 @@ export const LoginPage = () => {
   const [login, { isLoading: isLoginLoading }] = useLoginMutation();
   const [register, { isLoading: isRegisterLoading }] = useRegisterMutation();
 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-
-  const isLoading = isLoginLoading || isRegisterLoading;
-
   const { formSchema } = useLoginFormSchema();
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: LOGIN_FORM_DEFAULT_VALUES,
+    mode: 'onChange',
   });
 
   const onLoginClick = async () => {
@@ -41,11 +31,14 @@ export const LoginPage = () => {
         return;
       }
 
+      const { username, password } = form.getValues();
+      console.log('Logging in with:', { username, password });
+
       await login({ username, password }).unwrap();
       navigate('/');
     } catch (e) {
       console.error('Login error:', e);
-      // TODO: Show error toast
+      toast.error('Login failed. Please check your credentials.');
     }
   };
 
@@ -56,11 +49,14 @@ export const LoginPage = () => {
         return;
       }
 
+      const { username, password } = form.getValues();
+      console.log('Registering with:', { username, password });
+
       await register({ username, password }).unwrap();
-      // TODO: Show registration success toast
+      toast.success('Registration successful! You can now log in.');
     } catch (e) {
       console.error('Registration error:', e);
-      // TODO: Show error toast
+      toast.error('Registration failed. Please try again.');
     }
   };
 
@@ -85,18 +81,18 @@ export const LoginPage = () => {
               variant="outline"
               className="flex-1"
               onClick={onLoginClick}
-              disabled={isLoading}
+              disabled={isLoginLoading}
             >
-              {isLoading ? 'Loading...' : 'Login'}
+              Login
             </Button>
 
             <Button
               type="submit"
               className="flex-1"
               onClick={onRegisterClick}
-              disabled={isLoading}
+              disabled={isRegisterLoading}
             >
-              {isLoading ? 'Loading...' : 'Register'}
+              Register
             </Button>
           </div>
         </div>
