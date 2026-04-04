@@ -1,75 +1,105 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { FormProvider, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
 
-import { useLoginMutation } from '../api/auth.api';
+import { useLoginMutation, useRegisterMutation } from '../api/auth.api';
+import { LoginForm } from '../components/LoginForm';
+import { useLoginFormSchema } from '../hooks/useLoginFormSchema';
+import type { LoginFormValues } from '../types/login';
+
+/**
+ *
+ * - [ ] Add register
+ * - [ ] Add error toasts
+ * - [ ] Add registration success toast
+ *
+ */
 
 export const LoginPage = () => {
-  const [login, { isLoading }] = useLoginMutation();
+  const navigate = useNavigate();
+
+  const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+  const [register, { isLoading: isRegisterLoading }] = useRegisterMutation();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const isLoading = isLoginLoading || isRegisterLoading;
 
-    if (!username || !password) {
-      setMessage('Username and password are required.');
-      return;
-    }
+  const { formSchema } = useLoginFormSchema();
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(formSchema),
+  });
 
+  const onLoginClick = async () => {
     try {
+      const isValid = await form.trigger();
+      if (!isValid) {
+        return;
+      }
+
       await login({ username, password }).unwrap();
-      setMessage('Logged in successfully.');
-    } catch {
-      setMessage('Login failed. Please check your credentials.');
+      navigate('/');
+    } catch (e) {
+      console.error('Login error:', e);
+      // TODO: Show error toast
+    }
+  };
+
+  const onRegisterClick = async () => {
+    try {
+      const isValid = await form.trigger();
+      if (!isValid) {
+        return;
+      }
+
+      await register({ username, password }).unwrap();
+      // TODO: Show registration success toast
+    } catch (e) {
+      console.error('Registration error:', e);
+      // TODO: Show error toast
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="space-y-2 text-center">
+      <div>
+        <div className="text-center">
           <h1 className="text-2xl font-bold">Login</h1>
           <p className="text-muted-foreground text-sm">
             Please enter your credentials to log in.
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="johndoe"
-              maxLength={255}
-            />
+        <div className="mt-10 space-y-4">
+          <FormProvider {...form}>
+            <LoginForm />
+          </FormProvider>
+
+          <div className="w-full flex gap-4">
+            <Button
+              type="submit"
+              variant="outline"
+              className="flex-1"
+              onClick={onLoginClick}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Login'}
+            </Button>
+
+            <Button
+              type="submit"
+              className="flex-1"
+              onClick={onRegisterClick}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Register'}
+            </Button>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-              maxLength={255}
-            />
-          </div>
-
-          {message ? <p className="text-sm text-red-500">{message}</p> : null}
-
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Login'}
-          </Button>
-        </form>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router';
+
 import { useMeQuery } from '../api/auth.api';
 
 interface Props {
@@ -9,7 +10,7 @@ export const WithAuth = ({ children }: Props) => {
   const { data, isLoading, error } = useMeQuery(null);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <></>;
   }
 
   if (!data || error) {
