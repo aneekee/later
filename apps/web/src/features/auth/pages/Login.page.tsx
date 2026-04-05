@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
+import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
 import { useLoginMutation, useRegisterMutation } from '../api/auth.api';
 import { LoginForm } from '../components/LoginForm';
@@ -24,6 +25,8 @@ export const LoginPage = () => {
     mode: 'onChange',
   });
 
+  const { displayErrorToast } = useDisplayErrorToast();
+
   const onLoginClick = async () => {
     try {
       const isValid = await form.trigger();
@@ -38,7 +41,7 @@ export const LoginPage = () => {
       navigate('/');
     } catch (e) {
       console.error('Login error:', e);
-      toast.error('Login failed. Please check your credentials.');
+      displayErrorToast(e, 'Login failed. Please check your credentials.');
     }
   };
 
@@ -56,7 +59,7 @@ export const LoginPage = () => {
       toast.success('Registration successful! You can now log in.');
     } catch (e) {
       console.error('Registration error:', e);
-      toast.error('Registration failed. Please try again.');
+      displayErrorToast(e, 'Registration failed. Please try again.');
     }
   };
 
