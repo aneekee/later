@@ -1,6 +1,12 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
+import type {
+  LoginRequestBody,
+  LoginSuccessResponse,
+  RegisterRequestBody,
+  RegisterSuccessResponseData,
+} from '@repo/types';
 
-import { baseQueryWithCookies } from '../../shared/api/api';
+import { baseQueryWithCookies } from '../../../shared/api/api';
 
 export const authApi = createApi({
   reducerPath: 'api',
@@ -19,7 +25,10 @@ export const authApiEndpoints = authApi.injectEndpoints({
       providesTags: ['Auth'],
     }),
 
-    register: builder.mutation({
+    register: builder.mutation<
+      RegisterSuccessResponseData,
+      RegisterRequestBody
+    >({
       query: (data) => ({
         url: 'v1/auth/register',
         method: 'POST',
@@ -27,7 +36,7 @@ export const authApiEndpoints = authApi.injectEndpoints({
       }),
     }),
 
-    login: builder.mutation({
+    login: builder.mutation<LoginSuccessResponse, LoginRequestBody>({
       query: (data) => ({
         url: 'v1/auth/login',
         method: 'POST',
@@ -55,6 +64,7 @@ export const authApiEndpoints = authApi.injectEndpoints({
 
 export const {
   useMeQuery,
+  useLazyMeQuery,
   useRegisterMutation,
   useLoginMutation,
   useRefreshMutation,

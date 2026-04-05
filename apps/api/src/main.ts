@@ -9,9 +9,8 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const frontendUrl =
-    configService.get<string>('FRONTEND_URL') ?? 'http://localhost:5173';
-  const port = Number.parseInt(configService.get<string>('PORT') ?? '3000', 10);
+  const frontendUrl = configService.get<string>('FRONTEND_URL')!;
+  const port = Number.parseInt(configService.get<string>('PORT')!, 10);
 
   app.useGlobalPipes(
     new ValidationPipe({
