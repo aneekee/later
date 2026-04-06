@@ -9,12 +9,12 @@ export class LoginDto implements LoginRequestBody {
     description: 'The username of the new user',
   })
   @IsNotEmpty()
-  username: string;
+  username!: string;
 
   @ApiProperty({
     example: 'P@ssw0rd!',
     description: 'The password for the new account',
   })
   @IsNotEmpty()
-  password: string;
+  password!: string;
 }
