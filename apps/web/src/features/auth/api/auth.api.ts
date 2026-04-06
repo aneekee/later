@@ -2,6 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import type {
   LoginRequestBody,
   LoginSuccessResponse,
+  MeSuccessResponse,
   RegisterRequestBody,
   RegisterSuccessResponseData,
 } from '@repo/types';
@@ -17,7 +18,7 @@ export const authApi = createApi({
 
 export const authApiEndpoints = authApi.injectEndpoints({
   endpoints: (builder) => ({
-    me: builder.query({
+    me: builder.query<MeSuccessResponse, void>({
       query: () => ({
         url: 'v1/auth/me',
         method: 'GET',

@@ -4,6 +4,7 @@ import { type Request, type Response } from 'express';
 import type {
   LoginSuccessResponse,
   LogoutSuccessResponse,
+  MeSuccessResponse,
   RefreshSuccessResponse,
   RegisterSuccessResponse,
 } from '@repo/types';
@@ -23,7 +24,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Get('me')
-  getCurrrentUser(@Req() req: Request) {
+  getCurrrentUser(@Req() req: Request): Promise<MeSuccessResponse> {
     return this.authService.getMe(
       (req.cookies as Record<string, string | undefined>)['access_token'],
     );

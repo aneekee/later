@@ -38,7 +38,7 @@ export const LoginPage = () => {
       console.log('Logging in with:', { username, password });
 
       await login({ username, password }).unwrap();
-      navigate('/');
+      await navigate('/');
     } catch (e) {
       console.error('Login error:', e);
       displayErrorToast(e, 'Login failed. Please check your credentials.');
@@ -83,7 +83,7 @@ export const LoginPage = () => {
               type="submit"
               variant="outline"
               className="flex-1"
-              onClick={onLoginClick}
+              onClick={() => void onLoginClick()}
               disabled={isLoginLoading}
             >
               Login
@@ -92,7 +92,7 @@ export const LoginPage = () => {
             <Button
               type="submit"
               className="flex-1"
-              onClick={onRegisterClick}
+              onClick={() => void onRegisterClick()}
               disabled={isRegisterLoading}
             >
               Register

@@ -70,7 +70,7 @@ export class AuthService {
       id: user.id,
       username: user.username,
       isVerified: user.isVerified,
-      createdAt: user.createdAt,
+      createdAt: user.createdAt.toISOString(),
     };
   }
 
