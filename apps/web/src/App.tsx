@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router';
 
 import { Toaster } from '@/shared/components/ui/sonner';
+
 import { HomePage } from './features/home/pages/Home.page';
 import { LoginPage } from './features/auth/pages/Login.page';
 import { NotFoundPage } from './features/auth/pages/NotFound.page';
