@@ -14,6 +14,7 @@ export const authApi = createApi({
   baseQuery: baseQueryWithCookies,
   tagTypes: ['Auth'],
   endpoints: () => ({}),
+  keepUnusedDataFor: 0,
 });
 
 export const authApiEndpoints = authApi.injectEndpoints({
