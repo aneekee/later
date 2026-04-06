@@ -9,8 +9,18 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const frontendUrl = configService.get<string>('FRONTEND_URL')!;
-  const port = Number.parseInt(configService.get<string>('PORT')!, 10);
+
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+  const serverPort = configService.get<string>('PORT');
+  if (!frontendUrl || !serverPort) {
+    console.error(
+      'Missing required environment variables: FRONTEND_URL or PORT',
+      { frontendUrl, serverPort },
+    );
+    return;
+  }
+
+  const port = Number.parseInt(serverPort, 10);
 
   app.useGlobalPipes(
     new ValidationPipe({

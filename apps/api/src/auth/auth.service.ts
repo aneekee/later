@@ -27,17 +27,17 @@ export class AuthService {
     private usersService: UsersService,
   ) {}
 
-  private getTokenPayload<T extends TokenPayload>(
+  private getTokenPayload(
     token: string | null | undefined,
     secretKey: AuthTokenSecretKey,
-  ): T {
+  ): TokenPayload {
     if (!token) {
       console.error('No token provided');
       throw new UnauthorizedException('No token provided');
     }
 
     try {
-      const payload = this.jwtService.verify<T>(token, {
+      const payload = this.jwtService.verify<TokenPayload>(token, {
         secret: this.configService.get(secretKey),
       });
 
@@ -49,14 +49,17 @@ export class AuthService {
   }
 
   getAccessTokenPayload(token?: string) {
-    return this.getTokenPayload<AccessTokenPayload>(token, 'JWT_ACCESS_SECRET');
+    return this.getTokenPayload(
+      token,
+      'JWT_ACCESS_SECRET',
+    ) as AccessTokenPayload;
   }
 
   getRefreshTokenPayload(token?: string) {
-    return this.getTokenPayload<RefreshTokenPayload>(
+    return this.getTokenPayload(
       token,
       'JWT_REFRESH_SECRET',
-    );
+    ) as RefreshTokenPayload;
   }
 
   async getMe(accessToken: string | undefined) {
@@ -70,7 +73,7 @@ export class AuthService {
       id: user.id,
       username: user.username,
       isVerified: user.isVerified,
-      createdAt: user.createdAt,
+      createdAt: user.createdAt.toISOString(),
     };
   }
 

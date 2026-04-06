@@ -7,10 +7,10 @@ interface Props {
 }
 
 export const WithAuth = ({ children }: Props) => {
-  const { data, isLoading, error } = useMeQuery(null);
+  const { data, isLoading, error } = useMeQuery();
 
   if (isLoading) {
-    return <></>;
+    return null;
   }
 
   if (!data || error) {

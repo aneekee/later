@@ -22,3 +22,10 @@ export interface RegisterSuccessResponse extends BaseSuccessResponse<RegisterSuc
 export interface RefreshSuccessResponse extends BaseSuccessResponse {}
 
 export interface LogoutSuccessResponse extends BaseSuccessResponse {}
+
+export interface MeSuccessResponse {
+  id: string;
+  username: string;
+  isVerified: boolean;
+  createdAt: string;
+}
