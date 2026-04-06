@@ -35,9 +35,6 @@ export class AuthGuard implements CanActivate {
     try {
       const payload = this.authService.getAccessTokenPayload(accessToken);
       console.log('AuthGuard: token payload =', payload);
-      if (!payload) {
-        return false;
-      }
 
       request['user'] = payload;
 
