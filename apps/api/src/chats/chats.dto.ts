@@ -1,12 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsNotEmpty, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateChatDto {
   @ApiProperty({
     example: 'Random Ideas',
     description: 'The title of the chat',
   })
+  @IsString()
   @IsNotEmpty()
   title!: string;
 
@@ -14,6 +15,8 @@ export class CreateChatDto {
     example: '<3',
     description: 'An emoji (optional)',
   })
+  @IsString()
+  @IsOptional()
   icon?: string;
 }
 
@@ -22,13 +25,16 @@ export class UpdateChatDto {
     example: 'Random Ideas',
     description: 'The title of the chat',
   })
-  @IsNotEmpty()
+  @IsString()
+  @IsOptional()
   title?: string;
 
   @ApiProperty({
     example: '<3',
     description: 'An emoji (optional)',
   })
+  @IsString()
+  @IsOptional()
   icon?: string;
 }
 
@@ -41,6 +47,7 @@ export class ListChatsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @IsOptional()
   page: number = 1;
 
   @ApiProperty({
@@ -50,5 +57,6 @@ export class ListChatsDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @IsOptional()
   pageSize: number = 20;
 }

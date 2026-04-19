@@ -4,9 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { Prisma } from 'generated/prisma/client';
-import { MessageModel } from 'generated/prisma/models';
-
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChatsService } from 'src/chats/chats.service';
 
@@ -38,15 +35,16 @@ export class MessagesService {
     const offset = (dto.page - 1) * dto.pageSize;
 
     const [messages, totalSize] = await this.prismaService.$transaction([
-      this.prismaService.$queryRaw<MessageModel[]>(
-        Prisma.sql`
-        SELECT * FROM messages m
-        INNER JOIN text_messages tm on tm.message_id = m.id
-        WHERE m.chat_id = ${dto.chatId}
-        ORDER BY m.created_at DESC
-        LIMIT ${dto.pageSize} OFFSET ${offset}
-        `,
-      ),
+      this.prismaService.message.findMany({
+        where: {
+          chatId: dto.chatId,
+          textMessage: { isNot: null },
+        },
+        include: { textMessage: true },
+        orderBy: { createdAt: 'desc' },
+        take: dto.pageSize,
+        skip: offset,
+      }),
       this.prismaService.message.count({
         where: {
           chatId: dto.chatId,

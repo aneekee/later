@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import type { Request } from 'express';
@@ -25,10 +26,11 @@ export class MessagesController {
   async getMessages(
     @Req() req: Request,
     @Param('chatId') chatId: string,
-    @Param() listMessagesDto: ListMessagesDto,
+    @Query() listMessagesDto: ListMessagesDto,
   ) {
     // TODO: move the "const userId = req['user']?.id as string;" to a decorator?
     const userId = req['user']?.id as string;
+
     const { list, page, pageSize, totalSize } =
       await this.messagesService.listMessages({
         page: listMessagesDto.page,

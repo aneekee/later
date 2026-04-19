@@ -6,9 +6,17 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { type Request } from 'express';
+
+import {
+  CreateChatSuccessResponse,
+  DeleteChatSuccessResponse,
+  ListChatsSuccessResponse,
+  UpdateChatSuccessResponse,
+} from '@repo/types';
 
 import { ChatsService } from './chats.service';
 import { CreateChatDto, ListChatsDto, UpdateChatDto } from './chats.dto';
@@ -18,7 +26,10 @@ export class ChatsController {
   constructor(private chatsService: ChatsService) {}
 
   @Get()
-  async getChats(@Req() req: Request, @Param() listChatsDto: ListChatsDto) {
+  async getChats(
+    @Req() req: Request,
+    @Query() listChatsDto: ListChatsDto,
+  ): Promise<ListChatsSuccessResponse> {
     const userId = req['user']?.id as string;
     const { list, page, pageSize, totalSize } =
       await this.chatsService.listChats({
@@ -34,7 +45,10 @@ export class ChatsController {
   }
 
   @Post()
-  async createChat(@Req() req: Request, @Body() createChatDto: CreateChatDto) {
+  async createChat(
+    @Req() req: Request,
+    @Body() createChatDto: CreateChatDto,
+  ): Promise<CreateChatSuccessResponse> {
     const userId = req['user']?.id as string;
     const chat = await this.chatsService.createChat({
       title: createChatDto.title,
@@ -52,7 +66,7 @@ export class ChatsController {
   async updateChat(
     @Param('id') id: string,
     @Body() updateChatDto: UpdateChatDto,
-  ) {
+  ): Promise<UpdateChatSuccessResponse> {
     const chat = await this.chatsService.updateChat(id, {
       title: updateChatDto.title,
       icon: updateChatDto.icon,
@@ -65,7 +79,9 @@ export class ChatsController {
   }
 
   @Delete(':id')
-  async deleteChat(@Param('id') id: string) {
+  async deleteChat(
+    @Param('id') id: string,
+  ): Promise<DeleteChatSuccessResponse> {
     await this.chatsService.deleteChat(id);
 
     return {
