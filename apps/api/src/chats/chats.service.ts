@@ -2,12 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { Prisma } from 'generated/prisma/client';
 import { ChatModel } from 'generated/prisma/models';
+
 import { PrismaService } from 'src/prisma/prisma.service';
+
 import {
+  CheckChatAccessServiceDto,
   CreateChatServiceDto,
   ListChatsServiceDto,
   UpdateChatServiceDto,
-} from './chats.type';
+} from './chats.types';
 
 @Injectable()
 export class ChatsService {
@@ -27,6 +30,23 @@ export class ChatsService {
     return chat;
   }
 
+  async checkAccess(dto: CheckChatAccessServiceDto) {
+    try {
+      const chat = await this.prismaService.chat.findUnique({
+        where: {
+          id: dto.chatId,
+          userId: dto.userId,
+        },
+      });
+
+      return !!chat;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+
+  // TODO: compare offset vs cursor
   async listChats(dto: ListChatsServiceDto) {
     const offset = (dto.page - 1) * dto.pageSize;
 

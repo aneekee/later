@@ -14,3 +14,8 @@ export interface UpdateChatServiceDto {
   title?: string;
   icon?: string;
 }
+
+export interface CheckChatAccessServiceDto {
+  chatId: string;
+  userId: string;
+}

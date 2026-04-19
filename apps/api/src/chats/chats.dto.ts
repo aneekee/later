@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsNotEmpty, Min } from 'class-validator';
 
@@ -32,8 +32,9 @@ export class UpdateChatDto {
   icon?: string;
 }
 
+// TODO: create a pagination dto
 export class ListChatsDto {
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 1,
     description: 'Page number (1-based)',
   })
@@ -42,7 +43,7 @@ export class ListChatsDto {
   @Min(1)
   page: number = 1;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 20,
     description: 'Number of items per page',
   })
