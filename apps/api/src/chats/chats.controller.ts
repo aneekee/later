@@ -26,7 +26,7 @@ export class ChatsController {
   constructor(private chatsService: ChatsService) {}
 
   @Get()
-  async getChats(
+  async listChats(
     @Req() req: Request,
     @Query() listChatsDto: ListChatsDto,
   ): Promise<ListChatsSuccessResponse> {

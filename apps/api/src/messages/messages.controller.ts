@@ -11,6 +11,13 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 
+import {
+  CreateTextMessageSuccessResponse,
+  DeleteMessageSuccessResponse,
+  ListMessagesSuccessResponse,
+  UpdateTextMessageSuccessResponse,
+} from '@repo/types';
+
 import { MessagesService } from './messages.service';
 import {
   CreateTextMessageDto,
@@ -23,11 +30,11 @@ export class MessagesController {
   constructor(private messagesService: MessagesService) {}
 
   @Get()
-  async getMessages(
+  async listMessages(
     @Req() req: Request,
     @Param('chatId') chatId: string,
     @Query() listMessagesDto: ListMessagesDto,
-  ) {
+  ): Promise<ListMessagesSuccessResponse> {
     // TODO: move the "const userId = req['user']?.id as string;" to a decorator?
     const userId = req['user']?.id as string;
 
@@ -55,7 +62,7 @@ export class MessagesController {
     @Req() req: Request,
     @Param('chatId') chatId: string,
     @Body() body: CreateTextMessageDto,
-  ) {
+  ): Promise<CreateTextMessageSuccessResponse> {
     const userId = req['user']?.id as string;
 
     const message = await this.messagesService.createTextMessage({
@@ -78,7 +85,7 @@ export class MessagesController {
     @Param('id') id: string,
     @Param('chatId') chatId: string,
     @Body() dto: UpdateTextMessageDto,
-  ) {
+  ): Promise<UpdateTextMessageSuccessResponse> {
     const userId = req['user']?.id as string;
 
     const message = await this.messagesService.updateTextMessage({
@@ -101,7 +108,7 @@ export class MessagesController {
     @Req() req: Request,
     @Param('id') id: string,
     @Param('chatId') chatId: string,
-  ) {
+  ): Promise<DeleteMessageSuccessResponse> {
     const userId = req['user']?.id as string;
 
     await this.messagesService.deleteMessage({

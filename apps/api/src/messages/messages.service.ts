@@ -11,6 +11,8 @@ import {
   CreateTextMessageServiceDto,
   DeleteMessageServiceDto,
   ListMessagesServiceDto,
+  MessagesList,
+  MessageWithTextMessage,
   UpdateTextMessageServiceDto,
 } from './messages.types';
 
@@ -53,7 +55,7 @@ export class MessagesService {
     ]);
 
     return {
-      list: messages,
+      list: messages as MessagesList,
       page: dto.page,
       pageSize: dto.pageSize,
       totalSize,
@@ -70,7 +72,7 @@ export class MessagesService {
       throw new NotFoundException();
     }
 
-    return message;
+    return message as MessageWithTextMessage;
   }
 
   async createTextMessage(dto: CreateTextMessageServiceDto) {

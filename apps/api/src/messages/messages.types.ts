@@ -23,3 +23,17 @@ export interface DeleteMessageServiceDto {
   chatId: string;
   userId: string;
 }
+
+export type MessageWithTextMessage = {
+  id: string;
+  createdAt: Date;
+  type: 'TEXT';
+  chatId: string;
+  textMessage: {
+    id: string;
+    messageId: string;
+    content: string;
+  };
+};
+
+export type MessagesList = MessageWithTextMessage[];
