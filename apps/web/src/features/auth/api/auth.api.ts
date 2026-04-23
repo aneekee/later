@@ -10,7 +10,7 @@ import type {
 import { baseQueryWithCookies } from '../../../shared/api/api';
 
 export const authApi = createApi({
-  reducerPath: 'api',
+  reducerPath: 'authApi',
   baseQuery: baseQueryWithCookies,
   tagTypes: ['Auth'],
   endpoints: () => ({}),

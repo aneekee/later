@@ -3,11 +3,18 @@ import { Route, Routes } from 'react-router';
 
 import { Toaster } from '@/shared/components/ui/sonner';
 
+import { AppLayout } from './widgets/AppLayout';
+
 import { WithAuth } from './features/auth/components/WithAuth';
 
 const HomePage = lazy(() =>
   import('./features/home/pages/Home.page').then((m) => ({
     default: m.HomePage,
+  })),
+);
+const NotesPage = lazy(() =>
+  import('./features/notes/pages/Notes.page').then((m) => ({
+    default: m.NotesPage,
   })),
 );
 const LoginPage = lazy(() =>
@@ -28,13 +35,15 @@ export const App = () => {
       <Suspense fallback={null}>
         <Routes>
           <Route
-            path="/"
             element={
               <WithAuth>
-                <HomePage />
+                <AppLayout />
               </WithAuth>
             }
-          />
+          >
+            <Route path="/" element={<HomePage />} />
+            <Route path="/notes" element={<NotesPage />} />
+          </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
