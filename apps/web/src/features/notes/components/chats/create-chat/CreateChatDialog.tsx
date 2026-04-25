@@ -15,12 +15,13 @@ import {
 } from '@/shared/components/ui/dialog';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
-import { useCreateChatFormSchema } from '../../hooks/useCreateChatFormSchema';
-import type { CreateChatFormValues } from '../../types/chats.types';
-import { CREATE_CHAT_FORM_DEFAULT_VALUES } from '../../const/chats.constants';
+import { useCreateChatMutation } from '@/features/notes/api/chats.api';
+import { useCreateChatFormSchema } from '@/features/notes/hooks/useCreateChatFormSchema';
+import type { CreateChatFormValues } from '@/features/notes/types/chats.types';
+import { CREATE_CHAT_FORM_DEFAULT_VALUES } from '@/features/notes/const/chats.constants';
+import { mapChatFormToCreateChatDto } from '@/features/notes/utils/chat.utils';
+
 import { ChatForm } from './ChatForm';
-import { useCreateChatMutation } from '../../api/chats.api';
-import { mapChatFormToCreateChatDto } from '../../utils/chat.utils';
 
 export const CreateChatDialog = () => {
   const [open, setOpen] = useState(false);

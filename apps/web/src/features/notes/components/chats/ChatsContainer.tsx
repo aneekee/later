@@ -1,16 +1,16 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { RefreshCw } from 'lucide-react';
 
-import { useChatsQuery } from '../api/chats.api';
-import { CHATS_DEFAULT_PAGINATION } from '../const/chats.constants';
 import { ChatItem } from './ChatItem';
 import { ChatListEmpty } from './ChatListEmpty';
 import { CreateChatDialog } from './create-chat/CreateChatDialog';
-import { setActiveChatId } from '../slices/chats.slice';
-import { selectActiveChatId } from '../selectors/chats.selectors';
 import { ChatListError } from './ChatListError';
 import { ChatListLoading } from './ChatListLoading';
 import { Button } from '@/shared/components/ui/button';
+import { selectActiveChatId } from '../../selectors/chats.selectors';
+import { useChatsQuery } from '../../api/chats.api';
+import { CHATS_DEFAULT_PAGINATION } from '../../const/chats.constants';
+import { setActiveChatId } from '../../slices/chats.slice';
 
 export const ChatsContainer = () => {
   const dispatch = useDispatch();

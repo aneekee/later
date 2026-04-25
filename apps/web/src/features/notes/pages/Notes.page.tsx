@@ -1,4 +1,4 @@
-import { ChatsContainer } from '../components/ChatsContainer';
+import { ChatsContainer } from '../components/chats/ChatsContainer';
 
 export const NotesPage = () => {
   return (
