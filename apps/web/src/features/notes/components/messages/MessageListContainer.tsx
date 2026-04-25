@@ -1,6 +1,7 @@
 import { useMessagesQuery } from '../../api/messages.api';
 import { MessageListEmpty } from './MessageListEmpty';
 import { MessageListError } from './MessageListError';
+import { MessageListLoading } from './MessageListLoading';
 import { TextMessage } from './TextMessage';
 
 interface Props {
@@ -16,7 +17,7 @@ export const MessageListContainer = ({ chatId }: Props) => {
 
   const renderMessagesContent = () => {
     if (isFetching) {
-      return <div>Loading...</div>;
+      return <MessageListLoading />;
     }
 
     if (isError) {

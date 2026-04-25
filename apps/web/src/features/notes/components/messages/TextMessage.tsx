@@ -7,7 +7,7 @@ interface Props {
 
 export const TextMessage = ({ textContent, date }: Props) => {
   return (
-    <div className="relative py-1 px-2 w-fit text-sm rounded-lg bg-gray-300">
+    <div className="relative py-1 px-2 w-fit text-sm rounded-lg bg-gray-200">
       <p>
         {textContent}
         <span className="inline-block w-14" aria-hidden="true" />
