@@ -54,6 +54,7 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
           body: params.body,
         };
       },
+      invalidatesTags: ['Messages'],
     }),
 
     updateMessage: builder.mutation<

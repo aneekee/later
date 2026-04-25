@@ -6,7 +6,7 @@ export type AbstractMessageEntity = {
   id: string;
   type: MessageType;
   chatId: string;
-  createdAt: Date;
+  createdAt: string;
 };
 
 export type TextMessageEntity = AbstractMessageEntity & {

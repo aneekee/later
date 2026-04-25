@@ -15,6 +15,7 @@ import {
   MessageWithTextMessage,
   UpdateTextMessageServiceDto,
 } from './messages.types';
+import { mapMessageModelToEntity } from './messages.utils';
 
 @Injectable()
 export class MessagesService {
@@ -55,7 +56,7 @@ export class MessagesService {
     ]);
 
     return {
-      list: messages as MessagesList,
+      list: (messages as MessagesList).map(mapMessageModelToEntity),
       page: dto.page,
       pageSize: dto.pageSize,
       totalSize,
@@ -97,7 +98,7 @@ export class MessagesService {
 
     // TODO: prob I don't need to refetch it
     const textMessage = await this.getTextMessage(message.id);
-    return textMessage;
+    return mapMessageModelToEntity(textMessage);
   }
 
   async updateTextMessage(dto: UpdateTextMessageServiceDto) {
@@ -126,7 +127,7 @@ export class MessagesService {
 
     // TODO: prob I don't need to refetch it
     const textMessage = await this.getTextMessage(message.id);
-    return textMessage;
+    return mapMessageModelToEntity(textMessage);
   }
 
   async deleteMessage(dto: DeleteMessageServiceDto) {

@@ -4,6 +4,7 @@ import { selectActiveChat } from '../../selectors/chats.selectors';
 import { MessagesNoActiveChat } from './MessagesNoActiveChat';
 import { MessagesHeader } from './MessagesHeader';
 import { MessageInput } from './MessageInput';
+import { MessageListContainer } from './MessageListContainer';
 
 export const MessagesContainer = () => {
   const activeChat = useSelector(selectActiveChat);
@@ -14,50 +15,8 @@ export const MessagesContainer = () => {
   return (
     <div className="h-full flex flex-col">
       <MessagesHeader title={activeChat.title} />
-      <div className="h-1 grow overflow-auto">
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
-        <div>messages list</div>
+      <div className="p-2 h-1 flex grow overflow-auto">
+        <MessageListContainer chatId={activeChat.id} />
       </div>
       <footer className="p-3 border-t">
         <MessageInput key={activeChat.id} chatId={activeChat.id} />

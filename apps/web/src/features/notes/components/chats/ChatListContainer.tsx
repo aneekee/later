@@ -15,7 +15,7 @@ import { useChatsQuery } from '../../api/chats.api';
 import { CHATS_DEFAULT_PAGINATION } from '../../const/chats.constants';
 import { setActiveChat } from '../../slices/chats.slice';
 
-export const ChatsContainer = () => {
+export const ChatListContainer = () => {
   const dispatch = useDispatch();
 
   const activeChat = useSelector(selectActiveChat);
