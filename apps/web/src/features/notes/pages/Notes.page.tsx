@@ -5,7 +5,7 @@ export const NotesPage = () => {
   return (
     <div className="h-full flex">
       <ChatsContainer />
-      <div className="p-2 h-full overflow-hidden grow">
+      <div className="h-full grow">
         <MessagesContainer />
       </div>
     </div>
