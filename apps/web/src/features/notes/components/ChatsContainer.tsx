@@ -7,6 +7,7 @@ import { ChatsEmptyState } from './ChatsEmptyState';
 import { CreateChatDialog } from './create-chat/CreateChatDialog';
 import { setActiveChatId } from '../slices/chats.slice';
 import { selectActiveChatId } from '../selectors/chats.selectors';
+import { ChatListError } from './ChatListError';
 
 export const ChatsContainer = () => {
   const dispatch = useDispatch();
@@ -17,6 +18,7 @@ export const ChatsContainer = () => {
     data: chats,
     isFetching,
     isError,
+    refetch,
   } = useChatsQuery(CHATS_DEFAULT_PAGINATION);
 
   const onChatClick = (chatId: string) => {
@@ -29,7 +31,7 @@ export const ChatsContainer = () => {
     }
 
     if (isError) {
-      return <div>Error of fetching chats</div>;
+      return <ChatListError onRetry={() => void refetch()} />;
     }
 
     if (!chats?.data?.list.length) {
@@ -58,7 +60,7 @@ export const ChatsContainer = () => {
         <div className="p-2">
           <CreateChatDialog />
         </div>
-        <div className="p-2 flex grow overflow-auto">
+        <div className="p-2 flex grow items-start overflow-auto">
           {renderChatsContent()}
         </div>
       </div>
