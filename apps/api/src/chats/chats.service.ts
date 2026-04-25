@@ -11,6 +11,7 @@ import {
   ListChatsServiceDto,
   UpdateChatServiceDto,
 } from './chats.types';
+import { mapChatModelToEntity } from './chats.utils';
 
 @Injectable()
 export class ChatsService {
@@ -54,7 +55,7 @@ export class ChatsService {
     const [chats, totalSize] = await this.prismaService.$transaction([
       this.prismaService.$queryRaw<ChatModel[]>(
         Prisma.sql`
-          SELECT * FROM chats
+          SELECT id, user_id AS "userId", title, icon, created_at AS "createdAt" FROM chats
           WHERE user_id = ${dto.userId}
           ORDER BY (
             SELECT MAX(created_at) FROM messages WHERE chat_id = chats.id
@@ -68,7 +69,7 @@ export class ChatsService {
     ]);
 
     return {
-      list: chats,
+      list: chats.map((c) => mapChatModelToEntity(c)),
       page: dto.page,
       pageSize: dto.pageSize,
       totalSize,
@@ -84,7 +85,7 @@ export class ChatsService {
       },
     });
 
-    return chat;
+    return mapChatModelToEntity(chat);
   }
 
   async updateChat(id: string, dto: UpdateChatServiceDto) {
@@ -100,7 +101,7 @@ export class ChatsService {
       },
     });
 
-    return chat;
+    return mapChatModelToEntity(chat);
   }
 
   async deleteChat(id: string) {

@@ -5,7 +5,7 @@ export interface ChatEntity {
   userId: string;
   title: string;
   icon: string | null;
-  createdAt: Date;
+  createdAt: string;
 }
 
 // list chats

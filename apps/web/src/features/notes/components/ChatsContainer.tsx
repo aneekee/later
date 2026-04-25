@@ -1,14 +1,27 @@
+import { useDispatch, useSelector } from 'react-redux';
+
 import { useChatsQuery } from '../api/chats.api';
 import { CHATS_DEFAULT_PAGINATION } from '../const/chats.constants';
+import { ChatItem } from './ChatItem';
 import { ChatsEmptyState } from './ChatsEmptyState';
 import { CreateChatDialog } from './create-chat/CreateChatDialog';
+import { setActiveChatId } from '../slices/chats.slice';
+import { selectActiveChatId } from '../selectors/chats.selectors';
 
 export const ChatsContainer = () => {
+  const dispatch = useDispatch();
+
+  const activeChatId = useSelector(selectActiveChatId);
+
   const {
     data: chats,
     isFetching,
     isError,
   } = useChatsQuery(CHATS_DEFAULT_PAGINATION);
+
+  const onChatClick = (chatId: string) => {
+    dispatch(setActiveChatId({ chatId }));
+  };
 
   const renderChatsContent = () => {
     if (isFetching) {
@@ -24,16 +37,23 @@ export const ChatsContainer = () => {
     }
 
     return (
-      <ul>
+      <div className="w-full">
         {chats.data.list.map((c) => (
-          <li key={c.id}>{c.title}</li>
+          <ChatItem
+            key={c.id}
+            id={c.id}
+            title={c.title}
+            isActive={activeChatId === c.id}
+            date={c.createdAt}
+            onClick={onChatClick}
+          />
         ))}
-      </ul>
+      </div>
     );
   };
 
   return (
-    <div className="w-3xs h-full bg-gray-50 border-r overflow-auto">
+    <div className="w-3xs h-full border-r overflow-auto text-sm">
       <div className="h-full flex flex-col">
         <div className="p-2">
           <CreateChatDialog />

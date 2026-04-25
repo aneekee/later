@@ -3,12 +3,17 @@ import { configureStore } from '@reduxjs/toolkit';
 import { authApi } from './features/auth/api/auth.api';
 import { chatsApi } from './features/notes/api/chats.api';
 import { messagesApi } from './features/notes/api/messages.api';
+import { chatsSlice } from './features/notes/slices/chats.slice';
 
 export const store = configureStore({
   reducer: {
+    // api
     [authApi.reducerPath]: authApi.reducer,
     [chatsApi.reducerPath]: chatsApi.reducer,
     [messagesApi.reducerPath]: messagesApi.reducer,
+
+    // slices
+    [chatsSlice.name]: chatsSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -19,4 +24,5 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 
+// TODO: do I really need it?
 export type AppDispatch = typeof store.dispatch;
