@@ -29,7 +29,7 @@ export const MessageListContainer = ({ chatId }: Props) => {
     }
 
     return (
-      <div className="w-full flex flex-col items-end space-y-2">
+      <div className="w-full flex flex-col-reverse items-end space-y-2 overflow-auto">
         {data.data.list.map((m) => (
           <TextMessage
             key={m.id}
@@ -41,5 +41,9 @@ export const MessageListContainer = ({ chatId }: Props) => {
     );
   };
 
-  return <div className="w-full flex grow">{renderMessagesContent()}</div>;
+  return (
+    <div className="w-full flex grow overflow-hidden">
+      {renderMessagesContent()}
+    </div>
+  );
 };
