@@ -4,7 +4,7 @@ import { RefreshCw } from 'lucide-react';
 import { useChatsQuery } from '../api/chats.api';
 import { CHATS_DEFAULT_PAGINATION } from '../const/chats.constants';
 import { ChatItem } from './ChatItem';
-import { ChatsEmptyState } from './ChatsEmptyState';
+import { ChatListEmpty } from './ChatListEmpty';
 import { CreateChatDialog } from './create-chat/CreateChatDialog';
 import { setActiveChatId } from '../slices/chats.slice';
 import { selectActiveChatId } from '../selectors/chats.selectors';
@@ -38,7 +38,7 @@ export const ChatsContainer = () => {
     }
 
     if (!chats?.data?.list.length) {
-      return <ChatsEmptyState />;
+      return <ChatListEmpty />;
     }
 
     return (
