@@ -1,5 +1,12 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
+import type {
+  CreateTextMessageSuccessResponse,
+  DeleteMessageSuccessResponse,
+  ListMessagesSuccessResponse,
+  UpdateTextMessageSuccessResponse,
+} from '@repo/types';
+
 import { baseQueryWithCookies } from '@/shared/api/api';
 
 import type {
@@ -8,12 +15,6 @@ import type {
   GetMessagesListParams,
   UpdateTextMessageParams,
 } from '../types/messages.types';
-import type {
-  CreateTextMessageSuccessResponse,
-  DeleteMessageSuccessResponse,
-  ListMessagesSuccessResponse,
-  UpdateTextMessageSuccessResponse,
-} from '@repo/types';
 
 export const messagesApi = createApi({
   reducerPath: 'messagesApi',
@@ -42,14 +43,15 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
       },
     ),
 
-    createMessage: builder.mutation<
+    createTextMessage: builder.mutation<
       CreateTextMessageSuccessResponse,
       CreateTextMessageParams
     >({
       query: (params) => {
         return {
-          url: `v1/chats/${params.chatId}/messages`,
+          url: `v1/chats/${params.chatId}/messages/text`,
           method: 'POST',
+          body: params.body,
         };
       },
     }),
@@ -60,7 +62,7 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
     >({
       query: (params) => {
         return {
-          url: `v1/chats/${params.chatId}/messages/${params.messageId}`,
+          url: `v1/chats/${params.chatId}/messages/text/${params.messageId}`,
           method: 'PATCH',
         };
       },
@@ -79,3 +81,6 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
     }),
   }),
 });
+
+export const { useMessagesQuery, useCreateTextMessageMutation } =
+  messagesApiEndpoints;

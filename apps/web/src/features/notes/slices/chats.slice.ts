@@ -1,23 +1,24 @@
 import { createSlice } from '@reduxjs/toolkit';
+import type { ChatEntity } from '@repo/types';
 
 interface ChatsState {
-  activeChatId: string | null;
+  activeChat: ChatEntity | null;
 }
 
 const CHATS_SLICE_INIT_STATE: ChatsState = {
-  activeChatId: null,
+  activeChat: null,
 };
 
 export const chatsSlice = createSlice({
   name: 'chats',
   initialState: CHATS_SLICE_INIT_STATE,
   reducers: (create) => ({
-    setActiveChatId: create.reducer<{ chatId: string | null }>(
+    setActiveChat: create.reducer<{ chat: ChatEntity | null }>(
       (state, action) => {
-        state.activeChatId = action.payload.chatId;
+        state.activeChat = action.payload.chat;
       },
     ),
   }),
 });
 
-export const { setActiveChatId } = chatsSlice.actions;
+export const { setActiveChat } = chatsSlice.actions;
