@@ -30,7 +30,7 @@ export const chatsApiEndpoints = chatsApi.injectEndpoints({
         });
 
         return {
-          url: `v1/chatss?${queryParams}`,
+          url: `v1/chats?${queryParams}`,
           method: 'GET',
         };
       },
