@@ -64,7 +64,9 @@ export const ChatListContainer = () => {
     <div className="w-3xs h-full border-r overflow-auto text-sm">
       <div className="h-full flex flex-col">
         <div className="p-2 flex gap-2">
-          <CreateChatDialog />
+          {chats?.data?.list && chats.data.list.length < 10 ? (
+            <CreateChatDialog />
+          ) : null}
           <Button variant="outline" size="icon" onClick={() => void refetch()}>
             <RefreshCw className="size-4" />
           </Button>
