@@ -2,7 +2,7 @@ import { Send } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
 import { useCreateTextMessageMutation } from '../../api/messages.api';
@@ -33,10 +33,12 @@ export const MessageInput = ({ chatId }: Props) => {
   };
 
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex gap-2 items-end">
       <div className="grow">
-        <Input
+        <Textarea
           value={message}
+          rows={Math.min(3, (message.match(/\n/g) ?? []).length + 1)}
+          className="min-h-0"
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
