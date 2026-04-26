@@ -10,6 +10,7 @@ import { MessageListLoading } from './MessageListLoading';
 import { TextMessage } from './TextMessage';
 import { WithMessageContextMenu } from './WithMessageContextMenu';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
+import { cn } from '@/shared/lib/utils';
 
 interface Props {
   chatId: string;
@@ -84,16 +85,20 @@ export const MessageListContainer = ({ chatId }: Props) => {
     return (
       <div className="w-full flex flex-col-reverse items-end gap-2 overflow-auto">
         {messagesList.map((m) => (
-          <WithMessageContextMenu
-            onCopyClick={() => onCopyClick(m.textMessage.content)}
-            onDeleteClick={() => void onDeleteClick(m.id)}
+          <div
+            key={m.id}
+            className={cn(m.id.startsWith('MOCK-ID') ? 'opacity-50' : '')}
           >
-            <TextMessage
-              key={m.id}
-              textContent={m.textMessage.content}
-              date={m.createdAt}
-            />
-          </WithMessageContextMenu>
+            <WithMessageContextMenu
+              onCopyClick={() => onCopyClick(m.textMessage.content)}
+              onDeleteClick={() => void onDeleteClick(m.id)}
+            >
+              <TextMessage
+                textContent={m.textMessage.content}
+                date={m.createdAt}
+              />
+            </WithMessageContextMenu>
+          </div>
         ))}
         <div ref={topSentinelRef} />
       </div>

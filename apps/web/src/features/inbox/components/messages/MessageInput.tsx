@@ -20,12 +20,11 @@ export const MessageInput = ({ chatId }: Props) => {
 
   const onMessageSubmit = async () => {
     try {
+      setMessage('');
       await createMessage({
         chatId,
         body: { content: message },
       }).unwrap();
-
-      setMessage('');
     } catch (e) {
       console.error(e);
       displayErrorToast(e, 'Error of creating a message');
