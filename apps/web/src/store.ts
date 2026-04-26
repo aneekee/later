@@ -1,9 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 
 import { authApi } from './features/auth/api/auth.api';
-import { chatsApi } from './features/notes/api/chats.api';
-import { messagesApi } from './features/notes/api/messages.api';
-import { chatsSlice } from './features/notes/slices/chats.slice';
+import { chatsApi } from './features/inbox/api/chats.api';
+import { messagesApi } from './features/inbox/api/messages.api';
+import { chatsSlice } from './features/inbox/slices/chats.slice';
 
 export const store = configureStore({
   reducer: {

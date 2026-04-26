@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router';
-import { HomeIcon, NotebookIcon } from 'lucide-react';
+import { HomeIcon, InboxIcon } from 'lucide-react';
 
 import {
   Sidebar,
@@ -14,7 +14,7 @@ import {
 
 const navItems = [
   { to: '/', label: 'Home', icon: HomeIcon, end: true },
-  { to: '/notes', label: 'Notes', icon: NotebookIcon, end: false },
+  { to: '/inbox', label: 'Inbox', icon: InboxIcon, end: false },
 ];
 
 export const AppSidebar = () => {

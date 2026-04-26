@@ -15,11 +15,11 @@ import {
 } from '@/shared/components/ui/dialog';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
-import { useCreateChatMutation } from '@/features/notes/api/chats.api';
-import { useCreateChatFormSchema } from '@/features/notes/hooks/useCreateChatFormSchema';
-import type { CreateChatFormValues } from '@/features/notes/types/chats.types';
-import { CREATE_CHAT_FORM_DEFAULT_VALUES } from '@/features/notes/const/chats.constants';
-import { mapChatFormToCreateChatDto } from '@/features/notes/utils/chat.utils';
+import { useCreateChatMutation } from '@/features/inbox/api/chats.api';
+import { useCreateChatFormSchema } from '@/features/inbox/hooks/useCreateChatFormSchema';
+import type { CreateChatFormValues } from '@/features/inbox/types/chats.types';
+import { CREATE_CHAT_FORM_DEFAULT_VALUES } from '@/features/inbox/const/chats.constants';
+import { mapChatFormToCreateChatDto } from '@/features/inbox/utils/chat.utils';
 
 import { ChatForm } from './ChatForm';
 
@@ -72,7 +72,7 @@ export const CreateChatDialog = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Chat</DialogTitle>
-            <DialogDescription>Create another group of notes</DialogDescription>
+            <DialogDescription>Create inbox group</DialogDescription>
           </DialogHeader>
           <div className="mt-2">
             <FormProvider {...methods}>

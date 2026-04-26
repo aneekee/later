@@ -12,9 +12,9 @@ const HomePage = lazy(() =>
     default: m.HomePage,
   })),
 );
-const NotesPage = lazy(() =>
-  import('./features/notes/pages/Notes.page').then((m) => ({
-    default: m.NotesPage,
+const InboxPage = lazy(() =>
+  import('./features/inbox/pages/Inbox.page').then((m) => ({
+    default: m.InboxPage,
   })),
 );
 const LoginPage = lazy(() =>
@@ -42,7 +42,7 @@ export const App = () => {
             }
           >
             <Route path="/" element={<HomePage />} />
-            <Route path="/notes" element={<NotesPage />} />
+            <Route path="/inbox" element={<InboxPage />} />
           </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="*" element={<NotFoundPage />} />
