@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router';
 import { RefreshCw } from 'lucide-react';
 
 import type { ChatEntity } from '@repo/types';
@@ -17,6 +19,7 @@ import { setActiveChat } from '../../slices/chats.slice';
 
 export const ChatListContainer = () => {
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const activeChat = useSelector(selectActiveChat);
 
@@ -27,7 +30,24 @@ export const ChatListContainer = () => {
     refetch,
   } = useChatsQuery(CHATS_DEFAULT_PAGINATION);
 
+  useEffect(() => {
+    if (!chats?.data?.list) {
+      return;
+    }
+
+    const chatId = searchParams.get('chatId');
+    if (!chatId) {
+      return;
+    }
+
+    const chat = chats.data.list.find((c) => c.id === chatId);
+    if (chat) {
+      dispatch(setActiveChat({ chat }));
+    }
+  }, [chats?.data?.list, searchParams, dispatch]);
+
   const onChatClick = (chat: ChatEntity) => {
+    setSearchParams({ chatId: chat.id });
     dispatch(setActiveChat({ chat }));
   };
 
