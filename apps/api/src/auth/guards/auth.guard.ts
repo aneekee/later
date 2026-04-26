@@ -17,7 +17,6 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    console.log('AuthGuard: isPublic =', isPublic);
     if (isPublic) {
       return true;
     }
@@ -27,14 +26,12 @@ export class AuthGuard implements CanActivate {
       'access_token'
     ];
 
-    console.log('AuthGuard: accessToken =', accessToken);
     if (!accessToken) {
       return false;
     }
 
     try {
       const payload = this.authService.getAccessTokenPayload(accessToken);
-      console.log('AuthGuard: token payload =', payload);
 
       request['user'] = payload;
 

@@ -55,7 +55,6 @@ export const MessageListContainer = ({ chatId }: Props) => {
       .map((r) => r.data?.list || [])
       .reduce((acc, item) => acc.concat(item), []);
 
-    console.log(messagesList);
     if (!messagesList.length) {
       return <MessageListEmpty />;
     }

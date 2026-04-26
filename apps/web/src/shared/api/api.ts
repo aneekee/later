@@ -31,8 +31,6 @@ export const baseQueryWithCookies: BaseQueryFn<
           extraOptions,
         );
 
-        console.log({ refreshResult });
-
         if (refreshResult.data) {
           result = await baseQuery(args, api, extraOptions);
         }
