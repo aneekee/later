@@ -69,6 +69,7 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
           url: `v1/chats/${queryArg.chatId}/messages?${queryParams}`,
         };
       },
+      providesTags: ['Messages'],
     }),
 
     createTextMessage: builder.mutation<
