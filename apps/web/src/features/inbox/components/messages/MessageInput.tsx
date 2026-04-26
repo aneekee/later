@@ -33,7 +33,7 @@ export const MessageInput = ({ chatId }: Props) => {
   };
 
   return (
-    <div className="flex gap-2 items-end">
+    <div className="flex gap-2 items-center">
       <div className="grow">
         <Textarea
           value={message}
@@ -49,6 +49,7 @@ export const MessageInput = ({ chatId }: Props) => {
             }
           }}
           maxLength={255}
+          data-enable-grammarly="false"
         />
       </div>
       <div>
