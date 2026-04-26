@@ -156,6 +156,53 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
           method: 'DELETE',
         };
       },
+      onQueryStarted: async ({ chatId, messageId }, api) => {
+        const { dispatch, queryFulfilled } = api;
+
+        const messagesQueries = (
+          api.getState() as {
+            messagesApi: {
+              queries: Record<string, { originalArgs: GetMessagesListParams }>;
+            };
+          }
+        ).messagesApi.queries;
+
+        const patchResults = Object.entries(messagesQueries)
+          .filter(
+            ([key, entry]) =>
+              key.startsWith('messages(') &&
+              entry.originalArgs.chatId === chatId,
+          )
+          .map(([, entry]) =>
+            dispatch(
+              messagesApiEndpoints.util.updateQueryData(
+                'messages',
+                entry.originalArgs,
+                (draft) => {
+                  for (const page of draft.pages) {
+                    if (page.data) {
+                      const index = page.data.list.findIndex(
+                        (m) => m.id === messageId,
+                      );
+                      if (index !== -1) {
+                        page.data.list.splice(index, 1);
+                        page.data.totalSize -= 1;
+                        break;
+                      }
+                    }
+                  }
+                },
+              ),
+            ),
+          );
+
+        try {
+          await queryFulfilled;
+          dispatch(chatsApiEndpoints.util.invalidateTags(['Chats']));
+        } catch {
+          patchResults.forEach((p) => p.undo());
+        }
+      },
       invalidatesTags: ['Messages'],
     }),
   }),
