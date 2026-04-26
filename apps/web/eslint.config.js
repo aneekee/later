@@ -29,6 +29,10 @@ export default defineConfig([
         'error',
         { allowAsThisParameter: false, allowInGenericTypeArguments: true },
       ],
+      '@typescript-eslint/no-confusing-void-expression': [
+        'error',
+        { ignoreVoidReturningFunctions: true },
+      ],
     },
   },
   {
@@ -43,6 +47,20 @@ export default defineConfig([
       'react-refresh/only-export-components': 'warn',
       '@typescript-eslint/array-type': 'warn',
       '@typescript-eslint/no-unnecessary-condition': 'warn',
+      '@typescript-eslint/consistent-type-definitions': 'warn',
+    },
+  },
+  {
+    files: ['src/shared/components/ui/sidebar.tsx'],
+    rules: {
+      '@typescript-eslint/consistent-type-definitions': 'warn',
+      '@typescript-eslint/restrict-template-expressions': 'warn',
+    },
+  },
+  {
+    files: ['src/shared/hooks/use-mobile.ts'],
+    rules: {
+      '@typescript-eslint/restrict-template-expressions': 'warn',
     },
   },
 ]);

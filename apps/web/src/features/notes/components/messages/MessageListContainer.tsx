@@ -51,8 +51,8 @@ export const MessageListContainer = ({ chatId }: Props) => {
       return <MessageListError onRetry={() => void refetch()} />;
     }
 
-    const messagesList = (data?.pages.flat() || [])
-      .map((r) => r.data?.list || [])
+    const messagesList = (data?.pages.flat() ?? [])
+      .map((r) => r.data?.list ?? [])
       .reduce((acc, item) => acc.concat(item), []);
 
     if (!messagesList.length) {
