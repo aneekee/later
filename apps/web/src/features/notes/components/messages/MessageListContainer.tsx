@@ -1,4 +1,6 @@
-import { useMessagesQuery } from '../../api/messages.api';
+import { useEffect, useRef } from 'react';
+
+import { useMessagesInfiniteQuery } from '../../api/messages.api';
 import { MessageListEmpty } from './MessageListEmpty';
 import { MessageListError } from './MessageListError';
 import { MessageListLoading } from './MessageListLoading';
@@ -9,14 +11,39 @@ interface Props {
 }
 
 export const MessageListContainer = ({ chatId }: Props) => {
-  const { data, isFetching, isError, refetch } = useMessagesQuery({
-    chatId,
-    page: 1,
-    pageSize: 20,
-  });
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage } =
+    useMessagesInfiniteQuery({
+      chatId,
+      page: 1,
+      pageSize: 20,
+    });
+
+  const topSentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sentinel = topSentinelRef.current;
+    if (!sentinel) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoading && hasNextPage) {
+          void fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(sentinel);
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, isLoading, hasNextPage]);
 
   const renderMessagesContent = () => {
-    if (isFetching) {
+    // TODO: handle loading for fethcing another page
+    if (isLoading) {
       return <MessageListLoading />;
     }
 
@@ -24,19 +51,25 @@ export const MessageListContainer = ({ chatId }: Props) => {
       return <MessageListError onRetry={() => void refetch()} />;
     }
 
-    if (!data?.data?.list.length) {
+    const messagesList = (data?.pages.flat() || [])
+      .map((r) => r.data?.list || [])
+      .reduce((acc, item) => acc.concat(item), []);
+
+    console.log(messagesList);
+    if (!messagesList.length) {
       return <MessageListEmpty />;
     }
 
     return (
-      <div className="w-full flex flex-col-reverse items-end space-y-2 overflow-auto">
-        {data.data.list.map((m) => (
+      <div className="w-full flex flex-col-reverse items-end gap-2 overflow-auto">
+        {messagesList.map((m) => (
           <TextMessage
             key={m.id}
             textContent={m.textMessage.content}
             date={m.createdAt}
           />
         ))}
+        <div ref={topSentinelRef} />
       </div>
     );
   };

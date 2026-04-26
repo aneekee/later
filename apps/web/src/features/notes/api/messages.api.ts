@@ -26,22 +26,50 @@ export const messagesApi = createApi({
 
 export const messagesApiEndpoints = messagesApi.injectEndpoints({
   endpoints: (builder) => ({
-    messages: builder.query<ListMessagesSuccessResponse, GetMessagesListParams>(
-      {
-        query: (params) => {
-          const queryParams = new URLSearchParams({
-            page: params.page.toString(),
-            pageSize: params.pageSize.toString(),
-          });
+    messagesPage: builder.query<
+      ListMessagesSuccessResponse,
+      GetMessagesListParams
+    >({
+      query: (params) => {
+        const queryParams = new URLSearchParams({
+          page: params.page.toString(),
+          pageSize: params.pageSize.toString(),
+        });
 
-          return {
-            url: `v1/chats/${params.chatId}/messages?${queryParams}`,
-            method: 'GET',
-          };
-        },
-        providesTags: ['Messages'],
+        return {
+          url: `v1/chats/${params.chatId}/messages?${queryParams}`,
+          method: 'GET',
+        };
       },
-    ),
+      providesTags: ['Messages'],
+    }),
+
+    messages: builder.infiniteQuery<
+      ListMessagesSuccessResponse,
+      GetMessagesListParams,
+      number
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, allPages, lastPageParam) => {
+          const totalSize = lastPage.data?.totalSize ?? 0;
+          const pageSize = lastPage.data?.pageSize ?? 0;
+          const fetched = allPages.length * pageSize;
+          return fetched < totalSize ? lastPageParam + 1 : undefined;
+        },
+      },
+      query: ({ queryArg, pageParam }) => {
+        const queryParams = new URLSearchParams({
+          page: pageParam.toString(),
+          pageSize: queryArg.pageSize.toString(),
+        });
+
+        return {
+          method: 'GET',
+          url: `v1/chats/${queryArg.chatId}/messages?${queryParams}`,
+        };
+      },
+    }),
 
     createTextMessage: builder.mutation<
       CreateTextMessageSuccessResponse,
@@ -83,5 +111,8 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
   }),
 });
 
-export const { useMessagesQuery, useCreateTextMessageMutation } =
-  messagesApiEndpoints;
+export const {
+  useMessagesPageQuery,
+  useMessagesInfiniteQuery,
+  useCreateTextMessageMutation,
+} = messagesApiEndpoints;
