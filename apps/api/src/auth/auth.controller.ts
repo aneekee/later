@@ -51,7 +51,6 @@ export class AuthController {
     });
 
     return {
-      success: true,
       message: 'Login successful',
     };
   }
@@ -65,7 +64,6 @@ export class AuthController {
     });
 
     return {
-      success: true,
       message: 'User registered successfully, waiting for admin approval',
       data: {
         id: user.id,
@@ -94,7 +92,6 @@ export class AuthController {
     });
 
     return {
-      success: true,
       message: 'Refresh successful',
     };
   }
@@ -105,7 +102,6 @@ export class AuthController {
     res.clearCookie('refresh_token', COOKIE_OPTS_BASE);
 
     return {
-      success: true,
       message: 'Signed out successfully',
     };
   }

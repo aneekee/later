@@ -15,5 +15,48 @@ model User {
   isVerified Boolean  @default(false) @map("is_verified")
   createdAt  DateTime @default(now()) @map("created_at")
 
+  chats Chat[]
+
   @@map("users")
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String
+  icon      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  messages Message[]
+  user     User      @relation(fields: [userId], references: [id])
+
+  @@map("chats")
+}
+
+enum MessageType {
+  TEXT
+
+  @@map("message_type")
+}
+
+model Message {
+  id        String      @id @default(uuid())
+  type      MessageType @default(TEXT)
+  chatId    String      @map("chat_id")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  chat        Chat         @relation(fields: [chatId], references: [id])
+  textMessage TextMessage?
+
+  @@map("messages")
+}
+
+model TextMessage {
+  id        String @id @default(uuid())
+  messageId String @unique @map("message_id")
+  content   String
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("text_messages")
 }

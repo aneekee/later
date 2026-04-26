@@ -8,6 +8,7 @@ interface Props {
   type?: React.HTMLInputTypeAttribute;
   description?: string;
   placeholder?: string;
+  inputProps?: React.ComponentPropsWithoutRef<typeof Input>;
 }
 
 export const FormInput = ({
@@ -15,6 +16,7 @@ export const FormInput = ({
   type = 'text',
   description,
   placeholder,
+  inputProps,
 }: Props) => {
   const { control } = useFormContext();
 
@@ -25,6 +27,7 @@ export const FormInput = ({
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
           <Input
+            {...inputProps}
             {...field}
             id={field.name}
             type={type}

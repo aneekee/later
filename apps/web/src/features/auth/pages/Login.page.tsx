@@ -35,8 +35,6 @@ export const LoginPage = () => {
       }
 
       const { username, password } = form.getValues();
-      console.log('Logging in with:', { username, password });
-
       await login({ username, password }).unwrap();
       await navigate('/');
     } catch (e) {
@@ -53,8 +51,6 @@ export const LoginPage = () => {
       }
 
       const { username, password } = form.getValues();
-      console.log('Registering with:', { username, password });
-
       await register({ username, password }).unwrap();
       toast.success('Registration successful! You can now log in.');
     } catch (e) {
