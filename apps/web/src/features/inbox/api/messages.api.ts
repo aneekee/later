@@ -9,6 +9,10 @@ import type {
 
 import { baseQueryWithCookies } from '@/shared/api/api';
 
+import { chatsApiEndpoints } from './chats.api';
+
+import { buildOptimisticTextMessage } from '../utils/message.utils';
+
 import type {
   CreateTextMessageParams,
   DeleteMessageParams,
@@ -82,6 +86,50 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
           method: 'POST',
           body: params.body,
         };
+      },
+      onQueryStarted: async ({ chatId, body }, api) => {
+        const { dispatch, queryFulfilled } = api;
+
+        const optimisticMessage = buildOptimisticTextMessage(
+          chatId,
+          body.content,
+        );
+
+        const messagesQueries = (
+          api.getState() as {
+            messagesApi: {
+              queries: Record<string, { originalArgs: GetMessagesListParams }>;
+            };
+          }
+        ).messagesApi.queries;
+
+        const patchResults = Object.entries(messagesQueries)
+          .filter(
+            ([key, entry]) =>
+              key.startsWith('messages(') &&
+              entry.originalArgs.chatId === chatId,
+          )
+          .map(([, entry]) =>
+            dispatch(
+              messagesApiEndpoints.util.updateQueryData(
+                'messages',
+                entry.originalArgs,
+                (draft) => {
+                  if (draft.pages[0]?.data) {
+                    draft.pages[0].data.list.unshift(optimisticMessage);
+                    draft.pages[0].data.totalSize += 1;
+                  }
+                },
+              ),
+            ),
+          );
+
+        try {
+          await queryFulfilled;
+          dispatch(chatsApiEndpoints.util.invalidateTags(['Chats']));
+        } catch {
+          patchResults.forEach((p) => p.undo());
+        }
       },
       invalidatesTags: ['Messages'],
     }),
