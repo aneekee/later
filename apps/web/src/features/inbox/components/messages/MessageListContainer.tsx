@@ -1,10 +1,15 @@
 import { useEffect, useRef } from 'react';
 
-import { useMessagesInfiniteQuery } from '../../api/messages.api';
+import {
+  useDeleteMessageMutation,
+  useMessagesInfiniteQuery,
+} from '../../api/messages.api';
 import { MessageListEmpty } from './MessageListEmpty';
 import { MessageListError } from './MessageListError';
 import { MessageListLoading } from './MessageListLoading';
 import { TextMessage } from './TextMessage';
+import { WithMessageContextMenu } from './WithMessageContextMenu';
+import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
 interface Props {
   chatId: string;
@@ -17,6 +22,10 @@ export const MessageListContainer = ({ chatId }: Props) => {
       page: 1,
       pageSize: 20,
     });
+
+  const [deleteMessage] = useDeleteMessageMutation();
+
+  const { displayErrorToast } = useDisplayErrorToast();
 
   const topSentinelRef = useRef<HTMLDivElement>(null);
 
@@ -41,6 +50,19 @@ export const MessageListContainer = ({ chatId }: Props) => {
     };
   }, [fetchNextPage, isLoading, hasNextPage]);
 
+  const onCopyClick = (textContent: string) => {
+    void window.navigator.clipboard.writeText(textContent);
+  };
+
+  const onDeleteClick = async (id: string) => {
+    try {
+      await deleteMessage({ chatId, messageId: id }).unwrap();
+    } catch (error) {
+      console.error(error);
+      displayErrorToast(error, 'Message delete failed');
+    }
+  };
+
   const renderMessagesContent = () => {
     // TODO: handle loading for fethcing another page
     if (isLoading) {
@@ -62,11 +84,16 @@ export const MessageListContainer = ({ chatId }: Props) => {
     return (
       <div className="w-full flex flex-col-reverse items-end gap-2 overflow-auto">
         {messagesList.map((m) => (
-          <TextMessage
-            key={m.id}
-            textContent={m.textMessage.content}
-            date={m.createdAt}
-          />
+          <WithMessageContextMenu
+            onCopyClick={() => onCopyClick(m.textMessage.content)}
+            onDeleteClick={() => void onDeleteClick(m.id)}
+          >
+            <TextMessage
+              key={m.id}
+              textContent={m.textMessage.content}
+              date={m.createdAt}
+            />
+          </WithMessageContextMenu>
         ))}
         <div ref={topSentinelRef} />
       </div>

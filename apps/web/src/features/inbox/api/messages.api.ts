@@ -108,6 +108,7 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
           method: 'DELETE',
         };
       },
+      invalidatesTags: ['Messages'],
     }),
   }),
 });
@@ -116,4 +117,5 @@ export const {
   useMessagesPageQuery,
   useMessagesInfiniteQuery,
   useCreateTextMessageMutation,
+  useDeleteMessageMutation,
 } = messagesApiEndpoints;

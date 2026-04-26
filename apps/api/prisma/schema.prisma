@@ -56,7 +56,7 @@ model TextMessage {
   messageId String @unique @map("message_id")
   content   String
 
-  message Message @relation(fields: [messageId], references: [id])
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@map("text_messages")
 }
