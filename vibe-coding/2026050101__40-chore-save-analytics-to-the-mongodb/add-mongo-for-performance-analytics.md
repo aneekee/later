@@ -29,7 +29,7 @@ interface PerformanceEvent {
   // only URL params like "?page=1&pageSize=20" or function args (not now, in future), no need to log request bodies
   params: string;
 
-  // It should be ready to accept fractional millisecods from `performance.now()` calls
+  // It should be ready to accept fractional milliseconds from `performance.now()` calls
   duration: number;
 
   // Timestamp when the event was created
