@@ -17,7 +17,7 @@ I def can just write it to the existing postgres database, but I want to give Mo
   - Don't add indexes for now, keep it a simple collection
 - Make the PerformanceInterceptor write the performance data to the mongodb with the service created above
 
-The performance even schema in the mongodb should contain at least the following data
+The performance event schema in the mongodb should contain at least the following data
 
 ```typescript
 interface PerformanceEvent {
