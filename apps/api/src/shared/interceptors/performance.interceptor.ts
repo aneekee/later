@@ -4,7 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { Observable, tap } from 'rxjs';
+import { Observable, finalize } from 'rxjs';
 
 import { PerformanceAnalyticsService } from '../../performance-analytics/performance-analytics.service';
 import { PerformanceAnalyticsRequest } from './performance.types';
@@ -26,7 +26,7 @@ export class PerformanceInterceptor implements NestInterceptor {
     const start = performance.now();
 
     return next.handle().pipe(
-      tap(() => {
+      finalize(() => {
         const duration = performance.now() - start;
         void this.performanceAnalyticsService
           .record({
