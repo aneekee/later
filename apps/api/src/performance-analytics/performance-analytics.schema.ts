@@ -3,7 +3,7 @@ import { HydratedDocument } from 'mongoose';
 
 export type PerformanceEventDocument = HydratedDocument<PerformanceEvent>;
 
-@Schema({ versionKey: false })
+@Schema({ versionKey: false, collection: 'performance_events' })
 export class PerformanceEvent {
   @Prop({ required: true })
   target!: string;
