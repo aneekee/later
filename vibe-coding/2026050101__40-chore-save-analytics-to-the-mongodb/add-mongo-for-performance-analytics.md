@@ -37,4 +37,4 @@ interface PerformanceEvent {
 }
 ```
 
-I also expect to other collections in my mongodb, I don't expect it to be for the analytics only
+I also expect there to be other collections in my mongodb; I don't expect it to be for analytics only.
