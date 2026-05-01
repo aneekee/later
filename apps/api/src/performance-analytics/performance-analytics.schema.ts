@@ -9,7 +9,7 @@ export class PerformanceEvent {
   target!: string;
 
   @Prop({ required: false })
-  params!: string;
+  params?: string;
 
   @Prop({ required: true })
   duration!: number;
