@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react';
 
+import type { TextMessageEntity } from '@repo/types';
+
+import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
+import { cn } from '@/shared/lib/utils';
+import { getReadableDate, isMoreThanOneDayApart } from '@/shared/lib/date.util';
+
 import {
   useDeleteMessageMutation,
   useMessagesInfiniteQuery,
@@ -9,8 +15,7 @@ import { MessageListError } from './MessageListError';
 import { MessageListLoading } from './MessageListLoading';
 import { TextMessage } from './TextMessage';
 import { WithMessageContextMenu } from './WithMessageContextMenu';
-import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
-import { cn } from '@/shared/lib/utils';
+import { MessageDateSeparator } from './MessageDateSeparator';
 
 interface Props {
   chatId: string;
@@ -83,23 +88,36 @@ export const MessageListContainer = ({ chatId }: Props) => {
     }
 
     return (
+      // TODO: refactor, consider moving to a separate component -- this one is too complex
       <div className="w-full flex flex-col-reverse items-end gap-2 overflow-auto">
-        {messagesList.map((m) => (
-          <div
-            key={m.id}
-            className={cn(m.id.startsWith('MOCK-ID') ? 'opacity-50' : '')}
-          >
-            <WithMessageContextMenu
-              onCopyClick={() => onCopyClick(m.textMessage.content)}
-              onDeleteClick={() => void onDeleteClick(m.id)}
-            >
-              <TextMessage
-                textContent={m.textMessage.content}
-                date={m.createdAt}
-              />
-            </WithMessageContextMenu>
-          </div>
-        ))}
+        {messagesList.map((m, index, array) => {
+          const nextMessage = array[index + 1] as TextMessageEntity | undefined;
+          const showSeparator =
+            index === array.length - 1 ||
+            (nextMessage &&
+              isMoreThanOneDayApart(m.createdAt, nextMessage.createdAt));
+
+          return (
+            <div key={m.id} className="w-full flex flex-col gap-2 items-end">
+              {showSeparator ? (
+                <MessageDateSeparator title={getReadableDate(m.createdAt)} />
+              ) : null}
+              <div
+                className={cn(m.id.startsWith('MOCK-ID') ? 'opacity-50' : '')}
+              >
+                <WithMessageContextMenu
+                  onCopyClick={() => onCopyClick(m.textMessage.content)}
+                  onDeleteClick={() => void onDeleteClick(m.id)}
+                >
+                  <TextMessage
+                    textContent={m.textMessage.content}
+                    date={m.createdAt}
+                  />
+                </WithMessageContextMenu>
+              </div>
+            </div>
+          );
+        })}
         <div ref={topSentinelRef} />
       </div>
     );
