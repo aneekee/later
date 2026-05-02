@@ -4,7 +4,10 @@ import type { TextMessageEntity } from '@repo/types';
 
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 import { cn } from '@/shared/lib/utils';
-import { getReadableDate, isMoreThanOneDayApart } from '@/shared/lib/date.util';
+import {
+  getReadableDate,
+  isMoreThanOneDayApart,
+} from '@/shared/utils/date.util';
 
 import {
   useDeleteMessageMutation,
