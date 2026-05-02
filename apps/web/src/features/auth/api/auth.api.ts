@@ -5,7 +5,7 @@ import type {
   MeSuccessResponse,
   RegisterRequestBody,
   RegisterSuccessResponseData,
-} from '@repo/types';
+} from '@later/types';
 
 import { baseQueryWithCookies } from '../../../shared/api/api';
 

@@ -16,7 +16,7 @@ import {
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
   UpdateTextMessageSuccessResponse,
-} from '@repo/types';
+} from '@later/types';
 
 import { MessagesService } from './messages.service';
 import {

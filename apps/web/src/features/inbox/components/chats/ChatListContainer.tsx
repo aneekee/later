@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router';
 import { RefreshCw } from 'lucide-react';
 
-import type { ChatEntity } from '@repo/types';
+import type { ChatEntity } from '@later/types';
 
 import { Button } from '@/shared/components/ui/button';
 

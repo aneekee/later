@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import type { ChatEntity } from '@repo/types';
+import type { ChatEntity } from '@later/types';
 
 interface ChatsState {
   activeChat: ChatEntity | null;

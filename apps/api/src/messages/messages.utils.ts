@@ -1,4 +1,4 @@
-import { TextMessageEntity } from '@repo/types';
+import { TextMessageEntity } from '@later/types';
 
 import { MessageWithTextMessage } from './messages.types';
 

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty } from 'class-validator';
 
-import { LoginRequestBody } from '@repo/types';
+import { LoginRequestBody } from '@later/types';
 
 export class LoginDto implements LoginRequestBody {
   @ApiProperty({

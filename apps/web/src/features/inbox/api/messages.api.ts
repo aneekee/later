@@ -5,7 +5,7 @@ import type {
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
   UpdateTextMessageSuccessResponse,
-} from '@repo/types';
+} from '@later/types';
 
 import { baseQueryWithCookies } from '@/shared/api/api';
 
