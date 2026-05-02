@@ -17,7 +17,7 @@ export const TextWithLinks = ({ text }: Props) => {
             href={matches[i]}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline text-blue-600 hover:text-blue-800 break-all"
+            className="underline text-blue-600 hover:text-blue-800"
             onClick={(e) => e.stopPropagation()}
             onContextMenu={(e) => e.stopPropagation()}
           >
