@@ -7,7 +7,7 @@ import type {
   ListChatsSuccessResponse,
   UpdateChatRequestBody,
   UpdateChatSuccessResponse,
-} from '@repo/types';
+} from '@later/types';
 
 import { baseQueryWithCookies } from '@/shared/api/api';
 import type { BasePaginationParams } from '@/shared/types/api';

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import type { TextMessageEntity } from '@repo/types';
+import type { TextMessageEntity } from '@later/types';
 
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 import { cn } from '@/shared/lib/utils';

@@ -13,7 +13,7 @@
     "@fontsource-variable/geist": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@reduxjs/toolkit": "^2.11.2",
-    "@repo/types": "workspace:*",
+    "@later/types": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "async-mutex": "^0.5.0",
     "class-variance-authority": "^0.7.1",

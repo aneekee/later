@@ -1,4 +1,4 @@
-import type { TextMessageEntity } from '@repo/types';
+import type { TextMessageEntity } from '@later/types';
 
 export const buildOptimisticTextMessage = (
   chatId: string,

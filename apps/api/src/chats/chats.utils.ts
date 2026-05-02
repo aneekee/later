@@ -1,4 +1,4 @@
-import { ChatEntity } from '@repo/types';
+import { ChatEntity } from '@later/types';
 
 import { ChatModel } from '../../generated/prisma/models/Chat';
 

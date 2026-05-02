@@ -1,7 +1,7 @@
 import type {
   CreateTextMessageRequestBody,
   UpdateTextMessageRequestBody,
-} from '@repo/types';
+} from '@later/types';
 
 import type { BasePaginationParams } from '@/shared/types/api';
 

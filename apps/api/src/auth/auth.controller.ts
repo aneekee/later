@@ -7,7 +7,7 @@ import type {
   MeSuccessResponse,
   RefreshSuccessResponse,
   RegisterSuccessResponse,
-} from '@repo/types';
+} from '@later/types';
 
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';

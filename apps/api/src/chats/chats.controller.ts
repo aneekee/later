@@ -16,7 +16,7 @@ import {
   DeleteChatSuccessResponse,
   ListChatsSuccessResponse,
   UpdateChatSuccessResponse,
-} from '@repo/types';
+} from '@later/types';
 
 import { ChatsService } from './chats.service';
 import { CreateChatDto, ListChatsDto, UpdateChatDto } from './chats.dto';
