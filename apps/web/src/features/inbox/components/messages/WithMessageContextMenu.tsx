@@ -22,7 +22,7 @@ export const WithMessageContextMenu = ({
 }: Props) => {
   return (
     <ContextMenu>
-      <ContextMenuTrigger className="select-text cursor-auto">
+      <ContextMenuTrigger className="pointer-fine:select-text pointer-fine:cursor-auto">
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent>
