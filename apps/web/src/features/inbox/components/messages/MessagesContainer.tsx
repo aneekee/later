@@ -15,7 +15,7 @@ export const MessagesContainer = () => {
   return (
     <div className="h-full flex flex-col">
       <MessagesHeader title={activeChat.title} />
-      <div className="p-2 h-1 flex grow overflow-auto">
+      <div className="h-1 flex grow">
         <MessageListContainer key={activeChat.id} chatId={activeChat.id} />
       </div>
       <footer className="p-3 border-t">

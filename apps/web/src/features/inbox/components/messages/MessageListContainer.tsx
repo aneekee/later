@@ -93,7 +93,7 @@ export const MessageListContainer = ({ chatId }: Props) => {
     return (
       // TODO: refactor, consider moving to a separate component -- this one is too complex
       // also, add a memo wrapper
-      <div className="w-full flex flex-col-reverse items-end gap-2 overflow-auto">
+      <div className="px-3 py-2 w-full flex flex-col-reverse items-end gap-2 overflow-auto">
         {messagesList.map((m, index, array) => {
           const nextMessage = array[index + 1] as TextMessageEntity | undefined;
           const showSeparator =
@@ -102,7 +102,10 @@ export const MessageListContainer = ({ chatId }: Props) => {
               isMoreThanOneDayApart(m.createdAt, nextMessage.createdAt));
 
           return (
-            <div key={m.id} className="w-full flex flex-col gap-2 items-end">
+            <div
+              key={m.id}
+              className="w-full max-w-lg flex flex-col gap-2 items-end"
+            >
               {showSeparator ? (
                 <MessageDateSeparator title={getReadableDate(m.createdAt)} />
               ) : null}
