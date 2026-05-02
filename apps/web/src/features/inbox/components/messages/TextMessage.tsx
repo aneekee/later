@@ -1,4 +1,6 @@
-import { formatIsoTime, formatIsoDateTime } from '@/shared/lib/date.util';
+import { formatIsoTime, formatIsoDateTime } from '@/shared/utils/date.util';
+
+import { TextWithLinks } from './TextWithLinks';
 
 interface Props {
   textContent: string;
@@ -9,7 +11,7 @@ export const TextMessage = ({ textContent, date }: Props) => {
   return (
     <div className="relative py-1 px-2 w-fit text-sm rounded-lg bg-gray-200">
       <p className="whitespace-pre-wrap">
-        {textContent}
+        <TextWithLinks text={textContent} />
         <span className="inline-block w-14" aria-hidden="true" />
       </p>
       <span

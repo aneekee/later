@@ -1,4 +1,4 @@
-import { formatIsoDate } from '@/shared/lib/date.util';
+import { formatIsoDate } from '@/shared/utils/date.util';
 import { cn } from '@/shared/lib/utils';
 import { MessageSquare } from 'lucide-react';
 
