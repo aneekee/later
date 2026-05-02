@@ -92,6 +92,7 @@ export const MessageListContainer = ({ chatId }: Props) => {
 
     return (
       // TODO: refactor, consider moving to a separate component -- this one is too complex
+      // also, add a memo wrapper
       <div className="w-full flex flex-col-reverse items-end gap-2 overflow-auto">
         {messagesList.map((m, index, array) => {
           const nextMessage = array[index + 1] as TextMessageEntity | undefined;
