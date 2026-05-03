@@ -102,15 +102,15 @@ export const MessageListContainer = ({ chatId }: Props) => {
               isMoreThanOneDayApart(m.createdAt, nextMessage.createdAt));
 
           return (
-            <div
-              key={m.id}
-              className="w-full max-w-lg flex flex-col gap-2 items-end"
-            >
+            <div key={m.id} className="w-full flex flex-col gap-2 items-end">
               {showSeparator ? (
                 <MessageDateSeparator title={getReadableDate(m.createdAt)} />
               ) : null}
               <div
-                className={cn(m.id.startsWith('MOCK-ID') ? 'opacity-50' : '')}
+                className={cn(
+                  'max-w-lg',
+                  m.id.startsWith('MOCK-ID') ? 'opacity-50' : '',
+                )}
               >
                 <WithMessageContextMenu
                   onCopyClick={() => onCopyClick(m.textMessage.content)}
