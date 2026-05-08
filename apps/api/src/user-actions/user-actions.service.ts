@@ -18,4 +18,18 @@ export class UserActionsService {
       createdAt: new Date(),
     });
   }
+
+  async deleteCreateMessageAction(messageId: string): Promise<void> {
+    await this.userActionModel.deleteMany({
+      type: 'CREATE_MESSAGE',
+      'params.messageId': messageId,
+    });
+  }
+
+  async deleteCreateChatAction(chatId: string): Promise<void> {
+    await this.userActionModel.deleteMany({
+      type: 'CREATE_CHAT',
+      'params.chatId': chatId,
+    });
+  }
 }
