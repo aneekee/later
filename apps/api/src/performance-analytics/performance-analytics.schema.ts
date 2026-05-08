@@ -8,8 +8,8 @@ export class PerformanceEvent {
   @Prop({ required: true })
   target!: string;
 
-  @Prop({ required: false })
-  params?: string;
+  @Prop({ required: false, type: Object })
+  params?: Record<string, string>;
 
   @Prop({ required: true })
   duration!: number;

@@ -10,7 +10,7 @@ export const getRequestPerformanceAnalyticsData = (
     '/:id',
   );
   const target = `${method} ${normalizedPath}`;
-  const params = urlObj.search;
+  const params = Object.fromEntries(urlObj.searchParams);
 
   return { target, params };
 };
