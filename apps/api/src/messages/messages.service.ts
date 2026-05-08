@@ -101,7 +101,7 @@ export class MessagesService {
     await this.userActionsService.record({
       type: 'CREATE_MESSAGE',
       userId: dto.userId,
-      params: { messageType: 'TEXT' },
+      params: { messageId: message.id, messageType: 'TEXT' },
     });
 
     // TODO: prob I don't need to refetch it
@@ -152,5 +152,7 @@ export class MessagesService {
     await this.prismaService.message.delete({
       where: { id: dto.messageId },
     });
+
+    await this.userActionsService.deleteCreateMessageAction(dto.messageId);
   }
 }

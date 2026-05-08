@@ -92,6 +92,7 @@ export class ChatsService {
     await this.userActionsService.record({
       type: 'CREATE_CHAT',
       userId: dto.userId,
+      params: { chatId: chat.id },
     });
 
     return mapChatModelToEntity(chat);
@@ -122,5 +123,7 @@ export class ChatsService {
         id,
       },
     });
+
+    await this.userActionsService.deleteCreateChatAction(id);
   }
 }
