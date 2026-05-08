@@ -1,5 +1,5 @@
 export interface CreatePerformanceEventDto {
   target: string;
-  params: string;
+  params: Record<string, string>;
   duration: number;
 }
