@@ -6,12 +6,7 @@ import {
   PerformanceEvent,
   PerformanceEventDocument,
 } from './performance-analytics.schema';
-
-export interface CreatePerformanceEventDto {
-  target: string;
-  params: string;
-  duration: number;
-}
+import { CreatePerformanceEventDto } from './performance-analytics.types';
 
 @Injectable()
 export class PerformanceAnalyticsService {
