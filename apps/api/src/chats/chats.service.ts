@@ -12,10 +12,14 @@ import {
   UpdateChatServiceDto,
 } from './chats.types';
 import { mapChatModelToEntity } from './chats.utils';
+import { UserActionsService } from 'src/user-actions/user-actions.service';
 
 @Injectable()
 export class ChatsService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private userActionsService: UserActionsService,
+  ) {}
 
   async getOne(id: string) {
     const chat = await this.prismaService.chat.findUnique({
@@ -83,6 +87,11 @@ export class ChatsService {
         icon: dto.icon,
         userId: dto.userId,
       },
+    });
+
+    await this.userActionsService.record({
+      type: 'CREATE_CHAT',
+      userId: dto.userId,
     });
 
     return mapChatModelToEntity(chat);

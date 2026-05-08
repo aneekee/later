@@ -5,7 +5,7 @@ export type UserActionDocument = HydratedDocument<UserAction>;
 
 export type UserActionType = 'CREATE_MESSAGE' | 'CREATE_CHAT';
 
-@Schema({ versionKey: false, collection: 'performance_events' })
+@Schema({ versionKey: false, collection: 'user_actions' })
 export class UserAction {
   @Prop({ required: true })
   type!: UserActionType;
@@ -13,7 +13,7 @@ export class UserAction {
   @Prop({ required: true })
   userId!: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false, type: Object })
   params?: object;
 
   @Prop({ required: true })

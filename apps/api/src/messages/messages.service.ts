@@ -6,6 +6,7 @@ import {
 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChatsService } from 'src/chats/chats.service';
+import { UserActionsService } from 'src/user-actions/user-actions.service';
 
 import {
   CreateTextMessageServiceDto,
@@ -22,6 +23,7 @@ export class MessagesService {
   constructor(
     private prismaService: PrismaService,
     private chatsService: ChatsService,
+    private userActionsService: UserActionsService,
   ) {}
 
   // TODO: compare offset vs cursor
@@ -94,6 +96,12 @@ export class MessagesService {
           create: { content: dto.content },
         },
       },
+    });
+
+    await this.userActionsService.record({
+      type: 'CREATE_MESSAGE',
+      userId: dto.userId,
+      params: { messageType: 'TEXT' },
     });
 
     // TODO: prob I don't need to refetch it
