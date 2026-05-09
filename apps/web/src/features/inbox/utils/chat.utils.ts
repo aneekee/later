@@ -5,5 +5,4 @@ export const mapChatFormToCreateChatDto = (
   formValues: CreateChatFormValues,
 ): CreateChatRequestBody => ({
   title: formValues.title,
-  icon: formValues.icon,
 });

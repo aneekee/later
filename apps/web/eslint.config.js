@@ -61,6 +61,7 @@ export default defineConfig([
     files: ['src/shared/hooks/use-mobile.ts'],
     rules: {
       '@typescript-eslint/restrict-template-expressions': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
     },
   },
 ]);

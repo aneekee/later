@@ -4,7 +4,6 @@ export interface ChatEntity {
   id: string;
   userId: string;
   title: string;
-  icon: string | null;
   createdAt: string;
 }
 

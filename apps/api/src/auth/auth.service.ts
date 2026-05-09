@@ -14,7 +14,6 @@ import {
   AccessTokenPayload,
   AuthTokenSecretKey,
   LoginServiceDto,
-  RefreshTokenPayload,
   RegisterServiceDto,
   TokenPayload,
 } from './auth.types';
@@ -56,10 +55,7 @@ export class AuthService {
   }
 
   getRefreshTokenPayload(token?: string) {
-    return this.getTokenPayload(
-      token,
-      'JWT_REFRESH_SECRET',
-    ) as RefreshTokenPayload;
+    return this.getTokenPayload(token, 'JWT_REFRESH_SECRET');
   }
 
   async getMe(accessToken: string | undefined) {

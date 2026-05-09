@@ -24,7 +24,6 @@ model Chat {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   title     String
-  icon      String?
   createdAt DateTime @default(now()) @map("created_at")
 
   messages Message[]

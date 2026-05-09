@@ -84,7 +84,6 @@ export class ChatsService {
     const chat = await this.prismaService.chat.create({
       data: {
         title: dto.title,
-        icon: dto.icon,
         userId: dto.userId,
       },
     });
@@ -107,7 +106,6 @@ export class ChatsService {
       },
       data: {
         ...(dto.title ? { title: dto.title } : {}),
-        ...(dto.icon ? { icon: dto.icon } : {}),
       },
     });
 
