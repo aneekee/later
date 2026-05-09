@@ -10,14 +10,6 @@ export class CreateChatDto {
   @IsString()
   @IsNotEmpty()
   title!: string;
-
-  @ApiProperty({
-    example: '<3',
-    description: 'An emoji (optional)',
-  })
-  @IsString()
-  @IsOptional()
-  icon?: string;
 }
 
 export class UpdateChatDto {
@@ -28,14 +20,6 @@ export class UpdateChatDto {
   @IsString()
   @IsOptional()
   title?: string;
-
-  @ApiProperty({
-    example: '<3',
-    description: 'An emoji (optional)',
-  })
-  @IsString()
-  @IsOptional()
-  icon?: string;
 }
 
 // TODO: create a pagination dto

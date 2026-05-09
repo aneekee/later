@@ -8,5 +8,4 @@ export const CHATS_DEFAULT_PAGINATION: BasePaginationParams = {
 
 export const CREATE_CHAT_FORM_DEFAULT_VALUES: CreateChatFormValues = {
   title: '',
-  icon: '',
 };

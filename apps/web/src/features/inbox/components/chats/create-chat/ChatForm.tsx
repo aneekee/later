@@ -8,11 +8,6 @@ export const ChatForm = () => {
         <Label htmlFor="title">Title</Label>
         <FormInput name="title" />
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="icon">Icon</Label>
-        <FormInput name="icon" />
-      </div>
     </div>
   );
 };

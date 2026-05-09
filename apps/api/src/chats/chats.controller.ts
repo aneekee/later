@@ -52,7 +52,6 @@ export class ChatsController {
     const userId = req['user']?.id as string;
     const chat = await this.chatsService.createChat({
       title: createChatDto.title,
-      icon: createChatDto.icon,
       userId,
     });
 
@@ -69,7 +68,6 @@ export class ChatsController {
   ): Promise<UpdateChatSuccessResponse> {
     const chat = await this.chatsService.updateChat(id, {
       title: updateChatDto.title,
-      icon: updateChatDto.icon,
     });
 
     return {

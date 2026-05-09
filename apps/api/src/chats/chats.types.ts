@@ -6,13 +6,11 @@ export interface ListChatsServiceDto {
 
 export interface CreateChatServiceDto {
   title: string;
-  icon?: string;
   userId: string;
 }
 
 export interface UpdateChatServiceDto {
   title?: string;
-  icon?: string;
 }
 
 export interface CheckChatAccessServiceDto {
