@@ -59,7 +59,7 @@ export class ChatsService {
     const [chats, totalSize] = await this.prismaService.$transaction([
       this.prismaService.$queryRaw<ChatModel[]>(
         Prisma.sql`
-          SELECT id, user_id AS "userId", title, icon, created_at AS "createdAt" FROM chats
+          SELECT id, user_id AS "userId", title, created_at AS "createdAt" FROM chats
           WHERE user_id = ${dto.userId}
           ORDER BY (
             SELECT MAX(created_at) FROM messages WHERE chat_id = chats.id

@@ -15,7 +15,6 @@ export interface ListChatsSuccessResponse extends SuccessListResponse<ChatEntity
 
 export interface CreateChatRequestBody {
   title: string;
-  icon?: string;
 }
 
 export interface CreateChatSuccessResponseData {
@@ -28,7 +27,6 @@ export interface CreateChatSuccessResponse extends BaseSuccessResponse<CreateCha
 
 export interface UpdateChatRequestBody {
   title?: string;
-  icon?: string;
 }
 
 export interface UpdateChatSuccessResponseData {
