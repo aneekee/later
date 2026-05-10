@@ -1,6 +1,8 @@
+import { memo } from 'react';
+import { MessageSquare } from 'lucide-react';
+
 import { formatIsoDate } from '@/shared/utils/date.util';
 import { cn } from '@/shared/lib/utils';
-import { MessageSquare } from 'lucide-react';
 
 interface Props {
   id: string;
@@ -43,3 +45,12 @@ export const ChatItem = ({ id, title, isActive, date, onClick }: Props) => {
     </div>
   );
 };
+
+export const ChatItemMemo = memo(
+  ChatItem,
+  (prevProps, props) =>
+    prevProps.id === props.id &&
+    prevProps.title === props.title &&
+    prevProps.date === props.title &&
+    prevProps.isActive === props.isActive,
+);
