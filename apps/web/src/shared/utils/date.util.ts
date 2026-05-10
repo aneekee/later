@@ -22,6 +22,13 @@ export const isMoreThanOneDayApart = (
   return diffMs > DAY_IN_MS;
 };
 
+export const isOnDifferentDay = (
+  isoStringA: string,
+  isoStringB: string,
+): boolean => {
+  return isoStringA.slice(0, 10) !== isoStringB.slice(0, 10);
+};
+
 export const getReadableDate = (isoString: string): string => {
   const date = new Date(isoString);
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
