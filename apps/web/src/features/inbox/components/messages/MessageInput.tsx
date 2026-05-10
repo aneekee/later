@@ -38,6 +38,7 @@ export const MessageInput = ({ chatId }: Props) => {
           value={message}
           rows={Math.min(3, (message.match(/\n/g) ?? []).length + 1)}
           className="min-h-0"
+          autoFocus
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
