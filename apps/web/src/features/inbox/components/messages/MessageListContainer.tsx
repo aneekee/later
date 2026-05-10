@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 
 import type { TextMessageEntity } from '@later/types';
 
+import { Spinner } from '@/shared/components/ui/spinner';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 import { cn } from '@/shared/lib/utils';
 import {
@@ -25,12 +26,19 @@ interface Props {
 }
 
 export const MessageListContainer = ({ chatId }: Props) => {
-  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage } =
-    useMessagesInfiniteQuery({
-      chatId,
-      page: 1,
-      pageSize: 20,
-    });
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+  } = useMessagesInfiniteQuery({
+    chatId,
+    page: 1,
+    pageSize: 20,
+  });
 
   const [deleteMessage] = useDeleteMessageMutation();
 
@@ -125,6 +133,14 @@ export const MessageListContainer = ({ chatId }: Props) => {
             </div>
           );
         })}
+        <div
+          className={cn(
+            'w-full flex justify-center',
+            !isFetching && 'invisible',
+          )}
+        >
+          <Spinner />
+        </div>
         <div ref={topSentinelRef} />
       </div>
     );
