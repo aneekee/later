@@ -5,10 +5,7 @@ import type { TextMessageEntity } from '@later/types';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 import { cn } from '@/shared/lib/utils';
-import {
-  getReadableDate,
-  isMoreThanOneDayApart,
-} from '@/shared/utils/date.util';
+import { getReadableDate, isOnDifferentDay } from '@/shared/utils/date.util';
 
 import {
   useDeleteMessageMutation,
@@ -107,7 +104,7 @@ export const MessageListContainer = ({ chatId }: Props) => {
           const showSeparator =
             index === array.length - 1 ||
             (nextMessage &&
-              isMoreThanOneDayApart(m.createdAt, nextMessage.createdAt));
+              isOnDifferentDay(m.createdAt, nextMessage.createdAt));
 
           return (
             <div key={m.id} className="w-full flex flex-col gap-2 items-end">
