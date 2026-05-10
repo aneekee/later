@@ -22,6 +22,7 @@ interface Props {
   chatId: string;
 }
 
+// @TODO: fix messages list rerendering
 export const MessageListContainer = ({ chatId }: Props) => {
   const {
     data,

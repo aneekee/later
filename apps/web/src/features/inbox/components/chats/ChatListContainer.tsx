@@ -84,7 +84,7 @@ export const ChatListContainer = () => {
   };
 
   return (
-    <div className="w-3xs h-full border-r overflow-auto text-sm">
+    <div className="w-3xs h-full shrink-0 border-r overflow-auto text-sm">
       <div className="h-full flex flex-col">
         <div className="p-2 flex justify-between">
           <div className="flex gap-2">
