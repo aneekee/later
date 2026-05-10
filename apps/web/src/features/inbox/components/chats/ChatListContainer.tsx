@@ -5,6 +5,7 @@ import { RefreshCw } from 'lucide-react';
 
 import type { ChatEntity } from '@later/types';
 
+import { Spinner } from '@/shared/components/ui/spinner';
 import { Button } from '@/shared/components/ui/button';
 
 import { ChatItem } from './ChatItem';
@@ -17,15 +18,17 @@ import { useChatsQuery } from '../../api/chats.api';
 import { CHATS_DEFAULT_PAGINATION } from '../../const/chats.constants';
 import { setActiveChat } from '../../slices/chats.slice';
 
+// TODO: investigate the chats list rerenders -- it should not rerender the whole list on new message
 export const ChatListContainer = () => {
-  const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const dispatch = useDispatch();
   const activeChat = useSelector(selectActiveChat);
 
   const {
     data: chats,
     isFetching,
+    isLoading,
     isError,
     refetch,
   } = useChatsQuery(CHATS_DEFAULT_PAGINATION);
@@ -52,7 +55,7 @@ export const ChatListContainer = () => {
   };
 
   const renderChatsContent = () => {
-    if (isFetching) {
+    if (isLoading) {
       return <ChatListLoading />;
     }
 
@@ -83,13 +86,20 @@ export const ChatListContainer = () => {
   return (
     <div className="w-3xs h-full border-r overflow-auto text-sm">
       <div className="h-full flex flex-col">
-        <div className="p-2 flex gap-2">
-          {chats?.data?.list && chats.data.list.length < 10 ? (
-            <CreateChatDialog />
-          ) : null}
-          <Button variant="outline" size="icon" onClick={() => void refetch()}>
-            <RefreshCw className="size-4" />
-          </Button>
+        <div className="p-2 flex justify-between">
+          <div className="flex gap-2">
+            {chats?.data?.list && chats.data.list.length < 10 ? (
+              <CreateChatDialog />
+            ) : null}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => void refetch()}
+            >
+              <RefreshCw className="size-4" />
+            </Button>
+          </div>
+          {isFetching ? <Spinner className="self-center" /> : null}
         </div>
         <div className="p-2 flex grow items-start overflow-auto">
           {renderChatsContent()}
