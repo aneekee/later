@@ -17,6 +17,7 @@ import { MessageListError } from './MessageListError';
 import { MessageListLoading } from './MessageListLoading';
 import { TextMessage } from './TextMessage';
 import { WithMessageContextMenu } from './WithMessageContextMenu';
+import { WithMessageItemResolution } from './WithMessageItemResolution';
 import { MessageDateSeparator } from './MessageDateSeparator';
 
 interface Props {
@@ -129,7 +130,6 @@ export const MessageListContainer = ({ chatId }: Props) => {
                 className={cn(
                   'max-w-lg',
                   m.id.startsWith('MOCK-ID') ? 'opacity-50' : '',
-                  m.messageResolution ? 'opacity-10' : '',
                 )}
               >
                 <WithMessageContextMenu
@@ -138,10 +138,21 @@ export const MessageListContainer = ({ chatId }: Props) => {
                   onCopyClick={() => onCopyClick(m.textMessage.content)}
                   onDeleteClick={() => void onDeleteClick(m.id)}
                 >
-                  <TextMessage
-                    textContent={m.textMessage.content}
-                    date={m.createdAt}
-                  />
+                  {m.messageResolution ? (
+                    <WithMessageItemResolution
+                      messageResolution={m.messageResolution}
+                    >
+                      <TextMessage
+                        textContent={m.textMessage.content}
+                        date={m.createdAt}
+                      />
+                    </WithMessageItemResolution>
+                  ) : (
+                    <TextMessage
+                      textContent={m.textMessage.content}
+                      date={m.createdAt}
+                    />
+                  )}
                 </WithMessageContextMenu>
               </div>
             </div>
