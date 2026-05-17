@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { Prisma } from 'generated/prisma/client';
 import { ChatModel } from 'generated/prisma/models';
@@ -36,18 +40,15 @@ export class ChatsService {
   }
 
   async checkAccess(dto: CheckChatAccessServiceDto) {
-    try {
-      const chat = await this.prismaService.chat.findUnique({
-        where: {
-          id: dto.chatId,
-          userId: dto.userId,
-        },
-      });
+    const chat = await this.prismaService.chat.findUnique({
+      where: {
+        id: dto.chatId,
+        userId: dto.userId,
+      },
+    });
 
-      return !!chat;
-    } catch (error) {
-      console.error(error);
-      return false;
+    if (!chat) {
+      throw new ForbiddenException("You don't have access to this chat");
     }
   }
 

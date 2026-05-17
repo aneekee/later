@@ -2,11 +2,20 @@ import { BaseSuccessResponse, SuccessListResponse } from "./shared";
 
 export type MessageType = "TEXT";
 
+export type MessageResolution = {
+  id: string;
+  messageId: string;
+  note: string;
+  createdAt: string;
+};
+
 export type AbstractMessageEntity = {
   id: string;
   type: MessageType;
   chatId: string;
   createdAt: string;
+
+  messageResolution?: MessageResolution;
 };
 
 export type TextMessageEntity = AbstractMessageEntity & {
@@ -47,6 +56,14 @@ export interface UpdateTextMessageSuccessResponseData {
 }
 
 export interface UpdateTextMessageSuccessResponse extends BaseSuccessResponse<UpdateTextMessageSuccessResponseData> {}
+
+// resolve message
+
+export interface ResolveMessageRequestBody {
+  note?: string;
+}
+
+export interface ResolveMessageSuccessResponse extends BaseSuccessResponse<{}> {}
 
 // delete message
 

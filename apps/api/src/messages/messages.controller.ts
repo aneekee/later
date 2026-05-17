@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import {
   CreateTextMessageSuccessResponse,
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
+  ResolveMessageSuccessResponse,
   UpdateTextMessageSuccessResponse,
 } from '@later/types';
 
@@ -22,6 +24,7 @@ import { MessagesService } from './messages.service';
 import {
   CreateTextMessageDto,
   ListMessagesDto,
+  ResolveMessageDto,
   UpdateTextMessageDto,
 } from './messages.dto';
 
@@ -100,6 +103,27 @@ export class MessagesController {
       data: {
         message,
       },
+    };
+  }
+
+  @Put('/:id/resolution')
+  async resolveMessage(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Param('chatId') chatId: string,
+    @Body() dto: ResolveMessageDto,
+  ): Promise<ResolveMessageSuccessResponse> {
+    const userId = req['user']?.id as string;
+
+    await this.messagesService.resolveMessage({
+      messageId: id,
+      userId,
+      chatId,
+      note: dto.note,
+    });
+
+    return {
+      message: '',
     };
   }
 

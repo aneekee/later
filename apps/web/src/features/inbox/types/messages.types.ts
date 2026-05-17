@@ -1,5 +1,6 @@
 import type {
   CreateTextMessageRequestBody,
+  ResolveMessageRequestBody,
   UpdateTextMessageRequestBody,
 } from '@later/types';
 
@@ -18,6 +19,12 @@ export interface UpdateTextMessageParams {
   chatId: string;
   messageId: string;
   body: UpdateTextMessageRequestBody;
+}
+
+export interface ResolveMessageParams {
+  chatId: string;
+  messageId: string;
+  body?: ResolveMessageRequestBody;
 }
 
 export interface DeleteMessageParams {

@@ -10,6 +10,7 @@ import { getReadableDate, isOnDifferentDay } from '@/shared/utils/date.util';
 import {
   useDeleteMessageMutation,
   useMessagesInfiniteQuery,
+  useResolveMessageMutation,
 } from '../../api/messages.api';
 import { MessageListEmpty } from './MessageListEmpty';
 import { MessageListError } from './MessageListError';
@@ -39,6 +40,7 @@ export const MessageListContainer = ({ chatId }: Props) => {
   });
 
   const [deleteMessage] = useDeleteMessageMutation();
+  const [resolveMessage] = useResolveMessageMutation();
 
   const { displayErrorToast } = useDisplayErrorToast();
 
@@ -67,6 +69,17 @@ export const MessageListContainer = ({ chatId }: Props) => {
 
   const onCopyClick = (textContent: string) => {
     void window.navigator.clipboard.writeText(textContent);
+  };
+
+  const onResolveClick = (id: string) => {};
+
+  const onQuickResolveClick = async (id: string) => {
+    try {
+      await resolveMessage({ chatId, messageId: id }).unwrap();
+    } catch (error) {
+      console.error(error);
+      displayErrorToast(error, 'Quick resolve failed');
+    }
   };
 
   const onDeleteClick = async (id: string) => {
@@ -116,9 +129,12 @@ export const MessageListContainer = ({ chatId }: Props) => {
                 className={cn(
                   'max-w-lg',
                   m.id.startsWith('MOCK-ID') ? 'opacity-50' : '',
+                  m.messageResolution ? 'opacity-10' : '',
                 )}
               >
                 <WithMessageContextMenu
+                  onResolveClick={() => onResolveClick(m.id)}
+                  onQuickResolveClick={() => void onQuickResolveClick(m.id)}
                   onCopyClick={() => onCopyClick(m.textMessage.content)}
                   onDeleteClick={() => void onDeleteClick(m.id)}
                 >
