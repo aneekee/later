@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { TextMessageEntity } from '@later/types';
 
@@ -10,13 +10,17 @@ import { getReadableDate, isOnDifferentDay } from '@/shared/utils/date.util';
 import {
   useDeleteMessageMutation,
   useMessagesInfiniteQuery,
+  useResolveMessageMutation,
 } from '../../api/messages.api';
 import { MessageListEmpty } from './MessageListEmpty';
 import { MessageListError } from './MessageListError';
 import { MessageListLoading } from './MessageListLoading';
 import { TextMessage } from './TextMessage';
 import { WithMessageContextMenu } from './WithMessageContextMenu';
+import { WithMessageItemResolution } from './WithMessageItemResolution';
+import { ConditionalWrapper } from '@/shared/components/ConditionalWrapper';
 import { MessageDateSeparator } from './MessageDateSeparator';
+import { ResolveMessageDialog } from './resolve-message/ResolveMessageDialog';
 
 interface Props {
   chatId: string;
@@ -39,6 +43,11 @@ export const MessageListContainer = ({ chatId }: Props) => {
   });
 
   const [deleteMessage] = useDeleteMessageMutation();
+  const [resolveMessage] = useResolveMessageMutation();
+
+  const [resolveDialogMessageId, setResolveDialogMessageId] = useState<
+    string | null
+  >(null);
 
   const { displayErrorToast } = useDisplayErrorToast();
 
@@ -67,6 +76,19 @@ export const MessageListContainer = ({ chatId }: Props) => {
 
   const onCopyClick = (textContent: string) => {
     void window.navigator.clipboard.writeText(textContent);
+  };
+
+  const onResolveClick = (id: string) => {
+    setResolveDialogMessageId(id);
+  };
+
+  const onQuickResolveClick = async (id: string) => {
+    try {
+      await resolveMessage({ chatId, messageId: id }).unwrap();
+    } catch (error) {
+      console.error(error);
+      displayErrorToast(error, 'Quick resolve failed');
+    }
   };
 
   const onDeleteClick = async (id: string) => {
@@ -119,13 +141,27 @@ export const MessageListContainer = ({ chatId }: Props) => {
                 )}
               >
                 <WithMessageContextMenu
+                  onResolveClick={() => onResolveClick(m.id)}
+                  onQuickResolveClick={() => void onQuickResolveClick(m.id)}
                   onCopyClick={() => onCopyClick(m.textMessage.content)}
                   onDeleteClick={() => void onDeleteClick(m.id)}
                 >
-                  <TextMessage
-                    textContent={m.textMessage.content}
-                    date={m.createdAt}
-                  />
+                  <ConditionalWrapper
+                    condition={!!m.messageResolution}
+                    wrapper={(children) => (
+                      <WithMessageItemResolution
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                        messageResolution={m.messageResolution!}
+                      >
+                        {children}
+                      </WithMessageItemResolution>
+                    )}
+                  >
+                    <TextMessage
+                      textContent={m.textMessage.content}
+                      date={m.createdAt}
+                    />
+                  </ConditionalWrapper>
                 </WithMessageContextMenu>
               </div>
             </div>
@@ -147,6 +183,18 @@ export const MessageListContainer = ({ chatId }: Props) => {
   return (
     <div className="w-full flex grow overflow-hidden">
       {renderMessagesContent()}
+      {resolveDialogMessageId ? (
+        <ResolveMessageDialog
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setResolveDialogMessageId(null);
+            }
+          }}
+          chatId={chatId}
+          messageId={resolveDialogMessageId}
+        />
+      ) : null}
     </div>
   );
 };

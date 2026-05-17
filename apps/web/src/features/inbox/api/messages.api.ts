@@ -4,19 +4,20 @@ import type {
   CreateTextMessageSuccessResponse,
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
+  ResolveMessageSuccessResponse,
   UpdateTextMessageSuccessResponse,
 } from '@later/types';
 
 import { baseQueryWithCookies } from '@/shared/api/api';
 
 import { chatsApiEndpoints } from './chats.api';
-
 import { buildOptimisticTextMessage } from '../utils/message.utils';
 
 import type {
   CreateTextMessageParams,
   DeleteMessageParams,
   GetMessagesListParams,
+  ResolveMessageParams,
   UpdateTextMessageParams,
 } from '../types/messages.types';
 
@@ -134,6 +135,20 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
       invalidatesTags: ['Messages'],
     }),
 
+    resolveMessage: builder.mutation<
+      ResolveMessageSuccessResponse,
+      ResolveMessageParams
+    >({
+      query: (params) => {
+        return {
+          url: `v1/chats/${params.chatId}/messages/${params.messageId}/resolution`,
+          method: 'PUT',
+          body: params.body,
+        };
+      },
+      invalidatesTags: ['Messages'],
+    }),
+
     updateMessage: builder.mutation<
       UpdateTextMessageSuccessResponse,
       UpdateTextMessageParams
@@ -213,4 +228,5 @@ export const {
   useMessagesInfiniteQuery,
   useCreateTextMessageMutation,
   useDeleteMessageMutation,
+  useResolveMessageMutation,
 } = messagesApiEndpoints;

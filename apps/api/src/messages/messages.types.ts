@@ -1,3 +1,5 @@
+import { MessageType } from '@later/types';
+
 export interface ListMessagesServiceDto {
   chatId: string;
   userId: string;
@@ -18,17 +20,36 @@ export interface UpdateTextMessageServiceDto {
   userId: string;
 }
 
+export interface ResolveMessageServiceDto {
+  messageId: string;
+  chatId: string;
+  userId: string;
+  note?: string;
+}
+
 export interface DeleteMessageServiceDto {
   messageId: string;
   chatId: string;
   userId: string;
 }
 
-export type MessageWithTextMessage = {
+// @TODO: use the Prisma types instead
+export type DbMessageResolution = {
   id: string;
+  messageId: string;
+  note: string;
   createdAt: Date;
-  type: 'TEXT';
+};
+
+export type DbAbstractMessageItem = {
+  id: string;
+  type: MessageType;
   chatId: string;
+  createdAt: Date;
+  messageResolution?: DbMessageResolution;
+};
+
+export type DbTextMessageItem = DbAbstractMessageItem & {
   textMessage: {
     id: string;
     messageId: string;
@@ -36,4 +57,6 @@ export type MessageWithTextMessage = {
   };
 };
 
-export type MessagesList = MessageWithTextMessage[];
+export type DbMessageItem = DbTextMessageItem;
+
+export type DbMessagesList = DbMessageItem[];

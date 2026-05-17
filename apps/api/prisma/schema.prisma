@@ -44,8 +44,9 @@ model Message {
   chatId    String      @map("chat_id")
   createdAt DateTime    @default(now()) @map("created_at")
 
-  chat        Chat         @relation(fields: [chatId], references: [id])
-  textMessage TextMessage?
+  chat              Chat               @relation(fields: [chatId], references: [id])
+  textMessage       TextMessage?
+  messageResolution MessageResolution?
 
   @@map("messages")
 }
@@ -58,4 +59,15 @@ model TextMessage {
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@map("text_messages")
+}
+
+model MessageResolution {
+  id        String   @id @default(uuid())
+  messageId String   @unique @map("message_id")
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("message_resolutions")
 }
