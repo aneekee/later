@@ -29,16 +29,17 @@ export const WithMessageItemResolution = ({
         {children}
         <div className="px-2 py-1 w-full flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
           <CheckCheckIcon size="14px" />
-          <span>Resolved</span>
-          {messageResolution.note ? (
-            <button
-              type="button"
-              className="ml-1 underline underline-offset-2 hover:text-foreground transition-colors"
-              onClick={() => setOpen(true)}
-            >
-              View Details
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className={
+              messageResolution.note
+                ? 'underline underline-offset-2 hover:text-foreground transition-colors'
+                : ''
+            }
+            onClick={messageResolution.note ? () => setOpen(true) : undefined}
+          >
+            Resolved
+          </button>
         </div>
       </div>
 

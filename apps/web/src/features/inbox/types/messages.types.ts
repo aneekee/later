@@ -1,8 +1,16 @@
+import type z from 'zod';
+
 import type {
   CreateTextMessageRequestBody,
   ResolveMessageRequestBody,
   UpdateTextMessageRequestBody,
 } from '@later/types';
+
+import type { useResolveMessageFormSchema } from '../hooks/useResolveMessageFormSchema';
+
+export type ResolveMessageFormValues = z.infer<
+  ReturnType<typeof useResolveMessageFormSchema>['formSchema']
+>;
 
 import type { BasePaginationParams } from '@/shared/types/api';
 
