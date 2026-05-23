@@ -6,11 +6,13 @@ import { Spinner } from '@/shared/components/ui/spinner';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 import { cn } from '@/shared/lib/utils';
 import { getReadableDate, isOnDifferentDay } from '@/shared/utils/date.util';
+import { ConditionalWrapper } from '@/shared/components/ConditionalWrapper';
 
 import {
   useDeleteMessageMutation,
   useMessagesInfiniteQuery,
   useResolveMessageMutation,
+  useUnresolveMessageMutation,
 } from '../../api/messages.api';
 import { MessageListEmpty } from './MessageListEmpty';
 import { MessageListError } from './MessageListError';
@@ -18,7 +20,6 @@ import { MessageListLoading } from './MessageListLoading';
 import { TextMessage } from './TextMessage';
 import { WithMessageContextMenu } from './WithMessageContextMenu';
 import { WithMessageItemResolution } from './WithMessageItemResolution';
-import { ConditionalWrapper } from '@/shared/components/ConditionalWrapper';
 import { MessageDateSeparator } from './MessageDateSeparator';
 import { ResolveMessageDialog } from './resolve-message/ResolveMessageDialog';
 
@@ -44,6 +45,7 @@ export const MessageListContainer = ({ chatId }: Props) => {
 
   const [deleteMessage] = useDeleteMessageMutation();
   const [resolveMessage] = useResolveMessageMutation();
+  const [unresolveMutation] = useUnresolveMessageMutation();
 
   const [resolveDialogMessageId, setResolveDialogMessageId] = useState<
     string | null
@@ -88,6 +90,15 @@ export const MessageListContainer = ({ chatId }: Props) => {
     } catch (error) {
       console.error(error);
       displayErrorToast(error, 'Quick resolve failed');
+    }
+  };
+
+  const onUnresolveClick = async (messageId: string, resolutionId: string) => {
+    try {
+      await unresolveMutation({ chatId, messageId, resolutionId }).unwrap();
+    } catch (error) {
+      console.error(error);
+      displayErrorToast(error, 'Unresolve failed');
     }
   };
 
@@ -141,8 +152,23 @@ export const MessageListContainer = ({ chatId }: Props) => {
                 )}
               >
                 <WithMessageContextMenu
-                  onResolveClick={() => onResolveClick(m.id)}
-                  onQuickResolveClick={() => void onQuickResolveClick(m.id)}
+                  onResolveClick={
+                    !m.messageResolution
+                      ? () => onResolveClick(m.id)
+                      : undefined
+                  }
+                  onQuickResolveClick={
+                    !m.messageResolution
+                      ? () => void onQuickResolveClick(m.id)
+                      : undefined
+                  }
+                  onUnresolveClick={
+                    m.messageResolution
+                      ? () =>
+                          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                          void onUnresolveClick(m.id, m.messageResolution!.id)
+                      : undefined
+                  }
                   onCopyClick={() => onCopyClick(m.textMessage.content)}
                   onDeleteClick={() => void onDeleteClick(m.id)}
                 >

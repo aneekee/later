@@ -65,6 +65,10 @@ export interface ResolveMessageRequestBody {
 
 export interface ResolveMessageSuccessResponse extends BaseSuccessResponse<{}> {}
 
+// unresolve message
+
+export interface UnresolveMessageSuccessResponse extends BaseSuccessResponse<{}> {}
+
 // delete message
 
 export interface DeleteMessageSuccessResponse extends BaseSuccessResponse {}

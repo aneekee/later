@@ -35,6 +35,12 @@ export interface ResolveMessageParams {
   body?: ResolveMessageRequestBody;
 }
 
+export interface UnresolveMessageParams {
+  chatId: string;
+  messageId: string;
+  resolutionId: string;
+}
+
 export interface DeleteMessageParams {
   chatId: string;
   messageId: string;

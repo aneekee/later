@@ -1,5 +1,10 @@
 import type { ReactNode } from 'react';
-import { CircleCheckIcon, CopyIcon, TrashIcon } from 'lucide-react';
+import {
+  CircleCheckIcon,
+  CircleXIcon,
+  CopyIcon,
+  TrashIcon,
+} from 'lucide-react';
 
 import {
   ContextMenu,
@@ -12,6 +17,7 @@ import {
 interface Props {
   onResolveClick?: () => void;
   onQuickResolveClick?: () => void;
+  onUnresolveClick?: () => void;
   onCopyClick: () => void;
   onDeleteClick: () => void;
   children: ReactNode;
@@ -20,6 +26,7 @@ interface Props {
 export const WithMessageContextMenu = ({
   onResolveClick,
   onQuickResolveClick,
+  onUnresolveClick,
   onCopyClick,
   onDeleteClick,
   children,
@@ -49,6 +56,14 @@ export const WithMessageContextMenu = ({
             <ContextMenuItem onClick={onQuickResolveClick}>
               <CircleCheckIcon />
               Quick Resolve
+            </ContextMenuItem>
+          </ContextMenuGroup>
+        ) : null}
+        {onUnresolveClick ? (
+          <ContextMenuGroup>
+            <ContextMenuItem onClick={onUnresolveClick}>
+              <CircleXIcon />
+              Unresolve
             </ContextMenuItem>
           </ContextMenuGroup>
         ) : null}
