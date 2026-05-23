@@ -18,7 +18,7 @@ import {
   UpdateTextMessageServiceDto,
   UnresolveMessageServiceDto,
 } from './messages.types';
-import { mapMessageModelToEntity } from './messages.utils';
+import { getResolutionFilter, mapMessageModelToEntity } from './messages.utils';
 
 /**
  *
@@ -44,10 +44,14 @@ export class MessagesService {
 
     const offset = (dto.page - 1) * dto.pageSize;
 
+    const resolutionFilter = getResolutionFilter(dto.resolution);
+
+    // TODO: do I really need to do two queries here?
     const [messages, totalSize] = await this.prismaService.$transaction([
       this.prismaService.message.findMany({
         where: {
           chatId: dto.chatId,
+          ...resolutionFilter,
         },
         include: { textMessage: true, messageResolution: true },
         orderBy: { createdAt: 'desc' },
@@ -57,6 +61,7 @@ export class MessagesService {
       this.prismaService.message.count({
         where: {
           chatId: dto.chatId,
+          ...resolutionFilter,
         },
       }),
     ]);

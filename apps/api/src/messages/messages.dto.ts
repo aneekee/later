@@ -5,7 +5,14 @@ import {
 } from '@later/types';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 // TODO: create a pagination dto
 export class ListMessagesDto {
@@ -26,6 +33,17 @@ export class ListMessagesDto {
   @IsInt()
   @Min(1)
   pageSize: number = 20;
+
+  // TODO: connect it to the shared MessageResolutionFilter
+  @ApiProperty({
+    example: 'resolved',
+    description: 'Filter messages by resolution state',
+    enum: ['both', 'resolved', 'unresolved'],
+    required: false,
+  })
+  @IsEnum(['both', 'resolved', 'unresolved'])
+  @IsOptional()
+  resolution: 'both' | 'resolved' | 'unresolved' = 'unresolved';
 }
 
 export class CreateTextMessageDto implements CreateTextMessageRequestBody {

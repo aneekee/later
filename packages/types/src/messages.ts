@@ -2,6 +2,8 @@ import { BaseSuccessResponse, SuccessListResponse } from "./shared";
 
 export type MessageType = "TEXT";
 
+export type MessageResolutionFilter = "both" | "resolved" | "unresolved";
+
 export type MessageResolution = {
   id: string;
   messageId: string;

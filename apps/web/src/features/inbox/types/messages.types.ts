@@ -2,6 +2,7 @@ import type z from 'zod';
 
 import type {
   CreateTextMessageRequestBody,
+  MessageResolutionFilter,
   ResolveMessageRequestBody,
   UpdateTextMessageRequestBody,
 } from '@later/types';
@@ -16,6 +17,7 @@ import type { BasePaginationParams } from '@/shared/types/api';
 
 export interface GetMessagesListParams extends BasePaginationParams {
   chatId: string;
+  resolution?: MessageResolutionFilter;
 }
 
 export interface CreateTextMessageParams {
