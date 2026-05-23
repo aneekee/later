@@ -1,10 +1,11 @@
-import { MessageType } from '@later/types';
+import { MessageResolutionFilter, MessageType } from '@later/types';
 
 export interface ListMessagesServiceDto {
   chatId: string;
   userId: string;
   page: number;
   pageSize: number;
+  resolution: MessageResolutionFilter;
 }
 
 export interface CreateTextMessageServiceDto {

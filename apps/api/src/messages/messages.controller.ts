@@ -46,6 +46,7 @@ export class MessagesController {
       await this.messagesService.listMessages({
         page: listMessagesDto.page,
         pageSize: listMessagesDto.pageSize,
+        resolution: listMessagesDto.resolution,
         chatId,
         userId,
       });
