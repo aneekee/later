@@ -71,6 +71,10 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
           pageSize: queryArg.pageSize.toString(),
         });
 
+        if (queryArg.resolution) {
+          queryParams.set('resolution', queryArg.resolution);
+        }
+
         return {
           method: 'GET',
           url: `v1/chats/${queryArg.chatId}/messages?${queryParams}`,

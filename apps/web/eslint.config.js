@@ -64,4 +64,10 @@ export default defineConfig([
       'react-hooks/set-state-in-effect': 'warn',
     },
   },
+  {
+    files: ['src/shared/components/ui/toggle-group.tsx'],
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+    },
+  },
 ]);

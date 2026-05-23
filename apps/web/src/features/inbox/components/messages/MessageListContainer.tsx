@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import type { TextMessageEntity } from '@later/types';
+import type { MessageResolutionFilter, TextMessageEntity } from '@later/types';
 
 import { Spinner } from '@/shared/components/ui/spinner';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
@@ -25,10 +25,11 @@ import { ResolveMessageDialog } from './resolve-message/ResolveMessageDialog';
 
 interface Props {
   chatId: string;
+  resolution?: MessageResolutionFilter;
 }
 
 // @TODO: fix messages list rerendering
-export const MessageListContainer = ({ chatId }: Props) => {
+export const MessageListContainer = ({ chatId, resolution }: Props) => {
   const {
     data,
     isLoading,
@@ -41,6 +42,7 @@ export const MessageListContainer = ({ chatId }: Props) => {
     chatId,
     page: 1,
     pageSize: 20,
+    resolution,
   });
 
   const [deleteMessage] = useDeleteMessageMutation();
