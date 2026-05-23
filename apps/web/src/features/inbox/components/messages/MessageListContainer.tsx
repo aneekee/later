@@ -12,6 +12,7 @@ import {
   useDeleteMessageMutation,
   useMessagesInfiniteQuery,
   useResolveMessageMutation,
+  useUnresolveMessageMutation,
 } from '../../api/messages.api';
 import { MessageListEmpty } from './MessageListEmpty';
 import { MessageListError } from './MessageListError';
@@ -44,6 +45,7 @@ export const MessageListContainer = ({ chatId }: Props) => {
 
   const [deleteMessage] = useDeleteMessageMutation();
   const [resolveMessage] = useResolveMessageMutation();
+  const [unresolveMutation] = useUnresolveMessageMutation();
 
   const [resolveDialogMessageId, setResolveDialogMessageId] = useState<
     string | null
@@ -88,6 +90,15 @@ export const MessageListContainer = ({ chatId }: Props) => {
     } catch (error) {
       console.error(error);
       displayErrorToast(error, 'Quick resolve failed');
+    }
+  };
+
+  const onUnresolveClick = async (messageId: string, resolutionId: string) => {
+    try {
+      await unresolveMutation({ chatId, messageId, resolutionId }).unwrap();
+    } catch (error) {
+      console.error(error);
+      displayErrorToast(error, 'Unresolve failed');
     }
   };
 
@@ -149,6 +160,13 @@ export const MessageListContainer = ({ chatId }: Props) => {
                   onQuickResolveClick={
                     !m.messageResolution
                       ? () => void onQuickResolveClick(m.id)
+                      : undefined
+                  }
+                  onUnresolveClick={
+                    m.messageResolution
+                      ? () =>
+                          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                          void onUnresolveClick(m.id, m.messageResolution!.id)
                       : undefined
                   }
                   onCopyClick={() => onCopyClick(m.textMessage.content)}

@@ -17,6 +17,7 @@ import {
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
   ResolveMessageSuccessResponse,
+  UnresolveMessageSuccessResponse,
   UpdateTextMessageSuccessResponse,
 } from '@later/types';
 
@@ -82,17 +83,17 @@ export class MessagesController {
     };
   }
 
-  @Patch('/text/:id')
+  @Patch('/text/:messageId')
   async updateTextMessage(
     @Req() req: Request,
-    @Param('id') id: string,
+    @Param('messageId') messageId: string,
     @Param('chatId') chatId: string,
     @Body() dto: UpdateTextMessageDto,
   ): Promise<UpdateTextMessageSuccessResponse> {
     const userId = req['user']?.id as string;
 
     const message = await this.messagesService.updateTextMessage({
-      messageId: id,
+      messageId,
       userId,
       chatId,
       content: dto.content,
@@ -106,37 +107,57 @@ export class MessagesController {
     };
   }
 
-  @Put('/:id/resolution')
+  @Put('/:messageId/resolution')
   async resolveMessage(
     @Req() req: Request,
-    @Param('id') id: string,
+    @Param('messageId') messageId: string,
     @Param('chatId') chatId: string,
     @Body() dto: ResolveMessageDto,
   ): Promise<ResolveMessageSuccessResponse> {
     const userId = req['user']?.id as string;
 
     await this.messagesService.resolveMessage({
-      messageId: id,
+      messageId,
       userId,
       chatId,
       note: dto.note,
     });
 
     return {
-      message: '',
+      message: 'Message resolve successful',
+    };
+  }
+  @Delete('/:messageId/resolution/:resolutionId')
+  async unresolveMessage(
+    @Req() req: Request,
+    @Param('resolutionId') resolutionId: string,
+    @Param('messageId') messageId: string,
+    @Param('chatId') chatId: string,
+  ): Promise<UnresolveMessageSuccessResponse> {
+    const userId = req['user']?.id as string;
+
+    await this.messagesService.unresolveMessage({
+      messageId,
+      userId,
+      chatId,
+      resolutionId,
+    });
+
+    return {
+      message: 'Messaage unresolve successful',
     };
   }
 
-  @Delete(':id')
+  @Delete(':messageId')
   async deleteMessage(
     @Req() req: Request,
-    @Param('id') id: string,
+    @Param('messageId') messageId: string,
     @Param('chatId') chatId: string,
   ): Promise<DeleteMessageSuccessResponse> {
     const userId = req['user']?.id as string;
 
     await this.messagesService.deleteMessage({
-      messageId: id,
+      messageId,
       chatId,
       userId,
     });

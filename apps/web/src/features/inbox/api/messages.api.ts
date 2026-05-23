@@ -5,6 +5,7 @@ import type {
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
   ResolveMessageSuccessResponse,
+  UnresolveMessageSuccessResponse,
   UpdateTextMessageSuccessResponse,
 } from '@later/types';
 
@@ -18,6 +19,7 @@ import type {
   DeleteMessageParams,
   GetMessagesListParams,
   ResolveMessageParams,
+  UnresolveMessageParams,
   UpdateTextMessageParams,
 } from '../types/messages.types';
 
@@ -149,6 +151,19 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
       invalidatesTags: ['Messages'],
     }),
 
+    unresolveMessage: builder.mutation<
+      UnresolveMessageSuccessResponse,
+      UnresolveMessageParams
+    >({
+      query: (params) => {
+        return {
+          url: `v1/chats/${params.chatId}/messages/${params.messageId}/resolution/${params.resolutionId}`,
+          method: 'DELETE',
+        };
+      },
+      invalidatesTags: ['Messages'],
+    }),
+
     updateMessage: builder.mutation<
       UpdateTextMessageSuccessResponse,
       UpdateTextMessageParams
@@ -229,4 +244,5 @@ export const {
   useCreateTextMessageMutation,
   useDeleteMessageMutation,
   useResolveMessageMutation,
+  useUnresolveMessageMutation,
 } = messagesApiEndpoints;

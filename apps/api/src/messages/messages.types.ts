@@ -27,6 +27,13 @@ export interface ResolveMessageServiceDto {
   note?: string;
 }
 
+export interface UnresolveMessageServiceDto {
+  messageId: string;
+  chatId: string;
+  userId: string;
+  resolutionId: string;
+}
+
 export interface DeleteMessageServiceDto {
   messageId: string;
   chatId: string;

@@ -16,6 +16,7 @@ import {
   DbMessageItem,
   ResolveMessageServiceDto,
   UpdateTextMessageServiceDto,
+  UnresolveMessageServiceDto,
 } from './messages.types';
 import { mapMessageModelToEntity } from './messages.utils';
 
@@ -154,6 +155,32 @@ export class MessagesService {
       data: {
         messageId: dto.messageId,
         ...(dto.note ? { note: dto.note } : {}),
+      },
+    });
+  }
+
+  async unresolveMessage(dto: UnresolveMessageServiceDto) {
+    await this.chatsService.checkAccess({
+      userId: dto.userId,
+      chatId: dto.chatId,
+    });
+
+    // TODO: prob I can leave it to the db unique constraint
+    // Also, consider deduplication
+    const alreadyResolved =
+      await this.prismaService.messageResolution.findFirst({
+        where: {
+          messageId: dto.messageId,
+        },
+      });
+    if (!alreadyResolved) {
+      throw new ConflictException('This message is not resolved yet');
+    }
+
+    await this.prismaService.messageResolution.delete({
+      where: {
+        id: dto.resolutionId,
+        messageId: dto.messageId,
       },
     });
   }
