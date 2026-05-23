@@ -6,6 +6,7 @@ import { Spinner } from '@/shared/components/ui/spinner';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 import { cn } from '@/shared/lib/utils';
 import { getReadableDate, isOnDifferentDay } from '@/shared/utils/date.util';
+import { ConditionalWrapper } from '@/shared/components/ConditionalWrapper';
 
 import {
   useDeleteMessageMutation,
@@ -18,7 +19,6 @@ import { MessageListLoading } from './MessageListLoading';
 import { TextMessage } from './TextMessage';
 import { WithMessageContextMenu } from './WithMessageContextMenu';
 import { WithMessageItemResolution } from './WithMessageItemResolution';
-import { ConditionalWrapper } from '@/shared/components/ConditionalWrapper';
 import { MessageDateSeparator } from './MessageDateSeparator';
 import { ResolveMessageDialog } from './resolve-message/ResolveMessageDialog';
 
@@ -141,8 +141,16 @@ export const MessageListContainer = ({ chatId }: Props) => {
                 )}
               >
                 <WithMessageContextMenu
-                  onResolveClick={() => onResolveClick(m.id)}
-                  onQuickResolveClick={() => void onQuickResolveClick(m.id)}
+                  onResolveClick={
+                    !m.messageResolution
+                      ? () => onResolveClick(m.id)
+                      : undefined
+                  }
+                  onQuickResolveClick={
+                    !m.messageResolution
+                      ? () => void onQuickResolveClick(m.id)
+                      : undefined
+                  }
                   onCopyClick={() => onCopyClick(m.textMessage.content)}
                   onDeleteClick={() => void onDeleteClick(m.id)}
                 >
