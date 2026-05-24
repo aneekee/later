@@ -1,5 +1,11 @@
 import { MessageResolutionFilter, MessageType } from '@later/types';
 
+export interface ListResolvedMessagesServiceDto {
+  userId: string;
+  page: number;
+  pageSize: number;
+}
+
 export interface ListMessagesServiceDto {
   chatId: string;
   userId: string;
@@ -68,3 +74,12 @@ export type DbTextMessageItem = DbAbstractMessageItem & {
 export type DbMessageItem = DbTextMessageItem;
 
 export type DbMessagesList = DbMessageItem[];
+
+export type DbResolvedMessageItem = DbMessageItem & {
+  chat: {
+    id: string;
+    title: string;
+  };
+};
+
+export type DbResolvedMessagesList = DbResolvedMessageItem[];

@@ -31,9 +31,17 @@ export type TextMessageEntity = AbstractMessageEntity & {
 
 export type MessageEntity = TextMessageEntity;
 
+export type ResolvedMessageEntity = MessageEntity & {
+  chat: { id: string; title: string };
+};
+
 // list messages
 
 export interface ListMessagesSuccessResponse extends SuccessListResponse<MessageEntity> {}
+
+// list resolved messages
+
+export interface ListResolvedMessagesSuccessResponse extends SuccessListResponse<ResolvedMessageEntity> {}
 
 // create message
 

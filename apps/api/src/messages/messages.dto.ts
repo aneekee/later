@@ -15,6 +15,26 @@ import {
 } from 'class-validator';
 
 // TODO: create a pagination dto
+export class ListResolvedMessagesDto {
+  @ApiProperty({
+    example: 1,
+    description: 'Page number (1-based)',
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @ApiProperty({
+    example: 20,
+    description: 'Number of items per page',
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  pageSize: number = 20;
+}
+
 export class ListMessagesDto {
   @ApiProperty({
     example: 1,

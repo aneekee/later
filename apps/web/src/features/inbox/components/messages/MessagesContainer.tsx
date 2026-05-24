@@ -9,6 +9,7 @@ import { MessagesHeader } from './MessagesHeader';
 import { MessageInput } from './MessageInput';
 import { MessageListContainer } from './MessageListContainer';
 import { ChatSearchPanel } from './ChatSearchPanel';
+import { RESOLVED_NOTES_CHAT } from '../../const/chats.constants';
 
 export const MessagesContainer = () => {
   const activeChat = useSelector(selectActiveChat);
@@ -19,6 +20,33 @@ export const MessagesContainer = () => {
 
   if (!activeChat) {
     return <MessagesNoActiveChat />;
+  }
+
+  if (activeChat.id === RESOLVED_NOTES_CHAT.id) {
+    return (
+      <div className="h-full flex flex-col">
+        {/* TODO: Use different header */}
+        <MessagesHeader
+          title={activeChat.title}
+          isSearchOpen={isSearchOpen}
+          onSearchToggle={() => setIsSearchOpen((prev) => !prev)}
+        />
+        {isSearchOpen ? (
+          <ChatSearchPanel
+            resolution={resolution}
+            onResolutionChange={setResolution}
+          />
+        ) : null}
+        <div className="h-1 flex grow">
+          {/* TODO: Use different container */}
+          <MessageListContainer
+            key={activeChat.id}
+            chatId={activeChat.id}
+            resolution={resolution}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
