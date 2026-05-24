@@ -3,7 +3,11 @@ import { HydratedDocument } from 'mongoose';
 
 export type UserActionDocument = HydratedDocument<UserAction>;
 
-export type UserActionType = 'CREATE_MESSAGE' | 'CREATE_CHAT';
+export type UserActionType =
+  | 'CREATE_MESSAGE'
+  | 'CREATE_CHAT'
+  | 'RESOLVE_MESSAGE'
+  | 'UNRESOLVE_MESSAGE';
 
 @Schema({ versionKey: false, collection: 'user_actions' })
 export class UserAction {

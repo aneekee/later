@@ -8,6 +8,7 @@ import { Prisma } from 'generated/prisma/client';
 import { ChatModel } from 'generated/prisma/models';
 
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserActionsService } from 'src/user-actions/user-actions.service';
 
 import {
   CheckChatAccessServiceDto,
@@ -16,7 +17,6 @@ import {
   UpdateChatServiceDto,
 } from './chats.types';
 import { mapChatModelToEntity } from './chats.utils';
-import { UserActionsService } from 'src/user-actions/user-actions.service';
 
 @Injectable()
 export class ChatsService {
@@ -123,6 +123,7 @@ export class ChatsService {
       },
     });
 
+    // TODO: when deleting all messages in chat, also delete all the create message actions
     await this.userActionsService.deleteCreateChatAction(id);
   }
 }

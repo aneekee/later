@@ -194,10 +194,20 @@ export class MessagesService {
       throw new ConflictException('This message is already resolved');
     }
 
-    await this.prismaService.messageResolution.create({
+    const resolution = await this.prismaService.messageResolution.create({
       data: {
         messageId: dto.messageId,
         ...(dto.note ? { note: dto.note } : {}),
+      },
+    });
+
+    await this.userActionsService.record({
+      type: 'RESOLVE_MESSAGE',
+      userId: dto.userId,
+      params: {
+        messageId: dto.messageId,
+        resolutionId: resolution.id,
+        resolvedAt: resolution.createdAt,
       },
     });
   }
@@ -226,6 +236,15 @@ export class MessagesService {
         messageId: dto.messageId,
       },
     });
+
+    await this.userActionsService.record({
+      type: 'UNRESOLVE_MESSAGE',
+      userId: dto.userId,
+      params: {
+        messageId: dto.messageId,
+        unresolvedAt: new Date(),
+      },
+    });
   }
 
   async deleteMessage(dto: DeleteMessageServiceDto) {
@@ -239,6 +258,9 @@ export class MessagesService {
       where: { id: dto.messageId },
     });
 
+    // TODO: make the user actions stuff async
     await this.userActionsService.deleteCreateMessageAction(dto.messageId);
+    await this.userActionsService.deleteResolveMessageAction(dto.messageId);
+    await this.userActionsService.deleteUnresolveMessageAction(dto.messageId);
   }
 }
