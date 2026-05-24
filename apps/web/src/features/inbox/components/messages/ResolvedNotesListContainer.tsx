@@ -12,7 +12,7 @@ import {
   useResolvedMessagesInfiniteQuery,
   useUnresolveResolvedMessageMutation,
 } from '../../api/resolvedMessages.api';
-import { MessageListEmpty } from './MessageListEmpty';
+import { ResolvedMessageListEmpty } from './ResolvedMessageListEmpty';
 import { MessageListError } from './MessageListError';
 import { MessageListLoading } from './MessageListLoading';
 import { TextMessage } from './TextMessage';
@@ -103,7 +103,7 @@ export const ResolvedNotesListContainer = ({ chatId }: Props) => {
       .reduce<ResolvedMessageEntity[]>((acc, item) => acc.concat(item), []);
 
     if (!messagesList.length) {
-      return <MessageListEmpty />;
+      return <ResolvedMessageListEmpty />;
     }
 
     return (
