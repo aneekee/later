@@ -9,12 +9,18 @@ import { MessagesHeader } from './MessagesHeader';
 import { MessageInput } from './MessageInput';
 import { MessageListContainer } from './MessageListContainer';
 import { ChatSearchPanel } from './ChatSearchPanel';
+import { ResolvedNotesHeader } from './ResolvedNotesHeader';
+import { ResolvedNotesListContainer } from './ResolvedNotesListContainer';
+import { ResolvedChatSearchPanel } from './ResolvedChatSearchPanel';
 import { RESOLVED_NOTES_CHAT } from '../../const/chats.constants';
 
 export const MessagesContainer = () => {
   const activeChat = useSelector(selectActiveChat);
 
+  // TODO: I need to split it into two separate components
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isResolvedSearchOpen, setIsResolvedSearchOpen] = useState(false);
+
   const [resolution, setResolution] =
     useState<MessageResolutionFilter>('unresolved');
 
@@ -25,25 +31,13 @@ export const MessagesContainer = () => {
   if (activeChat.id === RESOLVED_NOTES_CHAT.id) {
     return (
       <div className="h-full flex flex-col">
-        {/* TODO: Use different header */}
-        <MessagesHeader
-          title={activeChat.title}
-          isSearchOpen={isSearchOpen}
-          onSearchToggle={() => setIsSearchOpen((prev) => !prev)}
+        <ResolvedNotesHeader
+          isSearchOpen={isResolvedSearchOpen}
+          onSearchToggle={() => setIsResolvedSearchOpen((prev) => !prev)}
         />
-        {isSearchOpen ? (
-          <ChatSearchPanel
-            resolution={resolution}
-            onResolutionChange={setResolution}
-          />
-        ) : null}
+        {isResolvedSearchOpen ? <ResolvedChatSearchPanel /> : null}
         <div className="h-1 flex grow">
-          {/* TODO: Use different container */}
-          <MessageListContainer
-            key={activeChat.id}
-            chatId={activeChat.id}
-            resolution={resolution}
-          />
+          <ResolvedNotesListContainer chatId={activeChat.id} />
         </div>
       </div>
     );

@@ -90,7 +90,7 @@ export class MessagesService {
           messageResolution: { isNot: null },
         },
         include: { textMessage: true, messageResolution: true, chat: true },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { messageResolution: { createdAt: 'desc' } },
         take: dto.pageSize,
         skip: offset,
       }),

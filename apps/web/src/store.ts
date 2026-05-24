@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { authApi } from './features/auth/api/auth.api';
 import { chatsApi } from './features/inbox/api/chats.api';
 import { messagesApi } from './features/inbox/api/messages.api';
+import { resolvedMessagesApi } from './features/inbox/api/resolvedMessages.api';
 import { chatsSlice } from './features/inbox/slices/chats.slice';
 
 export const store = configureStore({
@@ -11,6 +12,7 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [chatsApi.reducerPath]: chatsApi.reducer,
     [messagesApi.reducerPath]: messagesApi.reducer,
+    [resolvedMessagesApi.reducerPath]: resolvedMessagesApi.reducer,
 
     // slices
     [chatsSlice.name]: chatsSlice.reducer,
@@ -19,7 +21,8 @@ export const store = configureStore({
     getDefaultMiddleware()
       .concat(authApi.middleware)
       .concat(chatsApi.middleware)
-      .concat(messagesApi.middleware),
+      .concat(messagesApi.middleware)
+      .concat(resolvedMessagesApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
