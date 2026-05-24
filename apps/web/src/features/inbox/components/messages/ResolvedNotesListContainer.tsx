@@ -1,35 +1,30 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
-import type { MessageResolutionFilter, TextMessageEntity } from '@later/types';
+import type { ResolvedMessageEntity } from '@later/types';
 
 import { Spinner } from '@/shared/components/ui/spinner';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 import { cn } from '@/shared/lib/utils';
 import { getReadableDate, isOnDifferentDay } from '@/shared/utils/date.util';
-import { ConditionalWrapper } from '@/shared/components/ConditionalWrapper';
 
 import {
-  useDeleteMessageMutation,
-  useMessagesInfiniteQuery,
-  useResolveMessageMutation,
-  useUnresolveMessageMutation,
-} from '../../api/messages.api';
+  useDeleteResolvedMessageMutation,
+  useResolvedMessagesInfiniteQuery,
+  useUnresolveResolvedMessageMutation,
+} from '../../api/resolvedMessages.api';
 import { MessageListEmpty } from './MessageListEmpty';
 import { MessageListError } from './MessageListError';
 import { MessageListLoading } from './MessageListLoading';
 import { TextMessage } from './TextMessage';
 import { WithMessageContextMenu } from './WithMessageContextMenu';
-import { WithMessageItemResolution } from './WithMessageItemResolution';
 import { MessageDateSeparator } from './MessageDateSeparator';
-import { ResolveMessageDialog } from './resolve-message/ResolveMessageDialog';
+import { WithMessageItemResolution } from './WithMessageItemResolution';
 
 interface Props {
   chatId: string;
-  resolution?: MessageResolutionFilter;
 }
 
-// @TODO: fix messages list rerendering
-export const MessageListContainer = ({ chatId, resolution }: Props) => {
+export const ResolvedNotesListContainer = ({ chatId }: Props) => {
   const {
     data,
     isLoading,
@@ -38,20 +33,10 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
     refetch,
     fetchNextPage,
     hasNextPage,
-  } = useMessagesInfiniteQuery({
-    chatId,
-    page: 1,
-    pageSize: 20,
-    resolution,
-  });
+  } = useResolvedMessagesInfiniteQuery({ chatId, page: 1, pageSize: 20 });
 
-  const [deleteMessage] = useDeleteMessageMutation();
-  const [resolveMessage] = useResolveMessageMutation();
-  const [unresolveMutation] = useUnresolveMessageMutation();
-
-  const [resolveDialogMessageId, setResolveDialogMessageId] = useState<
-    string | null
-  >(null);
+  const [deleteMessage] = useDeleteResolvedMessageMutation();
+  const [unresolveMutation] = useUnresolveResolvedMessageMutation();
 
   const { displayErrorToast } = useDisplayErrorToast();
 
@@ -82,20 +67,11 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
     void window.navigator.clipboard.writeText(textContent);
   };
 
-  const onResolveClick = (id: string) => {
-    setResolveDialogMessageId(id);
-  };
-
-  const onQuickResolveClick = async (id: string) => {
-    try {
-      await resolveMessage({ chatId, messageId: id }).unwrap();
-    } catch (error) {
-      console.error(error);
-      displayErrorToast(error, 'Quick resolve failed');
-    }
-  };
-
-  const onUnresolveClick = async (messageId: string, resolutionId: string) => {
+  const onUnresolveClick = async (
+    chatId: string,
+    messageId: string,
+    resolutionId: string,
+  ) => {
     try {
       await unresolveMutation({ chatId, messageId, resolutionId }).unwrap();
     } catch (error) {
@@ -104,9 +80,9 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
     }
   };
 
-  const onDeleteClick = async (id: string) => {
+  const onDeleteClick = async (chatId: string, messageId: string) => {
     try {
-      await deleteMessage({ chatId, messageId: id }).unwrap();
+      await deleteMessage({ chatId, messageId }).unwrap();
     } catch (error) {
       console.error(error);
       displayErrorToast(error, 'Message delete failed');
@@ -114,7 +90,6 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
   };
 
   const renderMessagesContent = () => {
-    // TODO: handle loading for fethcing another page
     if (isLoading) {
       return <MessageListLoading />;
     }
@@ -125,18 +100,18 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
 
     const messagesList = (data?.pages.flat() ?? [])
       .map((r) => r.data?.list ?? [])
-      .reduce((acc, item) => acc.concat(item), []);
+      .reduce<ResolvedMessageEntity[]>((acc, item) => acc.concat(item), []);
 
     if (!messagesList.length) {
       return <MessageListEmpty />;
     }
 
     return (
-      // TODO: refactor, consider moving to a separate component -- this one is too complex
-      // also, add a memo wrapper
       <div className="px-3 py-2 w-full flex flex-col-reverse items-end gap-2 overflow-auto">
         {messagesList.map((m, index, array) => {
-          const nextMessage = array[index + 1] as TextMessageEntity | undefined;
+          const nextMessage = array[index + 1] as
+            | ResolvedMessageEntity
+            | undefined;
           const showSeparator =
             index === array.length - 1 ||
             (nextMessage &&
@@ -148,48 +123,35 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
                 <MessageDateSeparator title={getReadableDate(m.createdAt)} />
               ) : null}
               <div
-                className={cn(
-                  'max-w-lg',
-                  m.id.startsWith('MOCK-ID') ? 'opacity-50' : '',
-                )}
+                className={cn(m.id.startsWith('MOCK-ID') ? 'opacity-50' : '')}
               >
+                <p className="text-xs text-muted-foreground mb-1 text-right">
+                  {m.chat.title}
+                </p>
                 <WithMessageContextMenu
-                  onResolveClick={
-                    !m.messageResolution
-                      ? () => onResolveClick(m.id)
-                      : undefined
-                  }
-                  onQuickResolveClick={
-                    !m.messageResolution
-                      ? () => void onQuickResolveClick(m.id)
-                      : undefined
-                  }
                   onUnresolveClick={
                     m.messageResolution
                       ? () =>
-                          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                          void onUnresolveClick(m.id, m.messageResolution!.id)
+                          void onUnresolveClick(
+                            m.chat.id,
+                            m.id,
+                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                            m.messageResolution!.id,
+                          )
                       : undefined
                   }
                   onCopyClick={() => onCopyClick(m.textMessage.content)}
-                  onDeleteClick={() => void onDeleteClick(m.id)}
+                  onDeleteClick={() => void onDeleteClick(m.chat.id, m.id)}
                 >
-                  <ConditionalWrapper
-                    condition={!!m.messageResolution}
-                    wrapper={(children) => (
-                      <WithMessageItemResolution
-                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                        messageResolution={m.messageResolution!}
-                      >
-                        {children}
-                      </WithMessageItemResolution>
-                    )}
+                  <WithMessageItemResolution
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    messageResolution={m.messageResolution!}
                   >
                     <TextMessage
                       textContent={m.textMessage.content}
                       date={m.createdAt}
                     />
-                  </ConditionalWrapper>
+                  </WithMessageItemResolution>
                 </WithMessageContextMenu>
               </div>
             </div>
@@ -211,18 +173,6 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
   return (
     <div className="w-full flex grow overflow-hidden">
       {renderMessagesContent()}
-      {resolveDialogMessageId ? (
-        <ResolveMessageDialog
-          open={true}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) {
-              setResolveDialogMessageId(null);
-            }
-          }}
-          chatId={chatId}
-          messageId={resolveDialogMessageId}
-        />
-      ) : null}
     </div>
   );
 };

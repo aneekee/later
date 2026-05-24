@@ -4,19 +4,22 @@ import type {
   CreateTextMessageSuccessResponse,
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
+  ResolveMessageSuccessResponse,
+  UnresolveMessageSuccessResponse,
   UpdateTextMessageSuccessResponse,
 } from '@later/types';
 
 import { baseQueryWithCookies } from '@/shared/api/api';
 
 import { chatsApiEndpoints } from './chats.api';
-
 import { buildOptimisticTextMessage } from '../utils/message.utils';
 
 import type {
   CreateTextMessageParams,
   DeleteMessageParams,
   GetMessagesListParams,
+  ResolveMessageParams,
+  UnresolveMessageParams,
   UpdateTextMessageParams,
 } from '../types/messages.types';
 
@@ -67,6 +70,10 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
           page: pageParam.toString(),
           pageSize: queryArg.pageSize.toString(),
         });
+
+        if (queryArg.resolution) {
+          queryParams.set('resolution', queryArg.resolution);
+        }
 
         return {
           method: 'GET',
@@ -130,6 +137,33 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
         } catch {
           patchResults.forEach((p) => p.undo());
         }
+      },
+      invalidatesTags: ['Messages'],
+    }),
+
+    resolveMessage: builder.mutation<
+      ResolveMessageSuccessResponse,
+      ResolveMessageParams
+    >({
+      query: (params) => {
+        return {
+          url: `v1/chats/${params.chatId}/messages/${params.messageId}/resolution`,
+          method: 'PUT',
+          body: params.body,
+        };
+      },
+      invalidatesTags: ['Messages'],
+    }),
+
+    unresolveMessage: builder.mutation<
+      UnresolveMessageSuccessResponse,
+      UnresolveMessageParams
+    >({
+      query: (params) => {
+        return {
+          url: `v1/chats/${params.chatId}/messages/${params.messageId}/resolution/${params.resolutionId}`,
+          method: 'DELETE',
+        };
       },
       invalidatesTags: ['Messages'],
     }),
@@ -213,4 +247,6 @@ export const {
   useMessagesInfiniteQuery,
   useCreateTextMessageMutation,
   useDeleteMessageMutation,
+  useResolveMessageMutation,
+  useUnresolveMessageMutation,
 } = messagesApiEndpoints;

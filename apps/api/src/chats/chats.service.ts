@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { Prisma } from 'generated/prisma/client';
 import { ChatModel } from 'generated/prisma/models';
 
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserActionsService } from 'src/user-actions/user-actions.service';
 
 import {
   CheckChatAccessServiceDto,
@@ -12,7 +17,6 @@ import {
   UpdateChatServiceDto,
 } from './chats.types';
 import { mapChatModelToEntity } from './chats.utils';
-import { UserActionsService } from 'src/user-actions/user-actions.service';
 
 @Injectable()
 export class ChatsService {
@@ -36,18 +40,15 @@ export class ChatsService {
   }
 
   async checkAccess(dto: CheckChatAccessServiceDto) {
-    try {
-      const chat = await this.prismaService.chat.findUnique({
-        where: {
-          id: dto.chatId,
-          userId: dto.userId,
-        },
-      });
+    const chat = await this.prismaService.chat.findUnique({
+      where: {
+        id: dto.chatId,
+        userId: dto.userId,
+      },
+    });
 
-      return !!chat;
-    } catch (error) {
-      console.error(error);
-      return false;
+    if (!chat) {
+      throw new ForbiddenException("You don't have access to this chat");
     }
   }
 
@@ -122,6 +123,7 @@ export class ChatsService {
       },
     });
 
+    // TODO: when deleting all messages in chat, also delete all the create message actions
     await this.userActionsService.deleteCreateChatAction(id);
   }
 }

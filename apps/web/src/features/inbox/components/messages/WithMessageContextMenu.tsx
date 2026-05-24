@@ -1,5 +1,10 @@
 import type { ReactNode } from 'react';
-import { CopyIcon, TrashIcon } from 'lucide-react';
+import {
+  CircleCheckIcon,
+  CircleXIcon,
+  CopyIcon,
+  TrashIcon,
+} from 'lucide-react';
 
 import {
   ContextMenu,
@@ -10,12 +15,18 @@ import {
 } from '@/shared/components/ui/context-menu';
 
 interface Props {
+  onResolveClick?: () => void;
+  onQuickResolveClick?: () => void;
+  onUnresolveClick?: () => void;
   onCopyClick: () => void;
   onDeleteClick: () => void;
   children: ReactNode;
 }
 
 export const WithMessageContextMenu = ({
+  onResolveClick,
+  onQuickResolveClick,
+  onUnresolveClick,
   onCopyClick,
   onDeleteClick,
   children,
@@ -32,6 +43,30 @@ export const WithMessageContextMenu = ({
             Copy
           </ContextMenuItem>
         </ContextMenuGroup>
+        {onResolveClick ? (
+          <ContextMenuGroup>
+            <ContextMenuItem onClick={onResolveClick}>
+              <CircleCheckIcon />
+              Resolve
+            </ContextMenuItem>
+          </ContextMenuGroup>
+        ) : null}
+        {onQuickResolveClick ? (
+          <ContextMenuGroup>
+            <ContextMenuItem onClick={onQuickResolveClick}>
+              <CircleCheckIcon />
+              Quick Resolve
+            </ContextMenuItem>
+          </ContextMenuGroup>
+        ) : null}
+        {onUnresolveClick ? (
+          <ContextMenuGroup>
+            <ContextMenuItem onClick={onUnresolveClick}>
+              <CircleXIcon />
+              Unresolve
+            </ContextMenuItem>
+          </ContextMenuGroup>
+        ) : null}
         <ContextMenuGroup>
           <ContextMenuItem variant="destructive" onClick={onDeleteClick}>
             <TrashIcon />

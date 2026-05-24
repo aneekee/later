@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -15,6 +16,9 @@ import {
   CreateTextMessageSuccessResponse,
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
+  ListResolvedMessagesSuccessResponse,
+  ResolveMessageSuccessResponse,
+  UnresolveMessageSuccessResponse,
   UpdateTextMessageSuccessResponse,
 } from '@later/types';
 
@@ -22,6 +26,8 @@ import { MessagesService } from './messages.service';
 import {
   CreateTextMessageDto,
   ListMessagesDto,
+  ListResolvedMessagesDto,
+  ResolveMessageDto,
   UpdateTextMessageDto,
 } from './messages.dto';
 
@@ -42,12 +48,38 @@ export class MessagesController {
       await this.messagesService.listMessages({
         page: listMessagesDto.page,
         pageSize: listMessagesDto.pageSize,
+        resolution: listMessagesDto.resolution,
         chatId,
         userId,
       });
 
     return {
       message: 'Get messagess successful',
+      data: {
+        list,
+        page,
+        pageSize,
+        totalSize,
+      },
+    };
+  }
+
+  @Get('/resolved')
+  async listResolvedMessages(
+    @Req() req: Request,
+    @Query() dto: ListResolvedMessagesDto,
+  ): Promise<ListResolvedMessagesSuccessResponse> {
+    const userId = req['user']?.id as string;
+
+    const { list, page, pageSize, totalSize } =
+      await this.messagesService.listResolvedMessages({
+        page: dto.page,
+        pageSize: dto.pageSize,
+        userId,
+      });
+
+    return {
+      message: 'Get resolved messages successful',
       data: {
         list,
         page,
@@ -79,17 +111,17 @@ export class MessagesController {
     };
   }
 
-  @Patch('/text/:id')
+  @Patch('/text/:messageId')
   async updateTextMessage(
     @Req() req: Request,
-    @Param('id') id: string,
+    @Param('messageId') messageId: string,
     @Param('chatId') chatId: string,
     @Body() dto: UpdateTextMessageDto,
   ): Promise<UpdateTextMessageSuccessResponse> {
     const userId = req['user']?.id as string;
 
     const message = await this.messagesService.updateTextMessage({
-      messageId: id,
+      messageId,
       userId,
       chatId,
       content: dto.content,
@@ -103,16 +135,57 @@ export class MessagesController {
     };
   }
 
-  @Delete(':id')
+  @Put('/:messageId/resolution')
+  async resolveMessage(
+    @Req() req: Request,
+    @Param('messageId') messageId: string,
+    @Param('chatId') chatId: string,
+    @Body() dto: ResolveMessageDto,
+  ): Promise<ResolveMessageSuccessResponse> {
+    const userId = req['user']?.id as string;
+
+    await this.messagesService.resolveMessage({
+      messageId,
+      userId,
+      chatId,
+      note: dto.note,
+    });
+
+    return {
+      message: 'Message resolve successful',
+    };
+  }
+  @Delete('/:messageId/resolution/:resolutionId')
+  async unresolveMessage(
+    @Req() req: Request,
+    @Param('resolutionId') resolutionId: string,
+    @Param('messageId') messageId: string,
+    @Param('chatId') chatId: string,
+  ): Promise<UnresolveMessageSuccessResponse> {
+    const userId = req['user']?.id as string;
+
+    await this.messagesService.unresolveMessage({
+      messageId,
+      userId,
+      chatId,
+      resolutionId,
+    });
+
+    return {
+      message: 'Messaage unresolve successful',
+    };
+  }
+
+  @Delete(':messageId')
   async deleteMessage(
     @Req() req: Request,
-    @Param('id') id: string,
+    @Param('messageId') messageId: string,
     @Param('chatId') chatId: string,
   ): Promise<DeleteMessageSuccessResponse> {
     const userId = req['user']?.id as string;
 
     await this.messagesService.deleteMessage({
-      messageId: id,
+      messageId,
       chatId,
       userId,
     });

@@ -1,5 +1,5 @@
 import {
-  ForbiddenException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -12,12 +12,27 @@ import {
   CreateTextMessageServiceDto,
   DeleteMessageServiceDto,
   ListMessagesServiceDto,
-  MessagesList,
-  MessageWithTextMessage,
+  ListResolvedMessagesServiceDto,
+  DbMessagesList,
+  DbMessageItem,
+  DbResolvedMessagesList,
+  ResolveMessageServiceDto,
   UpdateTextMessageServiceDto,
+  UnresolveMessageServiceDto,
 } from './messages.types';
-import { mapMessageModelToEntity } from './messages.utils';
+import {
+  getResolutionFilter,
+  mapMessageModelToEntity,
+  mapResolvedMessageModelToEntity,
+} from './messages.utils';
 
+/**
+ *
+ * After the checkAccess refactoring I don't like the structure
+ * It's not obvious that checkAccess throws AND we execute the code below ONLY if the check passes
+ * The if check was uglier but more readable IMO
+ *
+ */
 @Injectable()
 export class MessagesService {
   constructor(
@@ -28,24 +43,23 @@ export class MessagesService {
 
   // TODO: compare offset vs cursor
   async listMessages(dto: ListMessagesServiceDto) {
-    // TODO: share the hasAccess check
-    const hasAccess = await this.chatsService.checkAccess({
+    await this.chatsService.checkAccess({
       userId: dto.userId,
       chatId: dto.chatId,
     });
-    if (!hasAccess) {
-      throw new ForbiddenException("You don't have access to this chat");
-    }
 
     const offset = (dto.page - 1) * dto.pageSize;
 
+    const resolutionFilter = getResolutionFilter(dto.resolution);
+
+    // TODO: do I really need to do two queries here?
     const [messages, totalSize] = await this.prismaService.$transaction([
       this.prismaService.message.findMany({
         where: {
           chatId: dto.chatId,
-          textMessage: { isNot: null },
+          ...resolutionFilter,
         },
-        include: { textMessage: true },
+        include: { textMessage: true, messageResolution: true },
         orderBy: { createdAt: 'desc' },
         take: dto.pageSize,
         skip: offset,
@@ -53,12 +67,45 @@ export class MessagesService {
       this.prismaService.message.count({
         where: {
           chatId: dto.chatId,
+          ...resolutionFilter,
         },
       }),
     ]);
 
     return {
-      list: (messages as MessagesList).map(mapMessageModelToEntity),
+      list: (messages as DbMessagesList).map(mapMessageModelToEntity),
+      page: dto.page,
+      pageSize: dto.pageSize,
+      totalSize,
+    };
+  }
+
+  async listResolvedMessages(dto: ListResolvedMessagesServiceDto) {
+    const offset = (dto.page - 1) * dto.pageSize;
+
+    const [messages, totalSize] = await this.prismaService.$transaction([
+      this.prismaService.message.findMany({
+        where: {
+          chat: { userId: dto.userId },
+          messageResolution: { isNot: null },
+        },
+        include: { textMessage: true, messageResolution: true, chat: true },
+        orderBy: { messageResolution: { createdAt: 'desc' } },
+        take: dto.pageSize,
+        skip: offset,
+      }),
+      this.prismaService.message.count({
+        where: {
+          chat: { userId: dto.userId },
+          messageResolution: { isNot: null },
+        },
+      }),
+    ]);
+
+    return {
+      list: (messages as DbResolvedMessagesList).map(
+        mapResolvedMessageModelToEntity,
+      ),
       page: dto.page,
       pageSize: dto.pageSize,
       totalSize,
@@ -68,25 +115,21 @@ export class MessagesService {
   private async getTextMessage(id: string) {
     const message = await this.prismaService.message.findUnique({
       where: { id },
-      include: { textMessage: true },
+      include: { textMessage: true, messageResolution: true },
     });
 
     if (!message) {
       throw new NotFoundException();
     }
 
-    return message as MessageWithTextMessage;
+    return message;
   }
 
   async createTextMessage(dto: CreateTextMessageServiceDto) {
-    // TODO: share the hasAccess check
-    const hasAccess = await this.chatsService.checkAccess({
+    await this.chatsService.checkAccess({
       userId: dto.userId,
       chatId: dto.chatId,
     });
-    if (!hasAccess) {
-      throw new ForbiddenException("You don't have access to this chat");
-    }
 
     const message = await this.prismaService.message.create({
       data: {
@@ -106,18 +149,14 @@ export class MessagesService {
 
     // TODO: prob I don't need to refetch it
     const textMessage = await this.getTextMessage(message.id);
-    return mapMessageModelToEntity(textMessage);
+    return mapMessageModelToEntity(textMessage as DbMessageItem);
   }
 
   async updateTextMessage(dto: UpdateTextMessageServiceDto) {
-    // TODO: share the hasAccess check
-    const hasAccess = await this.chatsService.checkAccess({
+    await this.chatsService.checkAccess({
       userId: dto.userId,
       chatId: dto.chatId,
     });
-    if (!hasAccess) {
-      throw new ForbiddenException("You don't have access to this chat");
-    }
 
     const message = await this.prismaService.message.update({
       data: {
@@ -135,24 +174,93 @@ export class MessagesService {
 
     // TODO: prob I don't need to refetch it
     const textMessage = await this.getTextMessage(message.id);
-    return mapMessageModelToEntity(textMessage);
+    return mapMessageModelToEntity(textMessage as DbMessageItem);
   }
 
-  async deleteMessage(dto: DeleteMessageServiceDto) {
-    // TODO: share the hasAccess check
-    const hasAccess = await this.chatsService.checkAccess({
+  async resolveMessage(dto: ResolveMessageServiceDto) {
+    await this.chatsService.checkAccess({
       userId: dto.userId,
       chatId: dto.chatId,
     });
-    if (!hasAccess) {
-      throw new ForbiddenException("You don't have access to this chat");
+
+    // TODO: prob I can leave it to the db unique constraint
+    const alreadyResolved =
+      await this.prismaService.messageResolution.findFirst({
+        where: {
+          messageId: dto.messageId,
+        },
+      });
+    if (alreadyResolved) {
+      throw new ConflictException('This message is already resolved');
     }
+
+    const resolution = await this.prismaService.messageResolution.create({
+      data: {
+        messageId: dto.messageId,
+        ...(dto.note ? { note: dto.note } : {}),
+      },
+    });
+
+    await this.userActionsService.record({
+      type: 'RESOLVE_MESSAGE',
+      userId: dto.userId,
+      params: {
+        messageId: dto.messageId,
+        resolutionId: resolution.id,
+        resolvedAt: resolution.createdAt,
+      },
+    });
+  }
+
+  async unresolveMessage(dto: UnresolveMessageServiceDto) {
+    await this.chatsService.checkAccess({
+      userId: dto.userId,
+      chatId: dto.chatId,
+    });
+
+    // TODO: prob I can leave it to the db unique constraint
+    // Also, consider deduplication
+    const alreadyResolved =
+      await this.prismaService.messageResolution.findFirst({
+        where: {
+          messageId: dto.messageId,
+        },
+      });
+    if (!alreadyResolved) {
+      throw new ConflictException('This message is not resolved yet');
+    }
+
+    await this.prismaService.messageResolution.delete({
+      where: {
+        id: dto.resolutionId,
+        messageId: dto.messageId,
+      },
+    });
+
+    await this.userActionsService.record({
+      type: 'UNRESOLVE_MESSAGE',
+      userId: dto.userId,
+      params: {
+        messageId: dto.messageId,
+        unresolvedAt: new Date(),
+      },
+    });
+  }
+
+  async deleteMessage(dto: DeleteMessageServiceDto) {
+    await this.chatsService.checkAccess({
+      userId: dto.userId,
+      chatId: dto.chatId,
+    });
 
     // TODO: add cascade delete for textMessage and imageMessage
     await this.prismaService.message.delete({
       where: { id: dto.messageId },
     });
 
+    // TODO: make the user actions stuff async
     await this.userActionsService.deleteCreateMessageAction(dto.messageId);
+    await this.userActionsService.deleteResolveMessageAction(dto.messageId);
+    await this.userActionsService.deleteUnresolveMessageAction(dto.messageId);
   }
 }

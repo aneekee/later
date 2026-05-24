@@ -1,5 +1,11 @@
 import type { BasePaginationParams } from '@/shared/types/api';
-import type { CreateChatFormValues } from '../types/chats.types';
+
+import type { ChatEntity } from '@later/types';
+
+import type {
+  CreateChatFormValues,
+  MessageResolutionOption,
+} from '../types/chats.types';
 
 export const CHATS_DEFAULT_PAGINATION: BasePaginationParams = {
   page: 1,
@@ -8,4 +14,17 @@ export const CHATS_DEFAULT_PAGINATION: BasePaginationParams = {
 
 export const CREATE_CHAT_FORM_DEFAULT_VALUES: CreateChatFormValues = {
   title: '',
+};
+
+export const RESOLUTION_OPTIONS: MessageResolutionOption[] = [
+  { value: 'unresolved', label: 'Unresolved' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'both', label: 'All' },
+];
+
+export const RESOLVED_NOTES_CHAT: ChatEntity = {
+  id: 'RESOLVED_NOTES_CHAT',
+  userId: '-',
+  title: 'Resolved Notes',
+  createdAt: '-',
 };

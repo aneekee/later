@@ -2,11 +2,22 @@ import { BaseSuccessResponse, SuccessListResponse } from "./shared";
 
 export type MessageType = "TEXT";
 
+export type MessageResolutionFilter = "both" | "resolved" | "unresolved";
+
+export type MessageResolution = {
+  id: string;
+  messageId: string;
+  note: string;
+  createdAt: string;
+};
+
 export type AbstractMessageEntity = {
   id: string;
   type: MessageType;
   chatId: string;
   createdAt: string;
+
+  messageResolution?: MessageResolution;
 };
 
 export type TextMessageEntity = AbstractMessageEntity & {
@@ -20,9 +31,17 @@ export type TextMessageEntity = AbstractMessageEntity & {
 
 export type MessageEntity = TextMessageEntity;
 
+export type ResolvedMessageEntity = MessageEntity & {
+  chat: { id: string; title: string };
+};
+
 // list messages
 
 export interface ListMessagesSuccessResponse extends SuccessListResponse<MessageEntity> {}
+
+// list resolved messages
+
+export interface ListResolvedMessagesSuccessResponse extends SuccessListResponse<ResolvedMessageEntity> {}
 
 // create message
 
@@ -47,6 +66,18 @@ export interface UpdateTextMessageSuccessResponseData {
 }
 
 export interface UpdateTextMessageSuccessResponse extends BaseSuccessResponse<UpdateTextMessageSuccessResponseData> {}
+
+// resolve message
+
+export interface ResolveMessageRequestBody {
+  note?: string;
+}
+
+export interface ResolveMessageSuccessResponse extends BaseSuccessResponse<{}> {}
+
+// unresolve message
+
+export interface UnresolveMessageSuccessResponse extends BaseSuccessResponse<{}> {}
 
 // delete message
 
