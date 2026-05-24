@@ -1,7 +1,12 @@
-import { MessageEntity, MessageResolutionFilter } from '@later/types';
 import { Prisma } from 'generated/prisma/client';
 
-import { DbMessageItem } from './messages.types';
+import {
+  MessageEntity,
+  MessageResolutionFilter,
+  ResolvedMessageEntity,
+} from '@later/types';
+
+import { DbMessageItem, DbResolvedMessageItem } from './messages.types';
 
 export function getResolutionFilter(
   resolution: MessageResolutionFilter,
@@ -29,5 +34,14 @@ export function mapMessageModelToEntity(message: DbMessageItem): MessageEntity {
         }
       : { messageResolution: undefined }),
     createdAt: message.createdAt.toISOString(),
+  };
+}
+
+export function mapResolvedMessageModelToEntity(
+  message: DbResolvedMessageItem,
+): ResolvedMessageEntity {
+  return {
+    ...mapMessageModelToEntity(message),
+    chat: { id: message.chat.id, title: message.chat.title },
   };
 }

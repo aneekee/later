@@ -1,5 +1,7 @@
 import type { BasePaginationParams } from '@/shared/types/api';
 
+import type { ChatEntity } from '@later/types';
+
 import type {
   CreateChatFormValues,
   MessageResolutionOption,
@@ -19,3 +21,10 @@ export const RESOLUTION_OPTIONS: MessageResolutionOption[] = [
   { value: 'resolved', label: 'Resolved' },
   { value: 'both', label: 'All' },
 ];
+
+export const RESOLVED_NOTES_CHAT: ChatEntity = {
+  id: 'RESOLVED_NOTES_CHAT',
+  userId: '-',
+  title: 'Resolved Notes',
+  createdAt: '-',
+};

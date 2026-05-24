@@ -16,6 +16,7 @@ import {
   CreateTextMessageSuccessResponse,
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
+  ListResolvedMessagesSuccessResponse,
   ResolveMessageSuccessResponse,
   UnresolveMessageSuccessResponse,
   UpdateTextMessageSuccessResponse,
@@ -25,6 +26,7 @@ import { MessagesService } from './messages.service';
 import {
   CreateTextMessageDto,
   ListMessagesDto,
+  ListResolvedMessagesDto,
   ResolveMessageDto,
   UpdateTextMessageDto,
 } from './messages.dto';
@@ -53,6 +55,31 @@ export class MessagesController {
 
     return {
       message: 'Get messagess successful',
+      data: {
+        list,
+        page,
+        pageSize,
+        totalSize,
+      },
+    };
+  }
+
+  @Get('/resolved')
+  async listResolvedMessages(
+    @Req() req: Request,
+    @Query() dto: ListResolvedMessagesDto,
+  ): Promise<ListResolvedMessagesSuccessResponse> {
+    const userId = req['user']?.id as string;
+
+    const { list, page, pageSize, totalSize } =
+      await this.messagesService.listResolvedMessages({
+        page: dto.page,
+        pageSize: dto.pageSize,
+        userId,
+      });
+
+    return {
+      message: 'Get resolved messages successful',
       data: {
         list,
         page,

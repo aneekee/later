@@ -12,13 +12,19 @@ import {
   CreateTextMessageServiceDto,
   DeleteMessageServiceDto,
   ListMessagesServiceDto,
+  ListResolvedMessagesServiceDto,
   DbMessagesList,
   DbMessageItem,
+  DbResolvedMessagesList,
   ResolveMessageServiceDto,
   UpdateTextMessageServiceDto,
   UnresolveMessageServiceDto,
 } from './messages.types';
-import { getResolutionFilter, mapMessageModelToEntity } from './messages.utils';
+import {
+  getResolutionFilter,
+  mapMessageModelToEntity,
+  mapResolvedMessageModelToEntity,
+} from './messages.utils';
 
 /**
  *
@@ -68,6 +74,38 @@ export class MessagesService {
 
     return {
       list: (messages as DbMessagesList).map(mapMessageModelToEntity),
+      page: dto.page,
+      pageSize: dto.pageSize,
+      totalSize,
+    };
+  }
+
+  async listResolvedMessages(dto: ListResolvedMessagesServiceDto) {
+    const offset = (dto.page - 1) * dto.pageSize;
+
+    const [messages, totalSize] = await this.prismaService.$transaction([
+      this.prismaService.message.findMany({
+        where: {
+          chat: { userId: dto.userId },
+          messageResolution: { isNot: null },
+        },
+        include: { textMessage: true, messageResolution: true, chat: true },
+        orderBy: { messageResolution: { createdAt: 'desc' } },
+        take: dto.pageSize,
+        skip: offset,
+      }),
+      this.prismaService.message.count({
+        where: {
+          chat: { userId: dto.userId },
+          messageResolution: { isNot: null },
+        },
+      }),
+    ]);
+
+    return {
+      list: (messages as DbResolvedMessagesList).map(
+        mapResolvedMessageModelToEntity,
+      ),
       page: dto.page,
       pageSize: dto.pageSize,
       totalSize,

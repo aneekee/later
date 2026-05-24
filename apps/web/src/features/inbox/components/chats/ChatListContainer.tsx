@@ -13,9 +13,13 @@ import { ChatListEmpty } from './ChatListEmpty';
 import { CreateChatDialog } from './create-chat/CreateChatDialog';
 import { ChatListError } from './ChatListError';
 import { ChatListLoading } from './ChatListLoading';
+import { ResolvedNotesItem } from './ResolvedNotesItem';
 import { selectActiveChat } from '../../selectors/chats.selectors';
 import { useChatsQuery } from '../../api/chats.api';
-import { CHATS_DEFAULT_PAGINATION } from '../../const/chats.constants';
+import {
+  CHATS_DEFAULT_PAGINATION,
+  RESOLVED_NOTES_CHAT,
+} from '../../const/chats.constants';
 import { setActiveChat } from '../../slices/chats.slice';
 
 // TODO: investigate the chats list rerenders -- it should not rerender the whole list on new message
@@ -43,6 +47,11 @@ export const ChatListContainer = () => {
       return;
     }
 
+    if (chatId === RESOLVED_NOTES_CHAT.id) {
+      dispatch(setActiveChat({ chat: RESOLVED_NOTES_CHAT }));
+      return;
+    }
+
     const chat = chats.data.list.find((c) => c.id === chatId);
     if (chat) {
       dispatch(setActiveChat({ chat }));
@@ -52,6 +61,11 @@ export const ChatListContainer = () => {
   const onChatClick = (chat: ChatEntity) => {
     setSearchParams({ chatId: chat.id });
     dispatch(setActiveChat({ chat }));
+  };
+
+  const onResolvedNotesClick = () => {
+    setSearchParams({ chatId: RESOLVED_NOTES_CHAT.id });
+    dispatch(setActiveChat({ chat: RESOLVED_NOTES_CHAT }));
   };
 
   const renderChatsContent = () => {
@@ -102,7 +116,14 @@ export const ChatListContainer = () => {
           {isFetching ? <Spinner className="self-center" /> : null}
         </div>
         <div className="p-2 flex grow items-start overflow-auto">
-          {renderChatsContent()}
+          <div className="w-full flex flex-col">
+            <ResolvedNotesItem
+              isActive={activeChat?.id === RESOLVED_NOTES_CHAT.id}
+              onClick={onResolvedNotesClick}
+            />
+            <div className="my-2 border-t" />
+            {renderChatsContent()}
+          </div>
         </div>
       </div>
     </div>
