@@ -15,7 +15,8 @@ model User {
   isVerified Boolean  @default(false) @map("is_verified")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  chats Chat[]
+  chats                    Chat[]
+  messageBurndownSnapshots MessageBurndownSnapshot[]
 
   @@map("users")
 }
@@ -70,4 +71,17 @@ model MessageResolution {
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@map("message_resolutions")
+}
+
+model MessageBurndownSnapshot {
+  id            String   @id @default(uuid())
+  day           DateTime @db.Date
+  userId        String   @map("user_id")
+  createdNotes  Int      @map("created_notes")
+  resolvedNotes Int      @map("resolved_notes")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, day])
+  @@map("message_burndown_snapshots")
 }
