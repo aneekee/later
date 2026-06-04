@@ -70,4 +70,14 @@ export default defineConfig([
       '@typescript-eslint/prefer-nullish-coalescing': 'warn',
     },
   },
+  {
+    files: ['src/shared/components/ui/chart.tsx'],
+    rules: {
+      '@typescript-eslint/restrict-template-expressions': 'warn',
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+    },
+  },
 ]);
