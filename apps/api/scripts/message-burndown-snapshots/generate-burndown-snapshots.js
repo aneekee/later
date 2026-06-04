@@ -27,14 +27,11 @@ const get = (flag) => {
 };
 
 const messagesFile =
-  get('--messages') ??
-  'scripts/message-burndown-snapshots/messages_202605302048.json';
+  get('--messages') ?? 'scripts/message-burndown-snapshots/<filename>';
 const resolutionsFile =
-  get('--resolutions') ??
-  'scripts/message-burndown-snapshots/message_resolutions_202605302049.json';
+  get('--resolutions') ?? 'scripts/message-burndown-snapshots/<filename>';
 const chatsFile =
-  get('--chats') ??
-  'scripts/message-burndown-snapshots/chats_202605302103.json';
+  get('--chats') ?? 'scripts/message-burndown-snapshots/<filename>';
 
 // ---------------------------------------------------------------------------
 // Load data
