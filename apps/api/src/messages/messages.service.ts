@@ -266,12 +266,29 @@ export class MessagesService {
       throw new ConflictException('This message is not resolved yet');
     }
 
-    await this.prismaService.messageResolution.delete({
-      where: {
-        id: dto.resolutionId,
-        messageId: dto.messageId,
-      },
-    });
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    await this.prismaService.$transaction([
+      this.prismaService.messageResolution.delete({
+        where: {
+          id: dto.resolutionId,
+          messageId: dto.messageId,
+        },
+      }),
+      this.prismaService.messageBurndownSnapshot.upsert({
+        where: { userId_day: { userId: dto.userId, day: today } },
+        create: {
+          userId: dto.userId,
+          day: today,
+          createdNotes: 0,
+          resolvedNotes: -1,
+        },
+        update: {
+          resolvedNotes: { decrement: 1 },
+        },
+      }),
+    ]);
 
     await this.userActionsService.record({
       type: 'UNRESOLVE_MESSAGE',
