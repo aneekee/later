@@ -306,14 +306,33 @@ export class MessagesService {
       chatId: dto.chatId,
     });
 
-    // TODO: add cascade delete for textMessage and imageMessage
-    await this.prismaService.message.delete({
-      where: { id: dto.messageId },
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    const noteResolved = await this.prismaService.messageResolution.findFirst({
+      where: {
+        messageId: dto.messageId,
+      },
     });
 
-    // TODO: make the user actions stuff async
-    await this.userActionsService.deleteCreateMessageAction(dto.messageId);
-    await this.userActionsService.deleteResolveMessageAction(dto.messageId);
-    await this.userActionsService.deleteUnresolveMessageAction(dto.messageId);
+    await this.prismaService.$transaction([
+      // TODO: add cascade delete for textMessage and imageMessage
+      this.prismaService.message.delete({
+        where: { id: dto.messageId },
+      }),
+      this.prismaService.messageBurndownSnapshot.upsert({
+        where: { userId_day: { userId: dto.userId, day: today } },
+        create: {
+          userId: dto.userId,
+          day: today,
+          createdNotes: -1,
+          resolvedNotes: noteResolved ? -1 : 0,
+        },
+        update: {
+          createdNotes: { decrement: 1 },
+          resolvedNotes: { decrement: noteResolved ? 1 : 0 },
+        },
+      }),
+    ]);
   }
 }
