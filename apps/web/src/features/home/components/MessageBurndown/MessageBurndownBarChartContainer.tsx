@@ -3,6 +3,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useMessageBurndownSnapshotsQuery } from '../../api/messages-burndown.api';
 import { MessageBurndownBarChart } from './MessageBurndownBarChart';
 import { MESSAGE_BURNDOWN_FROM_DATE } from '../../const/message-burndown.const';
+import { mapBarchartMessageBurndownApiEntity } from '../../utils/message-burndown.utils';
 
 export const MessageBurndownBarChartContainer = () => {
   const { data, isLoading, isError } = useMessageBurndownSnapshotsQuery({
@@ -32,7 +33,9 @@ export const MessageBurndownBarChartContainer = () => {
   return (
     <div>
       <h2 className="mb-4 text-lg font-semibold">Messages Created/Resolved</h2>
-      <MessageBurndownBarChart data={data.data.list} />
+      <MessageBurndownBarChart
+        data={data.data.list.map((m) => mapBarchartMessageBurndownApiEntity(m))}
+      />
     </div>
   );
 };
