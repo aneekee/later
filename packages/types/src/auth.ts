@@ -1,4 +1,4 @@
-import { BaseSuccessResponse } from "./shared";
+import type { BaseSuccessResponse } from "./shared";
 
 export interface LoginRequestBody {
   username: string;

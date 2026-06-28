@@ -1,4 +1,4 @@
-import { BaseSuccessResponse, SuccessListResponse } from "./shared";
+import type { BaseSuccessResponse, SuccessListResponse } from "./shared";
 
 export interface ChatEntity {
   id: string;
