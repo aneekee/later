@@ -35,6 +35,7 @@ async function bootstrap() {
   app.enableCors({
     origin: frontendUrl,
     credentials: true,
+    maxAge: 86400,
   });
 
   app.setGlobalPrefix('api', { exclude: ['health'] });
