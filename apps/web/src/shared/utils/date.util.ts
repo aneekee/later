@@ -1,15 +1,18 @@
 import { DAY_IN_MS } from '../const/date.const';
 
 export const formatIsoDate = (isoString: string): string => {
-  return isoString.slice(0, 10);
+  return new Date(isoString).toLocaleDateString('en-CA');
 };
 
 export const formatIsoTime = (isoString: string): string => {
-  return isoString.slice(11, 16);
+  return new Date(isoString).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 export const formatIsoDateTime = (isoString: string): string => {
-  return isoString.slice(0, 10) + ' ' + isoString.slice(11, 16);
+  return formatIsoDate(isoString) + ' ' + formatIsoTime(isoString);
 };
 
 export const isMoreThanOneDayApart = (
@@ -26,7 +29,7 @@ export const isOnDifferentDay = (
   isoStringA: string,
   isoStringB: string,
 ): boolean => {
-  return isoStringA.slice(0, 10) !== isoStringB.slice(0, 10);
+  return formatIsoDate(isoStringA) !== formatIsoDate(isoStringB);
 };
 
 export const getReadableDate = (isoString: string): string => {
