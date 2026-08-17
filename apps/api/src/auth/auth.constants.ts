@@ -1,7 +1,7 @@
 export const COOKIE_OPTS_BASE = {
   httpOnly: true,
   secure: true,
-  sameSite: 'none' as const,
+  sameSite: 'lax' as const,
   path: '/',
 };
 
