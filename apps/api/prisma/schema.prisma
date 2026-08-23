@@ -13,7 +13,7 @@ model User {
   username   String   @unique
   password   String
   isVerified Boolean  @default(false) @map("is_verified")
-  createdAt  DateTime @default(now()) @map("created_at")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   chats                    Chat[]
   messageBurndownSnapshots MessageBurndownSnapshot[]
@@ -25,7 +25,7 @@ model Chat {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   title     String
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   messages Message[]
   user     User      @relation(fields: [userId], references: [id])
@@ -43,7 +43,7 @@ model Message {
   id        String      @id @default(uuid())
   type      MessageType @default(TEXT)
   chatId    String      @map("chat_id")
-  createdAt DateTime    @default(now()) @map("created_at")
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
 
   chat              Chat               @relation(fields: [chatId], references: [id])
   textMessage       TextMessage?
@@ -66,7 +66,7 @@ model MessageResolution {
   id        String   @id @default(uuid())
   messageId String   @unique @map("message_id")
   note      String?
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
