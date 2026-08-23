@@ -13,7 +13,6 @@ import { MongoModule } from './mongo/mongo.module';
 import { PerformanceAnalyticsModule } from './performance-analytics/performance-analytics.module';
 import { PerformanceInterceptor } from './shared/interceptors/performance.interceptor';
 import { UserActionsModule } from './user-actions/user-actions.module';
-import { MessageBurndownSnapshotsModule } from './message-burndown-snapshots/message-burndown-snapshots.module';
 
 @Module({
   imports: [
@@ -26,7 +25,6 @@ import { MessageBurndownSnapshotsModule } from './message-burndown-snapshots/mes
     MongoModule,
     PerformanceAnalyticsModule,
     UserActionsModule,
-    MessageBurndownSnapshotsModule,
   ],
   controllers: [AppController],
   providers: [

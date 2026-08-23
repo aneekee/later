@@ -7,8 +7,6 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChatsService } from 'src/chats/chats.service';
 import { UserActionsService } from 'src/user-actions/user-actions.service';
-import { MessageBurndownSnapshotsService } from 'src/message-burndown-snapshots/message-burndown-snapshots.service';
-
 import {
   CreateTextMessageServiceDto,
   DeleteMessageServiceDto,
@@ -40,7 +38,6 @@ export class MessagesService {
     private prismaService: PrismaService,
     private chatsService: ChatsService,
     private userActionsService: UserActionsService,
-    private messageBurndownSnapshotsService: MessageBurndownSnapshotsService,
   ) {}
 
   // TODO: compare offset vs cursor
@@ -133,32 +130,15 @@ export class MessagesService {
       chatId: dto.chatId,
     });
 
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-
-    const [message] = await this.prismaService.$transaction([
-      this.prismaService.message.create({
-        data: {
-          type: 'TEXT',
-          chatId: dto.chatId,
-          textMessage: {
-            create: { content: dto.content },
-          },
+    const message = await this.prismaService.message.create({
+      data: {
+        type: 'TEXT',
+        chatId: dto.chatId,
+        textMessage: {
+          create: { content: dto.content },
         },
-      }),
-      this.prismaService.messageBurndownSnapshot.upsert({
-        where: { userId_day: { userId: dto.userId, day: today } },
-        create: {
-          userId: dto.userId,
-          day: today,
-          createdNotes: 1,
-          resolvedNotes: 0,
-        },
-        update: {
-          createdNotes: { increment: 1 },
-        },
-      }),
-    ]);
+      },
+    });
 
     await this.userActionsService.record({
       type: 'CREATE_MESSAGE',
@@ -213,29 +193,12 @@ export class MessagesService {
       throw new ConflictException('This message is already resolved');
     }
 
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-
-    const [resolution] = await this.prismaService.$transaction([
-      this.prismaService.messageResolution.create({
-        data: {
-          messageId: dto.messageId,
-          ...(dto.note ? { note: dto.note } : {}),
-        },
-      }),
-      this.prismaService.messageBurndownSnapshot.upsert({
-        where: { userId_day: { userId: dto.userId, day: today } },
-        create: {
-          userId: dto.userId,
-          day: today,
-          createdNotes: 0,
-          resolvedNotes: 1,
-        },
-        update: {
-          resolvedNotes: { increment: 1 },
-        },
-      }),
-    ]);
+    const resolution = await this.prismaService.messageResolution.create({
+      data: {
+        messageId: dto.messageId,
+        ...(dto.note ? { note: dto.note } : {}),
+      },
+    });
 
     await this.userActionsService.record({
       type: 'RESOLVE_MESSAGE',
@@ -266,29 +229,12 @@ export class MessagesService {
       throw new ConflictException('This message is not resolved yet');
     }
 
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-
-    await this.prismaService.$transaction([
-      this.prismaService.messageResolution.delete({
-        where: {
-          id: dto.resolutionId,
-          messageId: dto.messageId,
-        },
-      }),
-      this.prismaService.messageBurndownSnapshot.upsert({
-        where: { userId_day: { userId: dto.userId, day: today } },
-        create: {
-          userId: dto.userId,
-          day: today,
-          createdNotes: 0,
-          resolvedNotes: -1,
-        },
-        update: {
-          resolvedNotes: { decrement: 1 },
-        },
-      }),
-    ]);
+    await this.prismaService.messageResolution.delete({
+      where: {
+        id: dto.resolutionId,
+        messageId: dto.messageId,
+      },
+    });
 
     await this.userActionsService.record({
       type: 'UNRESOLVE_MESSAGE',
@@ -306,33 +252,9 @@ export class MessagesService {
       chatId: dto.chatId,
     });
 
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-
-    const noteResolved = await this.prismaService.messageResolution.findFirst({
-      where: {
-        messageId: dto.messageId,
-      },
+    // TODO: add cascade delete for textMessage and imageMessage
+    await this.prismaService.message.delete({
+      where: { id: dto.messageId },
     });
-
-    await this.prismaService.$transaction([
-      // TODO: add cascade delete for textMessage and imageMessage
-      this.prismaService.message.delete({
-        where: { id: dto.messageId },
-      }),
-      this.prismaService.messageBurndownSnapshot.upsert({
-        where: { userId_day: { userId: dto.userId, day: today } },
-        create: {
-          userId: dto.userId,
-          day: today,
-          createdNotes: -1,
-          resolvedNotes: noteResolved ? -1 : 0,
-        },
-        update: {
-          createdNotes: { decrement: 1 },
-          resolvedNotes: { decrement: noteResolved ? 1 : 0 },
-        },
-      }),
-    ]);
   }
 }
