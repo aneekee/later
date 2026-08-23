@@ -122,8 +122,5 @@ export class ChatsService {
         id,
       },
     });
-
-    // TODO: when deleting all messages in chat, also delete all the create message actions
-    await this.userActionsService.deleteCreateChatAction(id);
   }
 }
