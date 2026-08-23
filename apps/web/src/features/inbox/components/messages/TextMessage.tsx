@@ -10,7 +10,7 @@ interface Props {
 export const TextMessage = ({ textContent, date }: Props) => {
   return (
     <div className="relative w-full py-1 px-2 text-sm rounded-lg bg-gray-200">
-      <p className="whitespace-pre-wrap">
+      <p className="whitespace-pre-wrap wrap-anywhere">
         <TextWithLinks text={textContent} />
         <span className="inline-block w-14" aria-hidden="true" />
       </p>
