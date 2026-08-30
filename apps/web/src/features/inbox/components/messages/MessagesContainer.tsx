@@ -30,13 +30,13 @@ export const MessagesContainer = () => {
 
   if (activeChat.id === RESOLVED_NOTES_CHAT.id) {
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col overflow-hidden">
         <ResolvedNotesHeader
           isSearchOpen={isResolvedSearchOpen}
           onSearchToggle={() => setIsResolvedSearchOpen((prev) => !prev)}
         />
         {isResolvedSearchOpen ? <ResolvedChatSearchPanel /> : null}
-        <div className="h-1 flex grow">
+        <div className="flex grow min-h-0">
           <ResolvedNotesListContainer chatId={activeChat.id} />
         </div>
       </div>
@@ -44,7 +44,7 @@ export const MessagesContainer = () => {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden">
       <MessagesHeader
         title={activeChat.title}
         isSearchOpen={isSearchOpen}
@@ -56,14 +56,14 @@ export const MessagesContainer = () => {
           onResolutionChange={setResolution}
         />
       ) : null}
-      <div className="h-1 flex grow">
+      <div className="flex grow min-h-0">
         <MessageListContainer
           key={activeChat.id}
           chatId={activeChat.id}
           resolution={resolution}
         />
       </div>
-      <footer className="p-3 border-t">
+      <footer className="p-3 shrink-0 border-t">
         <MessageInput key={activeChat.id} chatId={activeChat.id} />
       </footer>
     </div>

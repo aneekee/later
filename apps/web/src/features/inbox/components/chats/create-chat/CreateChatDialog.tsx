@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -43,7 +43,8 @@ export const CreateChatDialog = () => {
       }
 
       const formValues = methods.getValues();
-      await createChat(mapChatFormToCreateChatDto(formValues)).unwrap();
+      const createChatDto = mapChatFormToCreateChatDto(formValues);
+      await createChat(createChatDto).unwrap();
       setOpen(false);
     } catch (e) {
       console.error('Create chat error:', e);
@@ -90,3 +91,6 @@ export const CreateChatDialog = () => {
     </>
   );
 };
+
+// Doesn't rerender on parent render
+export const CreateChatDialogMemo = memo(CreateChatDialog);

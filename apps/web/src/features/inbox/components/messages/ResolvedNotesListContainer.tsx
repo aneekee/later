@@ -107,7 +107,7 @@ export const ResolvedNotesListContainer = ({ chatId }: Props) => {
     }
 
     return (
-      <div className="px-3 py-2 w-full flex flex-col-reverse items-end gap-2 overflow-auto">
+      <div className="px-3 py-2 w-full min-h-0 flex flex-col-reverse items-end gap-2 overflow-y-auto">
         {messagesList.map((m, index, array) => {
           const nextMessage = array[index + 1] as
             | ResolvedMessageEntity
@@ -171,7 +171,7 @@ export const ResolvedNotesListContainer = ({ chatId }: Props) => {
   };
 
   return (
-    <div className="w-full flex grow overflow-hidden">
+    <div className="w-full flex grow min-h-0 overflow-hidden">
       {renderMessagesContent()}
     </div>
   );
