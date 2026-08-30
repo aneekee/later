@@ -16,9 +16,9 @@ export const InboxPage = () => {
   );
 
   return (
-    <div className="h-full flex">
+    <div className="h-full flex overflow-hidden">
       <ChatListContainer />
-      <div className="h-full grow">
+      <div className="h-full grow min-w-0">
         <MessagesContainer />
       </div>
     </div>

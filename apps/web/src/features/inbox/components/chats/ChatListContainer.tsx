@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router';
 import { RefreshCw } from 'lucide-react';
@@ -40,9 +40,13 @@ export const ChatListContainer = () => {
     hasNextPage,
   } = useChatsInfiniteQuery(CHATS_DEFAULT_PAGINATION);
 
-  const chatsList = (data?.pages.flat() ?? [])
-    .map((r) => r.data?.list ?? [])
-    .reduce((acc, item) => acc.concat(item), []);
+  const chatsList = useMemo(
+    () =>
+      (data?.pages.flat() ?? [])
+        .map((r) => r.data?.list ?? [])
+        .reduce((acc, item) => acc.concat(item), []),
+    [data],
+  );
 
   const bottomSentinelRef = useRef<HTMLDivElement>(null);
 
@@ -138,9 +142,9 @@ export const ChatListContainer = () => {
   };
 
   return (
-    <div className="w-3xs h-full shrink-0 border-r overflow-auto text-sm">
-      <div className="h-full flex flex-col">
-        <div className="p-2 flex justify-between">
+    <div className="w-3xs h-full shrink-0 flex flex-col border-r overflow-hidden text-sm">
+      <div className="flex grow flex-col min-h-0">
+        <div className="p-2 shrink-0 flex justify-between">
           <div className="flex gap-2">
             <CreateChatDialog />
             <Button
@@ -153,7 +157,7 @@ export const ChatListContainer = () => {
           </div>
           {isFetching ? <Spinner className="self-center" /> : null}
         </div>
-        <div className="p-2 flex grow items-start overflow-auto">
+        <div className="p-2 flex grow min-h-0 items-start overflow-y-auto">
           <div className="w-full flex flex-col">
             <ResolvedNotesItem
               isActive={activeChat?.id === RESOLVED_NOTES_CHAT.id}
