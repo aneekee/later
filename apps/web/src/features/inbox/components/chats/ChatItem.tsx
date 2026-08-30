@@ -52,5 +52,6 @@ export const ChatItemMemo = memo(
     prevProps.chat.id === props.chat.id &&
     prevProps.chat.title === props.chat.title &&
     prevProps.chat.createdAt === props.chat.createdAt &&
-    prevProps.isActive === props.isActive,
+    prevProps.isActive === props.isActive &&
+    prevProps.onClick === props.onClick,
 );
