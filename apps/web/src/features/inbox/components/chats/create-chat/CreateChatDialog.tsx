@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -91,3 +91,6 @@ export const CreateChatDialog = () => {
     </>
   );
 };
+
+// Doesn't rerender on parent render
+export const CreateChatDialogMemo = memo(CreateChatDialog);

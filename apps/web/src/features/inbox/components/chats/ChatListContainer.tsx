@@ -11,7 +11,7 @@ import { cn } from '@/shared/lib/utils';
 
 import { ChatItem } from './ChatItem';
 import { ChatListEmpty } from './ChatListEmpty';
-import { CreateChatDialog } from './create-chat/CreateChatDialog';
+import { CreateChatDialogMemo } from './create-chat/CreateChatDialog';
 import { ChatListError } from './ChatListError';
 import { ChatListLoading } from './ChatListLoading';
 import { ResolvedNotesItem } from './ResolvedNotesItem';
@@ -146,7 +146,7 @@ export const ChatListContainer = () => {
       <div className="flex grow flex-col min-h-0">
         <div className="p-2 shrink-0 flex justify-between">
           <div className="flex gap-2">
-            <CreateChatDialog />
+            <CreateChatDialogMemo />
             <Button
               variant="outline"
               size="icon"
