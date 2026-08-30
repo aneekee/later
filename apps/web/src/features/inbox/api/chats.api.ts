@@ -22,11 +22,39 @@ export const chatsApi = createApi({
 
 export const chatsApiEndpoints = chatsApi.injectEndpoints({
   endpoints: (builder) => ({
-    chats: builder.query<ListChatsSuccessResponse, BasePaginationParams>({
+    chatsPage: builder.query<ListChatsSuccessResponse, BasePaginationParams>({
       query: (params) => {
         const queryParams = new URLSearchParams({
           page: params.page.toString(),
           pageSize: params.pageSize.toString(),
+        });
+
+        return {
+          url: `v1/chats?${queryParams}`,
+          method: 'GET',
+        };
+      },
+      providesTags: ['Chats'],
+    }),
+
+    chats: builder.infiniteQuery<
+      ListChatsSuccessResponse,
+      BasePaginationParams,
+      number
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, allPages, lastPageParam) => {
+          const totalSize = lastPage.data?.totalSize ?? 0;
+          const pageSize = lastPage.data?.pageSize ?? 0;
+          const fetched = allPages.length * pageSize;
+          return fetched < totalSize ? lastPageParam + 1 : undefined;
+        },
+      },
+      query: ({ queryArg, pageParam }) => {
+        const queryParams = new URLSearchParams({
+          page: pageParam.toString(),
+          pageSize: queryArg.pageSize.toString(),
         });
 
         return {
@@ -73,7 +101,8 @@ export const chatsApiEndpoints = chatsApi.injectEndpoints({
 });
 
 export const {
-  useChatsQuery,
+  useChatsPageQuery,
+  useChatsInfiniteQuery,
   useCreateChatMutation,
   useUpdateChatMutation,
   useDeleteChatMutation,

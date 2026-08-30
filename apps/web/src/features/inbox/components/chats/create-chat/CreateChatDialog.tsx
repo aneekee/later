@@ -43,7 +43,8 @@ export const CreateChatDialog = () => {
       }
 
       const formValues = methods.getValues();
-      await createChat(mapChatFormToCreateChatDto(formValues)).unwrap();
+      const createChatDto = mapChatFormToCreateChatDto(formValues);
+      await createChat(createChatDto).unwrap();
       setOpen(false);
     } catch (e) {
       console.error('Create chat error:', e);

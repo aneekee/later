@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router';
 import { RefreshCw } from 'lucide-react';
@@ -7,6 +7,7 @@ import type { ChatEntity } from '@later/types';
 
 import { Spinner } from '@/shared/components/ui/spinner';
 import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/lib/utils';
 
 import { ChatItem } from './ChatItem';
 import { ChatListEmpty } from './ChatListEmpty';
@@ -15,7 +16,7 @@ import { ChatListError } from './ChatListError';
 import { ChatListLoading } from './ChatListLoading';
 import { ResolvedNotesItem } from './ResolvedNotesItem';
 import { selectActiveChat } from '../../selectors/chats.selectors';
-import { useChatsQuery } from '../../api/chats.api';
+import { useChatsInfiniteQuery } from '../../api/chats.api';
 import {
   CHATS_DEFAULT_PAGINATION,
   RESOLVED_NOTES_CHAT,
@@ -30,15 +31,45 @@ export const ChatListContainer = () => {
   const activeChat = useSelector(selectActiveChat);
 
   const {
-    data: chats,
+    data,
     isFetching,
     isLoading,
     isError,
     refetch,
-  } = useChatsQuery(CHATS_DEFAULT_PAGINATION);
+    fetchNextPage,
+    hasNextPage,
+  } = useChatsInfiniteQuery(CHATS_DEFAULT_PAGINATION);
+
+  const chatsList = (data?.pages.flat() ?? [])
+    .map((r) => r.data?.list ?? [])
+    .reduce((acc, item) => acc.concat(item), []);
+
+  const bottomSentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!chats?.data?.list) {
+    const sentinel = bottomSentinelRef.current;
+    if (!sentinel) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoading && hasNextPage) {
+          void fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, isLoading, hasNextPage]);
+
+  useEffect(() => {
+    if (!chatsList.length) {
       return;
     }
 
@@ -52,11 +83,11 @@ export const ChatListContainer = () => {
       return;
     }
 
-    const chat = chats.data.list.find((c) => c.id === chatId);
+    const chat = chatsList.find((c) => c.id === chatId);
     if (chat) {
       dispatch(setActiveChat({ chat }));
     }
-  }, [chats?.data?.list, searchParams, dispatch]);
+  }, [chatsList, searchParams, dispatch]);
 
   const onChatClick = (chat: ChatEntity) => {
     setSearchParams({ chatId: chat.id });
@@ -77,13 +108,13 @@ export const ChatListContainer = () => {
       return <ChatListError onRetry={() => void refetch()} />;
     }
 
-    if (!chats?.data?.list.length) {
+    if (!chatsList.length) {
       return <ChatListEmpty />;
     }
 
     return (
       <div className="w-full">
-        {chats.data.list.map((c) => (
+        {chatsList.map((c) => (
           <ChatItem
             key={c.id}
             id={c.id}
@@ -93,6 +124,15 @@ export const ChatListContainer = () => {
             onClick={() => onChatClick(c)}
           />
         ))}
+        <div
+          className={cn(
+            'w-full flex justify-center',
+            !isFetching && 'invisible',
+          )}
+        >
+          <Spinner />
+        </div>
+        <div ref={bottomSentinelRef} />
       </div>
     );
   };
@@ -102,9 +142,7 @@ export const ChatListContainer = () => {
       <div className="h-full flex flex-col">
         <div className="p-2 flex justify-between">
           <div className="flex gap-2">
-            {chats?.data?.list && chats.data.list.length < 10 ? (
-              <CreateChatDialog />
-            ) : null}
+            <CreateChatDialog />
             <Button
               variant="outline"
               size="icon"
