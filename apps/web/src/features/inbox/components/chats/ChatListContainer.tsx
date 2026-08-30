@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router';
 import { RefreshCw } from 'lucide-react';
@@ -9,7 +9,7 @@ import { Spinner } from '@/shared/components/ui/spinner';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils';
 
-import { ChatItem } from './ChatItem';
+import { ChatItemMemo } from './ChatItem';
 import { ChatListEmpty } from './ChatListEmpty';
 import { CreateChatDialogMemo } from './create-chat/CreateChatDialog';
 import { ChatListError } from './ChatListError';
@@ -23,7 +23,6 @@ import {
 } from '../../const/chats.constants';
 import { setActiveChat } from '../../slices/chats.slice';
 
-// TODO: investigate the chats list rerenders -- it should not rerender the whole list on new message
 export const ChatListContainer = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -93,10 +92,13 @@ export const ChatListContainer = () => {
     }
   }, [chatsList, searchParams, dispatch]);
 
-  const onChatClick = (chat: ChatEntity) => {
-    setSearchParams({ chatId: chat.id });
-    dispatch(setActiveChat({ chat }));
-  };
+  const onChatClick = useCallback(
+    (chat: ChatEntity) => {
+      setSearchParams({ chatId: chat.id });
+      dispatch(setActiveChat({ chat }));
+    },
+    [dispatch, setSearchParams],
+  );
 
   const onResolvedNotesClick = () => {
     setSearchParams({ chatId: RESOLVED_NOTES_CHAT.id });
@@ -119,13 +121,11 @@ export const ChatListContainer = () => {
     return (
       <div className="w-full">
         {chatsList.map((c) => (
-          <ChatItem
+          <ChatItemMemo
             key={c.id}
-            id={c.id}
-            title={c.title}
+            chat={c}
             isActive={activeChat?.id === c.id}
-            date={c.createdAt}
-            onClick={() => onChatClick(c)}
+            onClick={onChatClick}
           />
         ))}
         <div

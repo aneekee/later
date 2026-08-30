@@ -1,25 +1,25 @@
 import { memo } from 'react';
 import { MessageSquare } from 'lucide-react';
 
+import type { ChatEntity } from '@later/types';
+
 import { formatIsoDate } from '@/shared/utils/date.util';
 import { cn } from '@/shared/lib/utils';
 
 interface Props {
-  id: string;
-  title: string;
+  chat: ChatEntity;
   isActive: boolean;
-  date: string;
-  onClick: (id: string) => void;
+  onClick: (chat: ChatEntity) => void;
 }
 
-export const ChatItem = ({ id, title, isActive, date, onClick }: Props) => {
+export const ChatItem = ({ chat, isActive, onClick }: Props) => {
   return (
     <div
       className={cn(
         'p-2 w-full flex gap-3 items-start rounded-lg transition-colors hover:bg-accent',
         isActive ? 'bg-accent' : '',
       )}
-      onClick={() => onClick(id)}
+      onClick={() => onClick(chat)}
     >
       <div
         className={cn(
@@ -34,10 +34,10 @@ export const ChatItem = ({ id, title, isActive, date, onClick }: Props) => {
       <div className="flex flex-col grow overflow-hidden">
         <div className="flex gap-2 items-center justify-between">
           <p className="font-semibold text-nowrap overflow-hidden text-ellipsis">
-            {title}
+            {chat.title}
           </p>
           {/* TODO: add a real last message date */}
-          <p className="text-nowrap text-xs">{formatIsoDate(date)}</p>
+          <p className="text-nowrap text-xs">{formatIsoDate(chat.createdAt)}</p>
         </div>
         {/* TODO: add a real last message preview */}
         <div>...</div>
@@ -49,8 +49,8 @@ export const ChatItem = ({ id, title, isActive, date, onClick }: Props) => {
 export const ChatItemMemo = memo(
   ChatItem,
   (prevProps, props) =>
-    prevProps.id === props.id &&
-    prevProps.title === props.title &&
-    prevProps.date === props.title &&
+    prevProps.chat.id === props.chat.id &&
+    prevProps.chat.title === props.chat.title &&
+    prevProps.chat.createdAt === props.chat.createdAt &&
     prevProps.isActive === props.isActive,
 );
