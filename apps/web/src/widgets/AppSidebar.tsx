@@ -1,9 +1,12 @@
 import { NavLink } from 'react-router';
 import { HomeIcon, InboxIcon } from 'lucide-react';
 
+import { UserMenu } from '@/features/auth/components/UserMenu';
+
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -43,6 +46,9 @@ export const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <UserMenu />
+      </SidebarFooter>
     </Sidebar>
   );
 };
