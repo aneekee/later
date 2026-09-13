@@ -10,7 +10,7 @@ export interface CreateChatServiceDto {
 }
 
 export interface UpdateChatServiceDto {
-  title?: string;
+  title: string;
 }
 
 export interface CheckChatAccessServiceDto {

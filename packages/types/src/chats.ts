@@ -26,7 +26,7 @@ export interface CreateChatSuccessResponse extends BaseSuccessResponse<CreateCha
 // update chat
 
 export interface UpdateChatRequestBody {
-  title?: string;
+  title: string;
 }
 
 export interface UpdateChatSuccessResponseData {

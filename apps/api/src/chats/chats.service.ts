@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,6 +9,7 @@ import { Prisma } from 'generated/prisma/client';
 import { ChatModel } from 'generated/prisma/models';
 
 import { PrismaService } from 'src/prisma/prisma.service';
+import { isRecordNotFoundError } from 'src/shared/utils/prisma.utils';
 import { UserActionsService } from 'src/user-actions/user-actions.service';
 
 import {
@@ -89,38 +91,61 @@ export class ChatsService {
       },
     });
 
-    await this.userActionsService.record({
-      type: 'CREATE_CHAT',
-      userId: dto.userId,
-      params: { chatId: chat.id },
-    });
+    this.userActionsService
+      .record({
+        type: 'CREATE_CHAT',
+        userId: dto.userId,
+        params: { chatId: chat.id },
+      })
+      .catch((error: unknown) => {
+        console.error('CREATE_CHAT tracking error', error);
+      });
 
     return mapChatModelToEntity(chat);
   }
 
   async updateChat(id: string, dto: UpdateChatServiceDto) {
-    await this.getOne(id);
+    if (!dto.title) {
+      throw new BadRequestException('Wrong chat update dto schema');
+    }
 
-    const chat = await this.prismaService.chat.update({
-      where: {
-        id,
-      },
-      data: {
-        ...(dto.title ? { title: dto.title } : {}),
-      },
-    });
+    try {
+      const chat = await this.prismaService.chat.update({
+        where: {
+          id,
+        },
+        data: {
+          title: dto.title,
+        },
+      });
 
-    return mapChatModelToEntity(chat);
+      // TODO: don't forget to track UPDATE_CHAT event
+
+      return mapChatModelToEntity(chat);
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new NotFoundException('Chat not found');
+      }
+
+      throw error;
+    }
   }
 
   async deleteChat(id: string) {
-    await this.getOne(id);
+    try {
+      // TODO: delete messages in the chat, or set up cascade delete in the database
+      // TODO: don't forget to track DELETE_CHAT event
+      await this.prismaService.chat.delete({
+        where: {
+          id,
+        },
+      });
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new NotFoundException('Chat not found');
+      }
 
-    // TODO: delete messages in the chat, or set up cascade delete in the database
-    await this.prismaService.chat.delete({
-      where: {
-        id,
-      },
-    });
+      throw error;
+    }
   }
 }
