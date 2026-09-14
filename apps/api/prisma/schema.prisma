@@ -71,6 +71,5 @@ model MessageResolution {
 
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
-  @@index([createdAt])
   @@map("message_resolutions")
 }
