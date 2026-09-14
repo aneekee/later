@@ -15,6 +15,8 @@ import { UserActionsService } from 'src/user-actions/user-actions.service';
 import {
   CheckChatAccessServiceDto,
   CreateChatServiceDto,
+  DeleteChatServiceDto,
+  GetOneChatServiceDto,
   ListChatsServiceDto,
   UpdateChatServiceDto,
 } from './chats.types';
@@ -27,20 +29,6 @@ export class ChatsService {
     private userActionsService: UserActionsService,
   ) {}
 
-  async getOne(id: string) {
-    const chat = await this.prismaService.chat.findUnique({
-      where: {
-        id,
-      },
-    });
-
-    if (!chat) {
-      throw new NotFoundException('Chat not found');
-    }
-
-    return chat;
-  }
-
   async checkAccess(dto: CheckChatAccessServiceDto) {
     const chat = await this.prismaService.chat.findUnique({
       where: {
@@ -52,6 +40,21 @@ export class ChatsService {
     if (!chat) {
       throw new ForbiddenException("You don't have access to this chat");
     }
+  }
+
+  async getOne(dto: GetOneChatServiceDto) {
+    const chat = await this.prismaService.chat.findUnique({
+      where: {
+        id: dto.chatId,
+        userId: dto.userId,
+      },
+    });
+
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+
+    return chat;
   }
 
   // TODO: compare offset vs cursor
@@ -109,6 +112,11 @@ export class ChatsService {
       throw new BadRequestException('Wrong chat update dto schema');
     }
 
+    await this.checkAccess({
+      chatId: id,
+      userId: dto.userId,
+    });
+
     try {
       const chat = await this.prismaService.chat.update({
         where: {
@@ -131,13 +139,18 @@ export class ChatsService {
     }
   }
 
-  async deleteChat(id: string) {
+  async deleteChat(dto: DeleteChatServiceDto) {
+    await this.checkAccess({
+      chatId: dto.chatId,
+      userId: dto.userId,
+    });
+
     try {
       // TODO: delete messages in the chat, or set up cascade delete in the database
       // TODO: don't forget to track DELETE_CHAT event
       await this.prismaService.chat.delete({
         where: {
-          id,
+          id: dto.chatId,
         },
       });
     } catch (error) {
