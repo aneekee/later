@@ -29,7 +29,7 @@ export class ChatsService {
     private userActionsService: UserActionsService,
   ) {}
 
-  async checkAccess(dto: CheckChatAccessServiceDto) {
+  async checkChatAccess(dto: CheckChatAccessServiceDto) {
     const chat = await this.prismaService.chat.findUnique({
       where: {
         id: dto.chatId,
@@ -112,7 +112,7 @@ export class ChatsService {
       throw new BadRequestException('Wrong chat update dto schema');
     }
 
-    await this.checkAccess({
+    await this.checkChatAccess({
       chatId: id,
       userId: dto.userId,
     });
@@ -140,7 +140,7 @@ export class ChatsService {
   }
 
   async deleteChat(dto: DeleteChatServiceDto) {
-    await this.checkAccess({
+    await this.checkChatAccess({
       chatId: dto.chatId,
       userId: dto.userId,
     });

@@ -12,6 +12,13 @@ export interface CheckMessageAccessServiceDto {
   userId: string;
 }
 
+export interface CheckMessageResolutionAccessServiceDto {
+  resolutionId: string;
+  messageId: string;
+  chatId: string;
+  userId: string;
+}
+
 export interface ListMessagesServiceDto {
   chatId: string;
   userId: string;

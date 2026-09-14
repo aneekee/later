@@ -13,6 +13,7 @@ import {
 } from 'src/shared/utils/prisma.utils';
 import {
   CheckMessageAccessServiceDto,
+  CheckMessageResolutionAccessServiceDto,
   CreateTextMessageServiceDto,
   DeleteMessageServiceDto,
   ListMessagesServiceDto,
@@ -45,7 +46,7 @@ export class MessagesService {
     private userActionsService: UserActionsService,
   ) {}
 
-  async checkAccess(dto: CheckMessageAccessServiceDto) {
+  async checkMessageAccess(dto: CheckMessageAccessServiceDto) {
     const message = await this.prismaService.message.findUnique({
       where: {
         id: dto.messageId,
@@ -59,9 +60,27 @@ export class MessagesService {
     }
   }
 
+  async checkMessageResolutionAccess(
+    dto: CheckMessageResolutionAccessServiceDto,
+  ) {
+    const resolution = await this.prismaService.messageResolution.findUnique({
+      where: {
+        id: dto.resolutionId,
+        messageId: dto.messageId,
+        message: { chatId: dto.chatId, chat: { userId: dto.userId } },
+      },
+    });
+
+    if (!resolution) {
+      throw new ForbiddenException(
+        "You don't have access to this message resolution",
+      );
+    }
+  }
+
   // TODO: compare offset vs cursor
   async listMessages(dto: ListMessagesServiceDto) {
-    await this.chatsService.checkAccess({
+    await this.chatsService.checkChatAccess({
       userId: dto.userId,
       chatId: dto.chatId,
     });
@@ -131,7 +150,7 @@ export class MessagesService {
   }
 
   async createTextMessage(dto: CreateTextMessageServiceDto) {
-    await this.chatsService.checkAccess({
+    await this.chatsService.checkChatAccess({
       userId: dto.userId,
       chatId: dto.chatId,
     });
@@ -161,7 +180,7 @@ export class MessagesService {
   }
 
   async updateTextMessage(dto: UpdateTextMessageServiceDto) {
-    await this.checkAccess({
+    await this.checkMessageAccess({
       userId: dto.userId,
       chatId: dto.chatId,
       messageId: dto.messageId,
@@ -186,7 +205,7 @@ export class MessagesService {
   }
 
   async resolveMessage(dto: ResolveMessageServiceDto) {
-    await this.checkAccess({
+    await this.checkMessageAccess({
       userId: dto.userId,
       chatId: dto.chatId,
       messageId: dto.messageId,
@@ -224,10 +243,11 @@ export class MessagesService {
   }
 
   async unresolveMessage(dto: UnresolveMessageServiceDto) {
-    await this.checkAccess({
+    await this.checkMessageResolutionAccess({
       userId: dto.userId,
       chatId: dto.chatId,
       messageId: dto.messageId,
+      resolutionId: dto.resolutionId,
     });
 
     try {
@@ -259,7 +279,7 @@ export class MessagesService {
   }
 
   async deleteMessage(dto: DeleteMessageServiceDto) {
-    await this.checkAccess({
+    await this.checkMessageAccess({
       userId: dto.userId,
       chatId: dto.chatId,
       messageId: dto.messageId,
