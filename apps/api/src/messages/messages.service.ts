@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChatsService } from 'src/chats/chats.service';
@@ -8,6 +12,7 @@ import {
   isUniqueConstraintError,
 } from 'src/shared/utils/prisma.utils';
 import {
+  CheckMessageAccessServiceDto,
   CreateTextMessageServiceDto,
   DeleteMessageServiceDto,
   ListMessagesServiceDto,
@@ -39,6 +44,20 @@ export class MessagesService {
     private chatsService: ChatsService,
     private userActionsService: UserActionsService,
   ) {}
+
+  async checkAccess(dto: CheckMessageAccessServiceDto) {
+    const message = await this.prismaService.message.findUnique({
+      where: {
+        id: dto.messageId,
+        chatId: dto.chatId,
+        chat: { userId: dto.userId },
+      },
+    });
+
+    if (!message) {
+      throw new ForbiddenException("You don't have access to this message");
+    }
+  }
 
   // TODO: compare offset vs cursor
   async listMessages(dto: ListMessagesServiceDto) {
@@ -82,6 +101,7 @@ export class MessagesService {
     const offset = (dto.page - 1) * dto.pageSize;
 
     const [messages, totalSize] = await this.prismaService.$transaction([
+      // TODO: add ownerId to the resolved messages table
       this.prismaService.message.findMany({
         where: {
           chat: { userId: dto.userId },
@@ -141,9 +161,10 @@ export class MessagesService {
   }
 
   async updateTextMessage(dto: UpdateTextMessageServiceDto) {
-    await this.chatsService.checkAccess({
+    await this.checkAccess({
       userId: dto.userId,
       chatId: dto.chatId,
+      messageId: dto.messageId,
     });
 
     const message = await this.prismaService.message.update({
@@ -165,9 +186,10 @@ export class MessagesService {
   }
 
   async resolveMessage(dto: ResolveMessageServiceDto) {
-    await this.chatsService.checkAccess({
+    await this.checkAccess({
       userId: dto.userId,
       chatId: dto.chatId,
+      messageId: dto.messageId,
     });
 
     let resolution;
@@ -186,21 +208,26 @@ export class MessagesService {
       throw error;
     }
 
-    await this.userActionsService.record({
-      type: 'RESOLVE_MESSAGE',
-      userId: dto.userId,
-      params: {
-        messageId: dto.messageId,
-        resolutionId: resolution.id,
-        resolvedAt: resolution.createdAt,
-      },
-    });
+    this.userActionsService
+      .record({
+        type: 'RESOLVE_MESSAGE',
+        userId: dto.userId,
+        params: {
+          messageId: dto.messageId,
+          resolutionId: resolution.id,
+          resolvedAt: resolution.createdAt,
+        },
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+      });
   }
 
   async unresolveMessage(dto: UnresolveMessageServiceDto) {
-    await this.chatsService.checkAccess({
+    await this.checkAccess({
       userId: dto.userId,
       chatId: dto.chatId,
+      messageId: dto.messageId,
     });
 
     try {
@@ -232,9 +259,10 @@ export class MessagesService {
   }
 
   async deleteMessage(dto: DeleteMessageServiceDto) {
-    await this.chatsService.checkAccess({
+    await this.checkAccess({
       userId: dto.userId,
       chatId: dto.chatId,
+      messageId: dto.messageId,
     });
 
     await this.prismaService.message.delete({
