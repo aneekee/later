@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,11 +9,14 @@ import { Prisma } from 'generated/prisma/client';
 import { ChatModel } from 'generated/prisma/models';
 
 import { PrismaService } from 'src/prisma/prisma.service';
+import { isRecordNotFoundError } from 'src/shared/utils/prisma.utils';
 import { UserActionsService } from 'src/user-actions/user-actions.service';
 
 import {
   CheckChatAccessServiceDto,
   CreateChatServiceDto,
+  DeleteChatServiceDto,
+  GetOneChatServiceDto,
   ListChatsServiceDto,
   UpdateChatServiceDto,
 } from './chats.types';
@@ -25,21 +29,7 @@ export class ChatsService {
     private userActionsService: UserActionsService,
   ) {}
 
-  async getOne(id: string) {
-    const chat = await this.prismaService.chat.findUnique({
-      where: {
-        id,
-      },
-    });
-
-    if (!chat) {
-      throw new NotFoundException('Chat not found');
-    }
-
-    return chat;
-  }
-
-  async checkAccess(dto: CheckChatAccessServiceDto) {
+  async checkChatAccess(dto: CheckChatAccessServiceDto) {
     const chat = await this.prismaService.chat.findUnique({
       where: {
         id: dto.chatId,
@@ -50,6 +40,21 @@ export class ChatsService {
     if (!chat) {
       throw new ForbiddenException("You don't have access to this chat");
     }
+  }
+
+  async getOne(dto: GetOneChatServiceDto) {
+    const chat = await this.prismaService.chat.findUnique({
+      where: {
+        id: dto.chatId,
+        userId: dto.userId,
+      },
+    });
+
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+
+    return chat;
   }
 
   // TODO: compare offset vs cursor
@@ -89,38 +94,71 @@ export class ChatsService {
       },
     });
 
-    await this.userActionsService.record({
-      type: 'CREATE_CHAT',
-      userId: dto.userId,
-      params: { chatId: chat.id },
-    });
+    this.userActionsService
+      .record({
+        type: 'CREATE_CHAT',
+        userId: dto.userId,
+        params: { chatId: chat.id },
+      })
+      .catch((error: unknown) => {
+        console.error('CREATE_CHAT tracking error', error);
+      });
 
     return mapChatModelToEntity(chat);
   }
 
   async updateChat(id: string, dto: UpdateChatServiceDto) {
-    await this.getOne(id);
+    if (!dto.title) {
+      throw new BadRequestException('Wrong chat update dto schema');
+    }
 
-    const chat = await this.prismaService.chat.update({
-      where: {
-        id,
-      },
-      data: {
-        ...(dto.title ? { title: dto.title } : {}),
-      },
+    await this.checkChatAccess({
+      chatId: id,
+      userId: dto.userId,
     });
 
-    return mapChatModelToEntity(chat);
+    try {
+      const chat = await this.prismaService.chat.update({
+        where: {
+          id,
+        },
+        data: {
+          title: dto.title,
+        },
+      });
+
+      // TODO: don't forget to track UPDATE_CHAT event
+
+      return mapChatModelToEntity(chat);
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new NotFoundException('Chat not found');
+      }
+
+      throw error;
+    }
   }
 
-  async deleteChat(id: string) {
-    await this.getOne(id);
-
-    // TODO: delete messages in the chat, or set up cascade delete in the database
-    await this.prismaService.chat.delete({
-      where: {
-        id,
-      },
+  async deleteChat(dto: DeleteChatServiceDto) {
+    await this.checkChatAccess({
+      chatId: dto.chatId,
+      userId: dto.userId,
     });
+
+    try {
+      // TODO: delete messages in the chat, or set up cascade delete in the database
+      // TODO: don't forget to track DELETE_CHAT event
+      await this.prismaService.chat.delete({
+        where: {
+          id: dto.chatId,
+        },
+      });
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new NotFoundException('Chat not found');
+      }
+
+      throw error;
+    }
   }
 }

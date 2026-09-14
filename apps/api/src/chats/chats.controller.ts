@@ -63,11 +63,14 @@ export class ChatsController {
 
   @Patch(':id')
   async updateChat(
+    @Req() req: Request,
     @Param('id') id: string,
     @Body() updateChatDto: UpdateChatDto,
   ): Promise<UpdateChatSuccessResponse> {
+    const userId = req['user']?.id as string;
     const chat = await this.chatsService.updateChat(id, {
       title: updateChatDto.title,
+      userId,
     });
 
     return {
@@ -78,9 +81,14 @@ export class ChatsController {
 
   @Delete(':id')
   async deleteChat(
+    @Req() req: Request,
     @Param('id') id: string,
   ): Promise<DeleteChatSuccessResponse> {
-    await this.chatsService.deleteChat(id);
+    const userId = req['user']?.id as string;
+    await this.chatsService.deleteChat({
+      chatId: id,
+      userId,
+    });
 
     return {
       message: 'Delete chat successful',

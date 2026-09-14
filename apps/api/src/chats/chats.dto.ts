@@ -2,7 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
-export class CreateChatDto {
+import { CreateChatRequestBody, UpdateChatRequestBody } from '@later/types';
+
+export class CreateChatDto implements CreateChatRequestBody {
   @ApiProperty({
     example: 'Random Ideas',
     description: 'The title of the chat',
@@ -12,14 +14,13 @@ export class CreateChatDto {
   title!: string;
 }
 
-export class UpdateChatDto {
+export class UpdateChatDto implements UpdateChatRequestBody {
   @ApiProperty({
     example: 'Random Ideas',
     description: 'The title of the chat',
   })
   @IsString()
-  @IsOptional()
-  title?: string;
+  title!: string;
 }
 
 // TODO: create a pagination dto

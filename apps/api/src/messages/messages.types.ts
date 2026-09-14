@@ -6,6 +6,19 @@ export interface ListResolvedMessagesServiceDto {
   pageSize: number;
 }
 
+export interface CheckMessageAccessServiceDto {
+  messageId: string;
+  chatId: string;
+  userId: string;
+}
+
+export interface CheckMessageResolutionAccessServiceDto {
+  resolutionId: string;
+  messageId: string;
+  chatId: string;
+  userId: string;
+}
+
 export interface ListMessagesServiceDto {
   chatId: string;
   userId: string;
