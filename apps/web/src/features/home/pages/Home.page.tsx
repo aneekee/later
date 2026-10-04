@@ -3,7 +3,7 @@ import { NotesStatsContainer } from '../components/NotesStats/NotesStatsContaine
 
 export const HomePage = () => {
   return (
-    <div className="flex flex-col gap-8 p-5 overflow-y-auto">
+    <div className="h-full flex flex-col gap-8 p-5 overflow-y-auto">
       <NotesStatsContainer />
       <NotesBurndownContainer />
     </div>

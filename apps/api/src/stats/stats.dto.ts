@@ -1,8 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsString } from 'class-validator';
-
-const TIMEZONES = [...Intl.supportedValuesOf('timeZone'), 'UTC'];
+import { IsString, IsTimeZone } from 'class-validator';
 
 export class GetNotesBurndownDto {
   @ApiProperty({
@@ -11,6 +9,6 @@ export class GetNotesBurndownDto {
   })
   @Type(() => String)
   @IsString()
-  @IsIn(TIMEZONES, { message: 'timezone must be a valid IANA timezone' })
+  @IsTimeZone({ message: 'timezone must be a valid IANA timezone' })
   timezone!: string;
 }
