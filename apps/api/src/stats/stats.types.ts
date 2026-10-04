@@ -12,6 +12,21 @@ export interface NotesTotalsDb {
   resolved: bigint;
 }
 
+export interface NotesPeriodCountsDb {
+  days: number;
+  created: bigint;
+  resolved: bigint;
+}
+
+export type NotesGapKind = 'creation' | 'resolution';
+
+export interface NotesPeriodGapDb {
+  days: number;
+  kind: NotesGapKind;
+  avgMs: number;
+  medianMs: number;
+}
+
 export interface NotesBurndownPointDb {
   day: string;
   createdCum: bigint;
