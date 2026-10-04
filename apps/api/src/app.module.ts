@@ -13,6 +13,7 @@ import { MongoModule } from './mongo/mongo.module';
 import { PerformanceAnalyticsModule } from './performance-analytics/performance-analytics.module';
 import { PerformanceInterceptor } from './shared/interceptors/performance.interceptor';
 import { UserActionsModule } from './user-actions/user-actions.module';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UserActionsModule } from './user-actions/user-actions.module';
     MongoModule,
     PerformanceAnalyticsModule,
     UserActionsModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [
