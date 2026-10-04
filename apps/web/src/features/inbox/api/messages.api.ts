@@ -4,6 +4,8 @@ import type {
   CreateTextMessageSuccessResponse,
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
+  MoveChatMessagesSuccessResponse,
+  MoveMessageSuccessResponse,
   ResolveMessageSuccessResponse,
   UnresolveMessageSuccessResponse,
   UpdateTextMessageSuccessResponse,
@@ -12,12 +14,15 @@ import type {
 import { baseQueryWithCookies } from '@/shared/api/api';
 
 import { chatsApiEndpoints } from './chats.api';
+import { resolvedMessagesApi } from './resolvedMessages.api';
 import { buildOptimisticTextMessage } from '../utils/message.utils';
 
 import type {
   CreateTextMessageParams,
   DeleteMessageParams,
   GetMessagesListParams,
+  MoveChatMessagesParams,
+  MoveMessageParams,
   ResolveMessageParams,
   UnresolveMessageParams,
   UpdateTextMessageParams,
@@ -168,6 +173,56 @@ export const messagesApiEndpoints = messagesApi.injectEndpoints({
       invalidatesTags: ['Messages'],
     }),
 
+    moveMessage: builder.mutation<
+      MoveMessageSuccessResponse,
+      MoveMessageParams
+    >({
+      query: (params) => {
+        return {
+          url: `v1/chats/${params.chatId}/messages/${params.messageId}/move`,
+          method: 'PUT',
+          body: params.body,
+        };
+      },
+      onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
+        try {
+          await queryFulfilled;
+          dispatch(chatsApiEndpoints.util.invalidateTags(['Chats']));
+          dispatch(
+            resolvedMessagesApi.util.invalidateTags(['ResolvedMessages']),
+          );
+        } catch {
+          // handled by the caller
+        }
+      },
+      invalidatesTags: ['Messages'],
+    }),
+
+    moveChatMessages: builder.mutation<
+      MoveChatMessagesSuccessResponse,
+      MoveChatMessagesParams
+    >({
+      query: (params) => {
+        return {
+          url: `v1/chats/${params.chatId}/messages/move`,
+          method: 'PUT',
+          body: params.body,
+        };
+      },
+      onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
+        try {
+          await queryFulfilled;
+          dispatch(chatsApiEndpoints.util.invalidateTags(['Chats']));
+          dispatch(
+            resolvedMessagesApi.util.invalidateTags(['ResolvedMessages']),
+          );
+        } catch {
+          // handled by the caller
+        }
+      },
+      invalidatesTags: ['Messages'],
+    }),
+
     updateMessage: builder.mutation<
       UpdateTextMessageSuccessResponse,
       UpdateTextMessageParams
@@ -249,4 +304,6 @@ export const {
   useDeleteMessageMutation,
   useResolveMessageMutation,
   useUnresolveMessageMutation,
+  useMoveMessageMutation,
+  useMoveChatMessagesMutation,
 } = messagesApiEndpoints;

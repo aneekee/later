@@ -12,6 +12,8 @@ import type {
 import { baseQueryWithCookies } from '@/shared/api/api';
 import type { BasePaginationParams } from '@/shared/types/api';
 
+import type { GetChatsListParams } from '../types/chats.types';
+
 export const chatsApi = createApi({
   reducerPath: 'chatsApi',
   baseQuery: baseQueryWithCookies,
@@ -39,7 +41,7 @@ export const chatsApiEndpoints = chatsApi.injectEndpoints({
 
     chats: builder.infiniteQuery<
       ListChatsSuccessResponse,
-      BasePaginationParams,
+      GetChatsListParams,
       number
     >({
       infiniteQueryOptions: {
@@ -56,6 +58,14 @@ export const chatsApiEndpoints = chatsApi.injectEndpoints({
           page: pageParam.toString(),
           pageSize: queryArg.pageSize.toString(),
         });
+
+        if (queryArg.search) {
+          queryParams.set('search', queryArg.search);
+        }
+
+        if (queryArg.excludeId) {
+          queryParams.set('excludeId', queryArg.excludeId);
+        }
 
         return {
           url: `v1/chats?${queryParams}`,

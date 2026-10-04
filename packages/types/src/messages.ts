@@ -82,3 +82,19 @@ export interface UnresolveMessageSuccessResponse extends BaseSuccessResponse<{}>
 // delete message
 
 export interface DeleteMessageSuccessResponse extends BaseSuccessResponse {}
+
+// move message
+
+export interface MoveMessageRequestBody {
+  targetChatId: string;
+}
+
+export interface MoveMessageSuccessResponse extends BaseSuccessResponse {}
+
+// move all chat messages
+
+export interface MoveChatMessagesRequestBody {
+  targetChatId: string;
+}
+
+export interface MoveChatMessagesSuccessResponse extends BaseSuccessResponse {}

@@ -17,6 +17,8 @@ import {
   DeleteMessageSuccessResponse,
   ListMessagesSuccessResponse,
   ListResolvedMessagesSuccessResponse,
+  MoveChatMessagesSuccessResponse,
+  MoveMessageSuccessResponse,
   ResolveMessageSuccessResponse,
   UnresolveMessageSuccessResponse,
   UpdateTextMessageSuccessResponse,
@@ -27,6 +29,8 @@ import {
   CreateTextMessageDto,
   ListMessagesDto,
   ListResolvedMessagesDto,
+  MoveChatMessagesDto,
+  MoveMessageDto,
   ResolveMessageDto,
   UpdateTextMessageDto,
 } from './messages.dto';
@@ -132,6 +136,46 @@ export class MessagesController {
       data: {
         message,
       },
+    };
+  }
+
+  @Put('/move')
+  async moveChatMessages(
+    @Req() req: Request,
+    @Param('chatId') chatId: string,
+    @Body() dto: MoveChatMessagesDto,
+  ): Promise<MoveChatMessagesSuccessResponse> {
+    const userId = req['user']?.id as string;
+
+    await this.messagesService.moveChatMessages({
+      chatId,
+      userId,
+      targetChatId: dto.targetChatId,
+    });
+
+    return {
+      message: 'Move chat messages successful',
+    };
+  }
+
+  @Put('/:messageId/move')
+  async moveMessage(
+    @Req() req: Request,
+    @Param('messageId') messageId: string,
+    @Param('chatId') chatId: string,
+    @Body() dto: MoveMessageDto,
+  ): Promise<MoveMessageSuccessResponse> {
+    const userId = req['user']?.id as string;
+
+    await this.messagesService.moveMessage({
+      messageId,
+      chatId,
+      userId,
+      targetChatId: dto.targetChatId,
+    });
+
+    return {
+      message: 'Move message successful',
     };
   }
 

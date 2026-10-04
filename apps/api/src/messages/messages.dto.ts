@@ -1,5 +1,7 @@
 import {
   CreateTextMessageRequestBody,
+  MoveChatMessagesRequestBody,
+  MoveMessageRequestBody,
   ResolveMessageRequestBody,
   UpdateTextMessageRequestBody,
 } from '@later/types';
@@ -97,4 +99,24 @@ export class ResolveMessageDto implements ResolveMessageRequestBody {
   @IsString()
   @IsOptional()
   note?: string;
+}
+
+export class MoveMessageDto implements MoveMessageRequestBody {
+  @ApiProperty({
+    example: '0b5a3c1e-4f7e-4a8e-9d2b-1c3f5e7a9b0d',
+    description: 'The chat to move the message to',
+  })
+  @IsString()
+  @IsNotEmpty()
+  targetChatId!: string;
+}
+
+export class MoveChatMessagesDto implements MoveChatMessagesRequestBody {
+  @ApiProperty({
+    example: '0b5a3c1e-4f7e-4a8e-9d2b-1c3f5e7a9b0d',
+    description: 'The chat to move all the messages to',
+  })
+  @IsString()
+  @IsNotEmpty()
+  targetChatId!: string;
 }

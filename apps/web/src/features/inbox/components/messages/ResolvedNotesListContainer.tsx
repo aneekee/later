@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { ResolvedMessageEntity } from '@later/types';
 
@@ -12,6 +12,7 @@ import {
   useResolvedMessagesInfiniteQuery,
   useUnresolveResolvedMessageMutation,
 } from '../../api/resolvedMessages.api';
+import { useMoveMessageMutation } from '../../api/messages.api';
 import { ResolvedMessageListEmpty } from './ResolvedMessageListEmpty';
 import { MessageListError } from './MessageListError';
 import { MessageListLoading } from './MessageListLoading';
@@ -19,6 +20,7 @@ import { TextMessage } from './TextMessage';
 import { WithMessageContextMenu } from './WithMessageContextMenu';
 import { MessageDateSeparator } from './MessageDateSeparator';
 import { WithMessageItemResolution } from './WithMessageItemResolution';
+import { MoveToChatDialog } from '../MoveToChat/MoveToChatDialog';
 
 interface Props {
   chatId: string;
@@ -37,6 +39,12 @@ export const ResolvedNotesListContainer = ({ chatId }: Props) => {
 
   const [deleteMessage] = useDeleteResolvedMessageMutation();
   const [unresolveMutation] = useUnresolveResolvedMessageMutation();
+  const [moveMessage] = useMoveMessageMutation();
+
+  const [movingMessage, setMovingMessage] = useState<{
+    chatId: string;
+    messageId: string;
+  } | null>(null);
 
   const { displayErrorToast } = useDisplayErrorToast();
 
@@ -110,8 +118,7 @@ export const ResolvedNotesListContainer = ({ chatId }: Props) => {
       <div className="px-3 py-2 w-full min-h-0 flex flex-col-reverse items-end gap-2 overflow-y-auto">
         {messagesList.map((m, index, array) => {
           const nextMessage = array[index + 1] as
-            | ResolvedMessageEntity
-            | undefined;
+            ResolvedMessageEntity | undefined;
           const showSeparator =
             index === array.length - 1 ||
             (nextMessage &&
@@ -141,6 +148,9 @@ export const ResolvedNotesListContainer = ({ chatId }: Props) => {
                       : undefined
                   }
                   onCopyClick={() => onCopyClick(m.textMessage.content)}
+                  onMoveClick={() =>
+                    setMovingMessage({ chatId: m.chat.id, messageId: m.id })
+                  }
                   onDeleteClick={() => void onDeleteClick(m.chat.id, m.id)}
                 >
                   <WithMessageItemResolution
@@ -173,6 +183,23 @@ export const ResolvedNotesListContainer = ({ chatId }: Props) => {
   return (
     <div className="w-full flex grow min-h-0 overflow-hidden">
       {renderMessagesContent()}
+      {movingMessage ? (
+        <MoveToChatDialog
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setMovingMessage(null);
+            }
+          }}
+          title="Move note"
+          description="Select a chat to move this note to"
+          excludeChatId={movingMessage.chatId}
+          errorMessage="Move note failed"
+          onSubmit={(targetChatId) =>
+            moveMessage({ ...movingMessage, body: { targetChatId } }).unwrap()
+          }
+        />
+      ) : null}
     </div>
   );
 };

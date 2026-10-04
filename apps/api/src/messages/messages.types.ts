@@ -60,6 +60,19 @@ export interface DeleteMessageServiceDto {
   userId: string;
 }
 
+export interface MoveMessageServiceDto {
+  messageId: string;
+  chatId: string;
+  targetChatId: string;
+  userId: string;
+}
+
+export interface MoveChatMessagesServiceDto {
+  chatId: string;
+  targetChatId: string;
+  userId: string;
+}
+
 // @TODO: use the Prisma types instead
 export type DbMessageResolution = {
   id: string;

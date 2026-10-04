@@ -3,6 +3,8 @@ import type z from 'zod';
 import type {
   CreateTextMessageRequestBody,
   MessageResolutionFilter,
+  MoveChatMessagesRequestBody,
+  MoveMessageRequestBody,
   ResolveMessageRequestBody,
   UpdateTextMessageRequestBody,
 } from '@later/types';
@@ -46,4 +48,15 @@ export interface UnresolveMessageParams {
 export interface DeleteMessageParams {
   chatId: string;
   messageId: string;
+}
+
+export interface MoveMessageParams {
+  chatId: string;
+  messageId: string;
+  body: MoveMessageRequestBody;
+}
+
+export interface MoveChatMessagesParams {
+  chatId: string;
+  body: MoveChatMessagesRequestBody;
 }

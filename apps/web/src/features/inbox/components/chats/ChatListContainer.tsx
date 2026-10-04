@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router';
 import { RefreshCw } from 'lucide-react';
@@ -15,8 +15,11 @@ import { CreateChatDialogMemo } from './create-chat/CreateChatDialog';
 import { ChatListError } from './ChatListError';
 import { ChatListLoading } from './ChatListLoading';
 import { ResolvedNotesItem } from './ResolvedNotesItem';
+import { WithChatContextMenu } from './WithChatContextMenu';
+import { MoveToChatDialog } from '../MoveToChat/MoveToChatDialog';
 import { selectActiveChat } from '../../selectors/chats.selectors';
 import { useChatsInfiniteQuery } from '../../api/chats.api';
+import { useMoveChatMessagesMutation } from '../../api/messages.api';
 import {
   CHATS_DEFAULT_PAGINATION,
   RESOLVED_NOTES_CHAT,
@@ -38,6 +41,9 @@ export const ChatListContainer = () => {
     fetchNextPage,
     hasNextPage,
   } = useChatsInfiniteQuery(CHATS_DEFAULT_PAGINATION);
+
+  const [moveChatMessages] = useMoveChatMessagesMutation();
+  const [movingChat, setMovingChat] = useState<ChatEntity | null>(null);
 
   const chatsList = useMemo(
     () =>
@@ -121,12 +127,13 @@ export const ChatListContainer = () => {
     return (
       <div className="w-full">
         {chatsList.map((c) => (
-          <ChatItemMemo
-            key={c.id}
-            chat={c}
-            isActive={activeChat?.id === c.id}
-            onClick={onChatClick}
-          />
+          <WithChatContextMenu key={c.id} onMoveClick={() => setMovingChat(c)}>
+            <ChatItemMemo
+              chat={c}
+              isActive={activeChat?.id === c.id}
+              onClick={onChatClick}
+            />
+          </WithChatContextMenu>
         ))}
         <div
           className={cn(
@@ -168,6 +175,26 @@ export const ChatListContainer = () => {
           </div>
         </div>
       </div>
+      {movingChat ? (
+        <MoveToChatDialog
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setMovingChat(null);
+            }
+          }}
+          title="Move all notes"
+          description={`All resolved and unresolved notes from '${movingChat.title}' will be moved.`}
+          excludeChatId={movingChat.id}
+          errorMessage="Move notes failed"
+          onSubmit={(targetChatId) =>
+            moveChatMessages({
+              chatId: movingChat.id,
+              body: { targetChatId },
+            }).unwrap()
+          }
+        />
+      ) : null}
     </div>
   );
 };

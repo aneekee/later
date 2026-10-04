@@ -9,6 +9,13 @@ export interface ChatEntity {
 
 // list chats
 
+export interface ListChatsQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  excludeId?: string;
+}
+
 export interface ListChatsSuccessResponse extends SuccessListResponse<ChatEntity> {}
 
 // create chat

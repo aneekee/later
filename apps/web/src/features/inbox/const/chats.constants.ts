@@ -5,6 +5,7 @@ import type { ChatEntity } from '@later/types';
 import type {
   CreateChatFormValues,
   MessageResolutionOption,
+  MoveToChatFormValues,
 } from '../types/chats.types';
 
 export const CHATS_DEFAULT_PAGINATION: BasePaginationParams = {
@@ -14,6 +15,10 @@ export const CHATS_DEFAULT_PAGINATION: BasePaginationParams = {
 
 export const CREATE_CHAT_FORM_DEFAULT_VALUES: CreateChatFormValues = {
   title: '',
+};
+
+export const MOVE_TO_CHAT_FORM_DEFAULT_VALUES: MoveToChatFormValues = {
+  targetChatId: '',
 };
 
 export const RESOLUTION_OPTIONS: MessageResolutionOption[] = [
