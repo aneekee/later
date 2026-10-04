@@ -300,17 +300,16 @@ export class MessagesService {
       );
     }
 
-    await Promise.all([
-      this.checkMessageAccess({
-        userId: dto.userId,
-        chatId: dto.chatId,
-        messageId: dto.messageId,
-      }),
-      this.chatsService.checkChatAccess({
-        userId: dto.userId,
-        chatId: dto.targetChatId,
-      }),
-    ]);
+    await this.checkMessageAccess({
+      userId: dto.userId,
+      chatId: dto.chatId,
+      messageId: dto.messageId,
+    });
+
+    await this.chatsService.checkChatAccess({
+      userId: dto.userId,
+      chatId: dto.targetChatId,
+    });
 
     await this.prismaService.message.update({
       where: { id: dto.messageId, chatId: dto.chatId },
@@ -325,16 +324,15 @@ export class MessagesService {
       );
     }
 
-    await Promise.all([
-      this.chatsService.checkChatAccess({
-        userId: dto.userId,
-        chatId: dto.chatId,
-      }),
-      this.chatsService.checkChatAccess({
-        userId: dto.userId,
-        chatId: dto.targetChatId,
-      }),
-    ]);
+    await this.chatsService.checkChatAccess({
+      userId: dto.userId,
+      chatId: dto.chatId,
+    });
+
+    await this.chatsService.checkChatAccess({
+      userId: dto.userId,
+      chatId: dto.targetChatId,
+    });
 
     await this.prismaService.message.updateMany({
       where: { chatId: dto.chatId },

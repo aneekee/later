@@ -13,6 +13,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   Min,
 } from 'class-validator';
 
@@ -116,7 +117,7 @@ export class MoveChatMessagesDto implements MoveChatMessagesRequestBody {
     example: '0b5a3c1e-4f7e-4a8e-9d2b-1c3f5e7a9b0d',
     description: 'The chat to move all the messages to',
   })
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   targetChatId!: string;
 }

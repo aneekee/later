@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -74,7 +75,7 @@ export class ListChatsDto implements ListChatsQueryParams {
     description: 'Chat id to exclude from the list',
     required: false,
   })
-  @IsString()
+  @IsUUID()
   @IsOptional()
   excludeId?: string;
 }
