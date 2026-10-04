@@ -11,6 +11,7 @@ import { ConditionalWrapper } from '@/shared/components/ConditionalWrapper';
 import {
   useDeleteMessageMutation,
   useMessagesInfiniteQuery,
+  useMoveMessageMutation,
   useResolveMessageMutation,
   useUnresolveMessageMutation,
 } from '../../api/messages.api';
@@ -22,6 +23,7 @@ import { WithMessageContextMenu } from './WithMessageContextMenu';
 import { WithMessageItemResolution } from './WithMessageItemResolution';
 import { MessageDateSeparator } from './MessageDateSeparator';
 import { ResolveMessageDialog } from './resolve-message/ResolveMessageDialog';
+import { MoveToChatDialog } from '../MoveToChat/MoveToChatDialog';
 
 interface Props {
   chatId: string;
@@ -48,10 +50,14 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
   const [deleteMessage] = useDeleteMessageMutation();
   const [resolveMessage] = useResolveMessageMutation();
   const [unresolveMutation] = useUnresolveMessageMutation();
+  const [moveMessage] = useMoveMessageMutation();
 
   const [resolveDialogMessageId, setResolveDialogMessageId] = useState<
     string | null
   >(null);
+  const [moveDialogMessageId, setMoveDialogMessageId] = useState<string | null>(
+    null,
+  );
 
   const { displayErrorToast } = useDisplayErrorToast();
 
@@ -80,6 +86,10 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
 
   const onCopyClick = (textContent: string) => {
     void window.navigator.clipboard.writeText(textContent);
+  };
+
+  const onMoveClick = (id: string) => {
+    setMoveDialogMessageId(id);
   };
 
   const onResolveClick = (id: string) => {
@@ -172,6 +182,7 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
                       : undefined
                   }
                   onCopyClick={() => onCopyClick(m.textMessage.content)}
+                  onMoveClick={() => onMoveClick(m.id)}
                   onDeleteClick={() => void onDeleteClick(m.id)}
                 >
                   <ConditionalWrapper
@@ -221,6 +232,27 @@ export const MessageListContainer = ({ chatId, resolution }: Props) => {
           }}
           chatId={chatId}
           messageId={resolveDialogMessageId}
+        />
+      ) : null}
+      {moveDialogMessageId ? (
+        <MoveToChatDialog
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setMoveDialogMessageId(null);
+            }
+          }}
+          title="Move note"
+          description="Select a chat to move this note to"
+          excludeChatId={chatId}
+          errorMessage="Move note failed"
+          onSubmit={(targetChatId) =>
+            moveMessage({
+              chatId,
+              messageId: moveDialogMessageId,
+              body: { targetChatId },
+            }).unwrap()
+          }
         />
       ) : null}
     </div>

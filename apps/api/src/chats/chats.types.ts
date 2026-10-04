@@ -2,6 +2,8 @@ export interface ListChatsServiceDto {
   userId: string;
   page: number;
   pageSize: number;
+  search?: string;
+  excludeId?: string;
 }
 
 export interface GetOneChatServiceDto {

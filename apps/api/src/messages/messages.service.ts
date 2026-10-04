@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -18,6 +19,8 @@ import {
   DeleteMessageServiceDto,
   ListMessagesServiceDto,
   ListResolvedMessagesServiceDto,
+  MoveChatMessagesServiceDto,
+  MoveMessageServiceDto,
   DbMessagesList,
   DbMessageItem,
   DbResolvedMessagesList,
@@ -287,6 +290,53 @@ export class MessagesService {
 
     await this.prismaService.message.delete({
       where: { id: dto.messageId },
+    });
+  }
+
+  async moveMessage(dto: MoveMessageServiceDto) {
+    if (dto.targetChatId === dto.chatId) {
+      throw new BadRequestException(
+        'The target chat must differ from the current one',
+      );
+    }
+
+    await this.checkMessageAccess({
+      userId: dto.userId,
+      chatId: dto.chatId,
+      messageId: dto.messageId,
+    });
+
+    await this.chatsService.checkChatAccess({
+      userId: dto.userId,
+      chatId: dto.targetChatId,
+    });
+
+    await this.prismaService.message.update({
+      where: { id: dto.messageId, chatId: dto.chatId },
+      data: { chatId: dto.targetChatId },
+    });
+  }
+
+  async moveChatMessages(dto: MoveChatMessagesServiceDto) {
+    if (dto.targetChatId === dto.chatId) {
+      throw new BadRequestException(
+        'The target chat must differ from the current one',
+      );
+    }
+
+    await this.chatsService.checkChatAccess({
+      userId: dto.userId,
+      chatId: dto.chatId,
+    });
+
+    await this.chatsService.checkChatAccess({
+      userId: dto.userId,
+      chatId: dto.targetChatId,
+    });
+
+    await this.prismaService.message.updateMany({
+      where: { chatId: dto.chatId },
+      data: { chatId: dto.targetChatId },
     });
   }
 }

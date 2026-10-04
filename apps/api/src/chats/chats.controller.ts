@@ -35,6 +35,8 @@ export class ChatsController {
       await this.chatsService.listChats({
         page: listChatsDto.page,
         pageSize: listChatsDto.pageSize,
+        search: listChatsDto.search,
+        excludeId: listChatsDto.excludeId,
         userId,
       });
 

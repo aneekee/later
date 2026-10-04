@@ -20,7 +20,7 @@ import {
   ListChatsServiceDto,
   UpdateChatServiceDto,
 } from './chats.types';
-import { mapChatModelToEntity } from './chats.utils';
+import { buildListChatsWhereSql, mapChatModelToEntity } from './chats.utils';
 
 @Injectable()
 export class ChatsService {
@@ -60,29 +60,30 @@ export class ChatsService {
   // TODO: compare offset vs cursor
   async listChats(dto: ListChatsServiceDto) {
     const offset = (dto.page - 1) * dto.pageSize;
+    const whereSql = buildListChatsWhereSql(dto);
 
     // TODO: add lastUpdatedAt field to chats table
-    const [chats, totalSize] = await this.prismaService.$transaction([
+    const [chats, countResult] = await this.prismaService.$transaction([
       this.prismaService.$queryRaw<ChatModel[]>(
         Prisma.sql`
           SELECT id, user_id AS "userId", title, created_at AS "createdAt" FROM chats
-          WHERE user_id = ${dto.userId}
+          ${whereSql}
           ORDER BY (
             SELECT MAX(created_at) FROM messages WHERE chat_id = chats.id
-          ) DESC NULLS LAST
+          ) DESC NULLS LAST, created_at DESC, id
           LIMIT ${dto.pageSize} OFFSET ${offset}
         `,
       ),
-      this.prismaService.chat.count({
-        where: { userId: dto.userId },
-      }),
+      this.prismaService.$queryRaw<[{ count: bigint }]>(
+        Prisma.sql`SELECT COUNT(*) AS count FROM chats ${whereSql}`,
+      ),
     ]);
 
     return {
       list: chats.map((c) => mapChatModelToEntity(c)),
       page: dto.page,
       pageSize: dto.pageSize,
-      totalSize,
+      totalSize: Number(countResult[0].count),
     };
   }
 
