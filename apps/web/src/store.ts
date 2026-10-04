@@ -4,6 +4,7 @@ import { authApi } from './features/auth/api/auth.api';
 import { chatsApi } from './features/inbox/api/chats.api';
 import { messagesApi } from './features/inbox/api/messages.api';
 import { resolvedMessagesApi } from './features/inbox/api/resolvedMessages.api';
+import { statsApi } from './features/home/api/stats.api';
 import { chatsSlice } from './features/inbox/slices/chats.slice';
 
 export const store = configureStore({
@@ -13,6 +14,7 @@ export const store = configureStore({
     [chatsApi.reducerPath]: chatsApi.reducer,
     [messagesApi.reducerPath]: messagesApi.reducer,
     [resolvedMessagesApi.reducerPath]: resolvedMessagesApi.reducer,
+    [statsApi.reducerPath]: statsApi.reducer,
 
     // slices
     [chatsSlice.name]: chatsSlice.reducer,
@@ -22,7 +24,8 @@ export const store = configureStore({
       .concat(authApi.middleware)
       .concat(chatsApi.middleware)
       .concat(messagesApi.middleware)
-      .concat(resolvedMessagesApi.middleware),
+      .concat(resolvedMessagesApi.middleware)
+      .concat(statsApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

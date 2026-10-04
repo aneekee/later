@@ -36,3 +36,19 @@ export const getReadableDate = (isoString: string): string => {
   const date = new Date(isoString);
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
 };
+
+export const getBrowserTimezone = () =>
+  Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+/**
+ * Formats a YYYY-MM-DD calendar day. The day is already local to the user's
+ * timezone, so it is parsed and formatted in UTC to avoid shifting it.
+ */
+export const formatCalendarDay = (
+  day: string,
+  options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' },
+) =>
+  new Date(`${day}T00:00:00Z`).toLocaleDateString('en-US', {
+    ...options,
+    timeZone: 'UTC',
+  });
