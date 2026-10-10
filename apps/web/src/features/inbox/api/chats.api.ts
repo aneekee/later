@@ -4,6 +4,7 @@ import type {
   CreateChatRequestBody,
   CreateChatSuccessResponse,
   DeleteChatSuccessResponse,
+  GetChatStatsSuccessResponse,
   ListChatsSuccessResponse,
   UpdateChatRequestBody,
   UpdateChatSuccessResponse,
@@ -12,7 +13,12 @@ import type {
 import { baseQueryWithCookies } from '@/shared/api/api';
 import type { BasePaginationParams } from '@/shared/types/api';
 
-import type { GetChatsListParams } from '../types/chats.types';
+import { messagesApi } from './messages.api';
+import { resolvedMessagesApi } from './resolvedMessages.api';
+import type {
+  DeleteChatParams,
+  GetChatsListParams,
+} from '../types/chats.types';
 
 export const chatsApi = createApi({
   reducerPath: 'chatsApi',
@@ -100,11 +106,30 @@ export const chatsApiEndpoints = chatsApi.injectEndpoints({
       invalidatesTags: ['Chats'],
     }),
 
-    deleteChat: builder.mutation<DeleteChatSuccessResponse, string>({
-      query: (id) => ({
-        url: `v1/chats/${id}`,
-        method: 'DELETE',
+    chatStats: builder.query<GetChatStatsSuccessResponse, string>({
+      query: (chatId) => ({
+        url: `v1/chats/${chatId}/stats`,
+        method: 'GET',
       }),
+    }),
+
+    deleteChat: builder.mutation<DeleteChatSuccessResponse, DeleteChatParams>({
+      query: ({ chatId, targetChatId }) => ({
+        url: `v1/chats/${chatId}`,
+        method: 'DELETE',
+        params: targetChatId ? { targetChatId } : undefined,
+      }),
+      onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
+        try {
+          await queryFulfilled;
+          dispatch(messagesApi.util.invalidateTags(['Messages']));
+          dispatch(
+            resolvedMessagesApi.util.invalidateTags(['ResolvedMessages']),
+          );
+        } catch {
+          // handled by the caller
+        }
+      },
       invalidatesTags: ['Chats'],
     }),
   }),
@@ -115,5 +140,6 @@ export const {
   useChatsInfiniteQuery,
   useCreateChatMutation,
   useUpdateChatMutation,
+  useChatStatsQuery,
   useDeleteChatMutation,
 } = chatsApiEndpoints;

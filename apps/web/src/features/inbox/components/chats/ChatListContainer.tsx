@@ -17,6 +17,7 @@ import { ChatListLoading } from './ChatListLoading';
 import { ResolvedNotesItem } from './ResolvedNotesItem';
 import { WithChatContextMenu } from './WithChatContextMenu';
 import { MoveToChatDialog } from '../MoveToChat/MoveToChatDialog';
+import { DeleteChatDialog } from './delete/DeleteChatDialog';
 import { selectActiveChat } from '../../selectors/chats.selectors';
 import { useChatsInfiniteQuery } from '../../api/chats.api';
 import { useMoveChatMessagesMutation } from '../../api/messages.api';
@@ -44,6 +45,7 @@ export const ChatListContainer = () => {
 
   const [moveChatMessages] = useMoveChatMessagesMutation();
   const [movingChat, setMovingChat] = useState<ChatEntity | null>(null);
+  const [deletingChat, setDeletingChat] = useState<ChatEntity | null>(null);
 
   const chatsList = useMemo(
     () =>
@@ -111,6 +113,18 @@ export const ChatListContainer = () => {
     dispatch(setActiveChat({ chat: RESOLVED_NOTES_CHAT }));
   };
 
+  const onChatDeleted = (chat: ChatEntity) => {
+    if (activeChat?.id !== chat.id) {
+      return;
+    }
+
+    dispatch(setActiveChat({ chat: null }));
+    setSearchParams((params) => {
+      params.delete('chatId');
+      return params;
+    });
+  };
+
   const renderChatsContent = () => {
     if (isLoading) {
       return <ChatListLoading />;
@@ -127,7 +141,11 @@ export const ChatListContainer = () => {
     return (
       <div className="w-full">
         {chatsList.map((c) => (
-          <WithChatContextMenu key={c.id} onMoveClick={() => setMovingChat(c)}>
+          <WithChatContextMenu
+            key={c.id}
+            onMoveClick={() => setMovingChat(c)}
+            onDeleteClick={() => setDeletingChat(c)}
+          >
             <ChatItemMemo
               chat={c}
               isActive={activeChat?.id === c.id}
@@ -193,6 +211,18 @@ export const ChatListContainer = () => {
               body: { targetChatId },
             }).unwrap()
           }
+        />
+      ) : null}
+      {deletingChat ? (
+        <DeleteChatDialog
+          chat={deletingChat}
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDeletingChat(null);
+            }
+          }}
+          onDeleted={() => onChatDeleted(deletingChat)}
         />
       ) : null}
     </div>

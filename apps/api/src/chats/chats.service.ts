@@ -5,6 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { ChatStatsEntity } from '@later/types';
+
 import { Prisma } from 'generated/prisma/client';
 import { ChatModel } from 'generated/prisma/models';
 
@@ -15,7 +17,9 @@ import { UserActionsService } from 'src/user-actions/user-actions.service';
 import {
   CheckChatAccessServiceDto,
   CreateChatServiceDto,
+  DeleteChatAndMoveMessagesServiceDto,
   DeleteChatServiceDto,
+  GetChatStatsServiceDto,
   GetOneChatServiceDto,
   ListChatsServiceDto,
   UpdateChatServiceDto,
@@ -147,8 +151,6 @@ export class ChatsService {
     });
 
     try {
-      // TODO: delete messages in the chat, or set up cascade delete in the database
-      // TODO: don't forget to track DELETE_CHAT event
       await this.prismaService.chat.delete({
         where: {
           id: dto.chatId,
@@ -161,5 +163,70 @@ export class ChatsService {
 
       throw error;
     }
+  }
+
+  async deleteChatAndMoveMessages(dto: DeleteChatAndMoveMessagesServiceDto) {
+    if (dto.targetChatId === dto.chatId) {
+      throw new BadRequestException(
+        'The target chat must differ from the deleted one',
+      );
+    }
+
+    await this.checkChatAccess({
+      chatId: dto.chatId,
+      userId: dto.userId,
+    });
+
+    await this.checkChatAccess({
+      chatId: dto.targetChatId,
+      userId: dto.userId,
+    });
+
+    try {
+      await this.prismaService.$transaction([
+        this.prismaService.message.updateMany({
+          where: { chatId: dto.chatId },
+          data: { chatId: dto.targetChatId },
+        }),
+        this.prismaService.chat.delete({
+          where: {
+            id: dto.chatId,
+          },
+        }),
+      ]);
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new NotFoundException('Chat not found');
+      }
+
+      throw error;
+    }
+  }
+
+  async getChatStats(dto: GetChatStatsServiceDto): Promise<ChatStatsEntity> {
+    await this.checkChatAccess({
+      chatId: dto.chatId,
+      userId: dto.userId,
+    });
+
+    const [result] = await this.prismaService.$queryRaw<
+      [{ total: bigint; resolved: bigint }]
+    >(
+      Prisma.sql`
+        SELECT COUNT(m.id) AS total, COUNT(mr.id) AS resolved
+        FROM messages m
+        LEFT JOIN message_resolutions mr ON mr.message_id = m.id
+        WHERE m.chat_id = ${dto.chatId}
+      `,
+    );
+
+    const total = Number(result.total);
+    const resolved = Number(result.resolved);
+
+    return {
+      total,
+      resolved,
+      unresolved: total - resolved,
+    };
   }
 }

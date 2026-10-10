@@ -30,3 +30,14 @@ export interface DeleteChatServiceDto {
   chatId: string;
   userId: string;
 }
+
+export interface DeleteChatAndMoveMessagesServiceDto {
+  chatId: string;
+  targetChatId: string;
+  userId: string;
+}
+
+export interface GetChatStatsServiceDto {
+  chatId: string;
+  userId: string;
+}

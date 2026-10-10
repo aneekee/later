@@ -24,6 +24,7 @@ interface Props {
   onChange: (chatId: string) => void;
   excludeChatId: string;
   invalid?: boolean;
+  showClear?: boolean;
 }
 
 export const ChatCombobox = ({
@@ -32,6 +33,7 @@ export const ChatCombobox = ({
   onChange,
   excludeChatId,
   invalid,
+  showClear,
 }: Props) => {
   const [search, setSearch] = useState('');
   const [selectedChat, setSelectedChat] = useState<ChatEntity | null>(null);
@@ -129,6 +131,7 @@ export const ChatCombobox = ({
           className="w-full"
           placeholder="Search chats..."
           aria-invalid={invalid}
+          showClear={showClear}
         />
         <ComboboxContent container={popupContainer}>
           <ComboboxEmpty>{renderEmpty()}</ComboboxEmpty>

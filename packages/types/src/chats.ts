@@ -44,4 +44,22 @@ export interface UpdateChatSuccessResponse extends BaseSuccessResponse<UpdateCha
 
 // delete chat
 
+export interface DeleteChatQueryParams {
+  targetChatId?: string;
+}
+
 export interface DeleteChatSuccessResponse extends BaseSuccessResponse {}
+
+// chat stats
+
+export interface ChatStatsEntity {
+  total: number;
+  resolved: number;
+  unresolved: number;
+}
+
+export interface GetChatStatsSuccessResponseData {
+  stats: ChatStatsEntity;
+}
+
+export interface GetChatStatsSuccessResponse extends BaseSuccessResponse<GetChatStatsSuccessResponseData> {}

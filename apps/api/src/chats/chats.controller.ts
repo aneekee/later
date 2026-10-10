@@ -14,12 +14,18 @@ import { type Request } from 'express';
 import {
   CreateChatSuccessResponse,
   DeleteChatSuccessResponse,
+  GetChatStatsSuccessResponse,
   ListChatsSuccessResponse,
   UpdateChatSuccessResponse,
 } from '@later/types';
 
 import { ChatsService } from './chats.service';
-import { CreateChatDto, ListChatsDto, UpdateChatDto } from './chats.dto';
+import {
+  CreateChatDto,
+  DeleteChatDto,
+  ListChatsDto,
+  UpdateChatDto,
+} from './chats.dto';
 
 @Controller('v1/chats')
 export class ChatsController {
@@ -63,6 +69,23 @@ export class ChatsController {
     };
   }
 
+  @Get(':id/stats')
+  async getChatStats(
+    @Req() req: Request,
+    @Param('id') id: string,
+  ): Promise<GetChatStatsSuccessResponse> {
+    const userId = req['user']?.id as string;
+    const stats = await this.chatsService.getChatStats({
+      chatId: id,
+      userId,
+    });
+
+    return {
+      message: 'Get chat stats successful',
+      data: { stats },
+    };
+  }
+
   @Patch(':id')
   async updateChat(
     @Req() req: Request,
@@ -85,12 +108,22 @@ export class ChatsController {
   async deleteChat(
     @Req() req: Request,
     @Param('id') id: string,
+    @Query() deleteChatDto: DeleteChatDto,
   ): Promise<DeleteChatSuccessResponse> {
     const userId = req['user']?.id as string;
-    await this.chatsService.deleteChat({
-      chatId: id,
-      userId,
-    });
+
+    if (deleteChatDto.targetChatId) {
+      await this.chatsService.deleteChatAndMoveMessages({
+        chatId: id,
+        targetChatId: deleteChatDto.targetChatId,
+        userId,
+      });
+    } else {
+      await this.chatsService.deleteChat({
+        chatId: id,
+        userId,
+      });
+    }
 
     return {
       message: 'Delete chat successful',
