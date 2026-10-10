@@ -23,7 +23,7 @@ import { WithMessageContextMenu } from './WithMessageContextMenu';
 import { WithMessageItemResolution } from './WithMessageItemResolution';
 import { MessageDateSeparator } from './MessageDateSeparator';
 import { ResolveMessageDialog } from './resolve-message/ResolveMessageDialog';
-import { MoveToChatDialog } from '../MoveToChat/MoveToChatDialog';
+import { MoveToChatDialog } from '../chats/move-to/MoveToChatDialog';
 
 interface Props {
   chatId: string;

@@ -1,7 +1,7 @@
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import type { ChatEntity, ChatStatsEntity } from '@later/types';
+import type { ChatEntity } from '@later/types';
 
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -22,12 +22,12 @@ import { useDeleteChatFormSchema } from '@/features/inbox/hooks/useDeleteChatFor
 import { DELETE_CHAT_FORM_DEFAULT_VALUES } from '@/features/inbox/const/chats.constants';
 import type { DeleteChatFormValues } from '@/features/inbox/types/chats.types';
 
-import { ChatCombobox } from '../../MoveToChat/ChatCombobox';
 import {
   useChatStatsQuery,
   useDeleteChatMutation,
 } from '../../../api/chats.api';
 import { buildStatsDescription } from '@/features/inbox/utils/chat.utils';
+import { ChatCombobox } from '../move-to/ChatCombobox';
 
 interface Props {
   chat: ChatEntity;

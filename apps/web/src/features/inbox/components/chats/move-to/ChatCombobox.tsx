@@ -14,9 +14,8 @@ import {
 import { Spinner } from '@/shared/components/ui/spinner';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { cn } from '@/shared/lib/utils';
-
-import { useChatsInfiniteQuery } from '../../api/chats.api';
-import { CHATS_DEFAULT_PAGINATION } from '../../const/chats.constants';
+import { useChatsInfiniteQuery } from '@/features/inbox/api/chats.api';
+import { CHATS_DEFAULT_PAGINATION } from '@/features/inbox/const/chats.constants';
 
 interface Props {
   id?: string;

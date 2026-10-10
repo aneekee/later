@@ -16,7 +16,6 @@ import { ChatListError } from './ChatListError';
 import { ChatListLoading } from './ChatListLoading';
 import { ResolvedNotesItem } from './ResolvedNotesItem';
 import { WithChatContextMenu } from './WithChatContextMenu';
-import { MoveToChatDialog } from '../MoveToChat/MoveToChatDialog';
 import { DeleteChatDialog } from './delete/DeleteChatDialog';
 import { selectActiveChat } from '../../selectors/chats.selectors';
 import { useChatsInfiniteQuery } from '../../api/chats.api';
@@ -26,6 +25,7 @@ import {
   RESOLVED_NOTES_CHAT,
 } from '../../const/chats.constants';
 import { setActiveChat } from '../../slices/chats.slice';
+import { MoveToChatDialog } from './move-to/MoveToChatDialog';
 
 export const ChatListContainer = () => {
   const [searchParams, setSearchParams] = useSearchParams();
