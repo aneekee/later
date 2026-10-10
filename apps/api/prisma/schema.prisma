@@ -45,7 +45,7 @@ model Message {
   chatId    String      @map("chat_id")
   createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  chat              Chat               @relation(fields: [chatId], references: [id])
+  chat              Chat               @relation(fields: [chatId], references: [id], onDelete: Cascade)
   textMessage       TextMessage?
   messageResolution MessageResolution?
 

@@ -4,6 +4,7 @@ import type { ChatEntity } from '@later/types';
 
 import type {
   CreateChatFormValues,
+  DeleteChatFormValues,
   MessageResolutionOption,
   MoveToChatFormValues,
 } from '../types/chats.types';
@@ -18,6 +19,10 @@ export const CREATE_CHAT_FORM_DEFAULT_VALUES: CreateChatFormValues = {
 };
 
 export const MOVE_TO_CHAT_FORM_DEFAULT_VALUES: MoveToChatFormValues = {
+  targetChatId: '',
+};
+
+export const DELETE_CHAT_FORM_DEFAULT_VALUES: DeleteChatFormValues = {
   targetChatId: '',
 };
 

@@ -14,9 +14,8 @@ import {
 import { Spinner } from '@/shared/components/ui/spinner';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { cn } from '@/shared/lib/utils';
-
-import { useChatsInfiniteQuery } from '../../api/chats.api';
-import { CHATS_DEFAULT_PAGINATION } from '../../const/chats.constants';
+import { useChatsInfiniteQuery } from '@/features/inbox/api/chats.api';
+import { CHATS_DEFAULT_PAGINATION } from '@/features/inbox/const/chats.constants';
 
 interface Props {
   id?: string;
@@ -24,6 +23,7 @@ interface Props {
   onChange: (chatId: string) => void;
   excludeChatId: string;
   invalid?: boolean;
+  showClear?: boolean;
 }
 
 export const ChatCombobox = ({
@@ -32,6 +32,7 @@ export const ChatCombobox = ({
   onChange,
   excludeChatId,
   invalid,
+  showClear,
 }: Props) => {
   const [search, setSearch] = useState('');
   const [selectedChat, setSelectedChat] = useState<ChatEntity | null>(null);
@@ -129,6 +130,7 @@ export const ChatCombobox = ({
           className="w-full"
           placeholder="Search chats..."
           aria-invalid={invalid}
+          showClear={showClear}
         />
         <ComboboxContent container={popupContainer}>
           <ComboboxEmpty>{renderEmpty()}</ComboboxEmpty>
