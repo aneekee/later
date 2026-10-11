@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
 import type {
+  DeleteMessageSuccessResponse,
   GetFeedSuccessResponse,
   SetMessageRatingSuccessResponse,
 } from '@later/types';
@@ -9,9 +10,11 @@ import { baseQueryWithCookies } from '@/shared/api/api';
 
 import { FEED_PAGE_SIZE } from '../const/feed.constants';
 import type {
+  DeleteFeedNoteParams,
   GetFeedParams,
   SetMessageRatingParams,
 } from '../types/feed.types';
+import { removeFeedItem } from '../utils/feed.utils';
 
 /**
  * The feed request is not idempotent: every fetched page is marked as seen on BE.
@@ -90,8 +93,39 @@ export const feedApiEndpoints = feedApi.injectEndpoints({
         }
       },
     }),
+
+    deleteFeedNote: builder.mutation<
+      DeleteMessageSuccessResponse,
+      DeleteFeedNoteParams
+    >({
+      query: (params) => {
+        return {
+          url: `v1/chats/${params.chatId}/messages/${params.messageId}`,
+          method: 'DELETE',
+        };
+      },
+      // no tags: the feed is never refetched, the deleted note is removed from the cache
+      async onQueryStarted(params, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+
+          dispatch(
+            feedApiEndpoints.util.updateQueryData(
+              'feed',
+              { pageSize: FEED_PAGE_SIZE },
+              (draft) => removeFeedItem(draft.pages, params.messageId),
+            ),
+          );
+        } catch {
+          // the caller shows the error
+        }
+      },
+    }),
   }),
 });
 
-export const { useFeedInfiniteQuery, useSetMessageRatingMutation } =
-  feedApiEndpoints;
+export const {
+  useFeedInfiniteQuery,
+  useSetMessageRatingMutation,
+  useDeleteFeedNoteMutation,
+} = feedApiEndpoints;

@@ -9,3 +9,8 @@ export interface SetMessageRatingParams {
   messageId: string;
   body: SetMessageRatingRequestBody;
 }
+
+export interface DeleteFeedNoteParams {
+  chatId: string;
+  messageId: string;
+}

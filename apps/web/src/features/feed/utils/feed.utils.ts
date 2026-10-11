@@ -17,6 +17,24 @@ export const dedupeKeepLast = (
   return items.filter((item, index) => lastIndexById.get(item.id) === index);
 };
 
+/**
+ * Removes a deleted note from every loaded page (it may be in several),
+ * mutates the cache draft
+ */
+export const removeFeedItem = (
+  pages: GetFeedSuccessResponse[],
+  messageId: string,
+) => {
+  pages.forEach((page) => {
+    if (!page.data) {
+      return;
+    }
+
+    page.data.items = page.data.items.filter((item) => item.id !== messageId);
+    page.data.total = Math.max(page.data.total - 1, 0);
+  });
+};
+
 const RELATIVE_UNITS = [
   { suffix: 'd', ms: 24 * 60 * 60 * 1000 },
   { suffix: 'h', ms: 60 * 60 * 1000 },
