@@ -67,6 +67,13 @@ export interface MoveMessageServiceDto {
   userId: string;
 }
 
+export interface SetMessageRatingServiceDto {
+  messageId: string;
+  chatId: string;
+  userId: string;
+  rating: number;
+}
+
 export interface MoveChatMessagesServiceDto {
   chatId: string;
   targetChatId: string;

@@ -25,6 +25,7 @@ import {
   DbMessageItem,
   DbResolvedMessagesList,
   ResolveMessageServiceDto,
+  SetMessageRatingServiceDto,
   UpdateTextMessageServiceDto,
   UnresolveMessageServiceDto,
 } from './messages.types';
@@ -243,6 +244,23 @@ export class MessagesService {
       .catch((error: unknown) => {
         console.error(error);
       });
+  }
+
+  /**
+   * Sets the absolute note rating, resolved notes can be rated too
+   */
+  async setMessageRating(dto: SetMessageRatingServiceDto) {
+    await this.checkMessageAccess({
+      userId: dto.userId,
+      chatId: dto.chatId,
+      messageId: dto.messageId,
+    });
+
+    return this.prismaService.message.update({
+      where: { id: dto.messageId },
+      data: { rating: dto.rating },
+      select: { id: true, rating: true },
+    });
   }
 
   async unresolveMessage(dto: UnresolveMessageServiceDto) {

@@ -36,7 +36,8 @@
 
 ### API
 
-- `PUT v1/messages/:messageId/rating` with body `{ rating }`. The value is **absolute**, not a delta.
+- `PUT v1/chats/:chatId/messages/:messageId/rating` with body `{ rating }`. The value is **absolute**, not a delta.
+  - The route is chat-scoped like every other `MessagesController` route. The feed item already carries `chatId`.
   - Returns `200 { data: { id, rating } }`.
   - Returns `400` if `rating` is not an integer or is outside 0..10000. The server never clamps silently, so the FE clamps before sending.
   - Returns `403` through the existing `checkMessageAccess` when the note doesn't exist or isn't the user's, the same as resolve, move and delete.
@@ -83,7 +84,7 @@
 2. **`packages/types`**
    - `feed.ts`: add `rating: number` to `FeedItemEntity`.
    - `messages.ts`: add `SetMessageRatingBody { rating }`, `MessageRatingEntity { id, rating }` and `SetMessageRatingSuccessResponse`.
-   - Rating bounds: put `MESSAGE_RATING_MIN = 0` and `MESSAGE_RATING_MAX = 10000` in `@later/types` if the package can export runtime values. If it can't, mirror them in an API constant and a web constant.
+   - Rating bounds: put `MESSAGE_RATING_MIN = 0` and `MESSAGE_RATING_MAX = 10000` as constants. `@later/types` is types-only (its build emits declarations only), so the constants are mirrored in `messages.constants.ts` (API) and `feed.constants.ts` (web).
 3. **API: messages**
    - `messages.dto.ts`: add `SetMessageRatingDto implements SetMessageRatingBody`, with `rating` as `@IsInt() @Min(MIN) @Max(MAX)` plus `@ApiProperty`.
    - `messages.types.ts`: add `SetMessageRatingServiceDto` (`userId`, `messageId`, `rating`).
@@ -103,7 +104,7 @@
      3. The existing `updateMany` (stamps `seen_at`) and `count` stay unchanged.
      - `buildFeedWhere` stays for `count`. Keep the raw `WHERE` equivalent to it.
 5. **Web: data layer (`features/feed/`)**
-   - `api/feed.api.ts`: add a `setMessageRating` mutation, `PUT v1/messages/:id/rating`.
+   - `api/feed.api.ts`: add a `setMessageRating` mutation, `PUT v1/chats/:chatId/messages/:id/rating`.
      - In `onQueryStarted`, after success, patch every occurrence of that note in the `feed` infinite-query cache with `updateQueryData`. A card that re-mounts (for example after a dedupe move) then starts from the confirmed value.
      - No tags, and never refetch the feed.
    - `utils/feed.utils.ts`: add `clampRating(n)`.

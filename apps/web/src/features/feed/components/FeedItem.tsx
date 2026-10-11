@@ -5,11 +5,13 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
 } from '@/shared/components/ui/card';
 import { formatIsoDateTime } from '@/shared/utils/date.util';
 
 import { formatRelativeTime } from '../utils/feed.utils';
+import { FeedRating } from './FeedRating';
 
 interface Props {
   item: FeedItemEntity;
@@ -38,7 +40,9 @@ export const FeedItem = ({ item }: Props) => {
           <TextWithLinks text={item.content} />
         </p>
       </CardContent>
-      {/* controls go to a CardFooter */}
+      <CardFooter>
+        <FeedRating item={item} />
+      </CardFooter>
     </Card>
   );
 };
