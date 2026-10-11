@@ -75,7 +75,7 @@ export const FeedContainer = () => {
 
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto">
-      <div className="mx-auto flex min-h-full w-full max-w-[600px] flex-col">
+      <div className="mx-auto flex min-h-full w-full max-w-150 flex-col">
         <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center bg-background/80 px-4 backdrop-blur">
           <h1 className="text-lg font-semibold">Feed</h1>
         </header>
