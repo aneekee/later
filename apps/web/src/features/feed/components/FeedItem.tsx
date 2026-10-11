@@ -1,5 +1,3 @@
-import { Link } from 'react-router';
-
 import type { FeedItemEntity } from '@later/types';
 
 import { TextWithLinks } from '@/features/inbox/components/messages/TextWithLinks';
@@ -22,12 +20,9 @@ export const FeedItem = ({ item }: Props) => {
     <Card className="gap-2">
       <CardHeader>
         <CardDescription className="flex min-w-0 items-center gap-1">
-          <Link
-            to={`/inbox?chatId=${item.chatId}`}
-            className="truncate font-semibold text-foreground hover:underline"
-          >
+          <span className="truncate font-semibold text-foreground">
             {item.chatTitle}
-          </Link>
+          </span>
           <span aria-hidden="true">·</span>
           <time
             dateTime={item.createdAt}
