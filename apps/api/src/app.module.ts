@@ -14,6 +14,7 @@ import { PerformanceAnalyticsModule } from './performance-analytics/performance-
 import { PerformanceInterceptor } from './shared/interceptors/performance.interceptor';
 import { UserActionsModule } from './user-actions/user-actions.module';
 import { StatsModule } from './stats/stats.module';
+import { FeedModule } from './feed/feed.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { StatsModule } from './stats/stats.module';
     PerformanceAnalyticsModule,
     UserActionsModule,
     StatsModule,
+    FeedModule,
   ],
   controllers: [AppController],
   providers: [

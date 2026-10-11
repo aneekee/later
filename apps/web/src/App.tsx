@@ -17,6 +17,11 @@ const InboxPage = lazy(() =>
     default: m.InboxPage,
   })),
 );
+const FeedPage = lazy(() =>
+  import('./features/feed/pages/Feed.page').then((m) => ({
+    default: m.FeedPage,
+  })),
+);
 const LoginPage = lazy(() =>
   import('./features/auth/pages/Login.page').then((m) => ({
     default: m.LoginPage,
@@ -43,6 +48,7 @@ export const App = () => {
           >
             <Route path="/" element={<HomePage />} />
             <Route path="/inbox" element={<InboxPage />} />
+            <Route path="/feed" element={<FeedPage />} />
           </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="*" element={<NotFoundPage />} />
