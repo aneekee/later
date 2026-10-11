@@ -12,6 +12,8 @@ import { clampRating } from '../utils/feed.utils';
  * Optimistic note rating. Changes are batched: one request with the latest value
  * is sent after a pause, requests never overlap, a failure reverts to the last
  * confirmed value. A pending change is flushed on unmount.
+ * cancel() drops the pending change and silences an in-flight one, e.g. before
+ * the note is deleted; the next change resumes sending.
  */
 export const useBatchedRating = (item: FeedItemEntity) => {
   const [rating, setRating] = useState(item.rating);
@@ -22,6 +24,7 @@ export const useBatchedRating = (item: FeedItemEntity) => {
   const debounceRef = useRef<number | undefined>(undefined);
   const isSendingRef = useRef(false);
   const isMountedRef = useRef(false);
+  const isCancelledRef = useRef(false);
 
   const [setMessageRating] = useSetMessageRatingMutation();
   const { displayErrorToast } = useDisplayErrorToast();
@@ -36,6 +39,7 @@ export const useBatchedRating = (item: FeedItemEntity) => {
     try {
       // a pending debounce sends later, don't send intermediate values
       while (
+        !isCancelledRef.current &&
         debounceRef.current === undefined &&
         ratingRef.current !== confirmedRef.current
       ) {
@@ -48,6 +52,12 @@ export const useBatchedRating = (item: FeedItemEntity) => {
           }).unwrap();
           confirmedRef.current = response.data?.rating ?? value;
         } catch (e) {
+          // the note is being deleted, its rating doesn't matter anymore;
+          // TS keeps the loop narrowing, but cancel() may run during the await
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          if (isCancelledRef.current) {
+            return;
+          }
           window.clearTimeout(debounceRef.current);
           debounceRef.current = undefined;
           ratingRef.current = confirmedRef.current;
@@ -70,6 +80,8 @@ export const useBatchedRating = (item: FeedItemEntity) => {
         return;
       }
 
+      // a new change after a failed delete, the note still exists
+      isCancelledRef.current = false;
       ratingRef.current = next;
       setRating(next);
 
@@ -81,6 +93,14 @@ export const useBatchedRating = (item: FeedItemEntity) => {
     },
     [send],
   );
+
+  const cancel = useCallback(() => {
+    isCancelledRef.current = true;
+    window.clearTimeout(debounceRef.current);
+    debounceRef.current = undefined;
+    ratingRef.current = confirmedRef.current;
+    setRating(confirmedRef.current);
+  }, []);
 
   const sendRef = useRef(send);
   useEffect(() => {
@@ -101,5 +121,5 @@ export const useBatchedRating = (item: FeedItemEntity) => {
     };
   }, []);
 
-  return { rating, change };
+  return { rating, change, cancel };
 };

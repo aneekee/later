@@ -50,7 +50,8 @@ export const FeedContainer = () => {
       return <FeedError onRetry={() => void refetch()} />;
     }
 
-    if (!items.length) {
+    // all loaded notes may be deleted while more exist, keep loading then
+    if (!items.length && !hasNextPage) {
       return <FeedEmpty />;
     }
 

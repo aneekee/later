@@ -1,23 +1,19 @@
 import { ArrowBigDownIcon, ArrowBigUpIcon } from 'lucide-react';
 
-import type { FeedItemEntity } from '@later/types';
-
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils';
 
 import { FEED_RATING_MAX, FEED_RATING_MIN } from '../const/feed.constants';
-import { useBatchedRating } from '../hooks/useBatchedRating';
 import { useHoldRepeat } from '../hooks/useHoldRepeat';
 
 interface Props {
-  item: FeedItemEntity;
+  rating: number;
+  change: (delta: number) => void;
 }
 
 const BUTTON_CLASS_NAME = 'touch-manipulation [-webkit-touch-callout:none]';
 
-export const FeedRating = ({ item }: Props) => {
-  const { rating, change } = useBatchedRating(item);
-
+export const FeedRating = ({ rating, change }: Props) => {
   const canUpvote = rating < FEED_RATING_MAX;
   const canDownvote = rating > FEED_RATING_MIN;
 
