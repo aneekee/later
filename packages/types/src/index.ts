@@ -3,3 +3,4 @@ export * from "./shared";
 export * from "./chats";
 export * from "./messages";
 export * from "./stats";
+export * from "./feed";

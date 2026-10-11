@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router';
-import { HomeIcon, InboxIcon } from 'lucide-react';
+import { HomeIcon, InboxIcon, NewspaperIcon } from 'lucide-react';
 
 import { UserMenu } from '@/features/auth/components/UserMenu';
 
@@ -18,6 +18,7 @@ import {
 const navItems = [
   { to: '/', label: 'Home', icon: HomeIcon, end: true },
   { to: '/inbox', label: 'Inbox', icon: InboxIcon, end: false },
+  { to: '/feed', label: 'Feed', icon: NewspaperIcon, end: false },
 ];
 
 export const AppSidebar = () => {
