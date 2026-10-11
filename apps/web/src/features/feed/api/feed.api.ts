@@ -1,10 +1,17 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
-import type { GetFeedSuccessResponse } from '@later/types';
+import type {
+  GetFeedSuccessResponse,
+  SetMessageRatingSuccessResponse,
+} from '@later/types';
 
 import { baseQueryWithCookies } from '@/shared/api/api';
 
-import type { GetFeedParams } from '../types/feed.types';
+import { FEED_PAGE_SIZE } from '../const/feed.constants';
+import type {
+  GetFeedParams,
+  SetMessageRatingParams,
+} from '../types/feed.types';
 
 /**
  * The feed request is not idempotent: every fetched page is marked as seen on BE.
@@ -44,7 +51,47 @@ export const feedApiEndpoints = feedApi.injectEndpoints({
         };
       },
     }),
+
+    setMessageRating: builder.mutation<
+      SetMessageRatingSuccessResponse,
+      SetMessageRatingParams
+    >({
+      query: (params) => {
+        return {
+          url: `v1/chats/${params.chatId}/messages/${params.messageId}/rating`,
+          method: 'PUT',
+          body: params.body,
+        };
+      },
+      // no tags: the feed is never refetched, the confirmed rating is patched into the cache,
+      // so a remounted card (e.g. moved by dedupe) starts from it
+      async onQueryStarted(params, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          const rating = data.data?.rating ?? params.body.rating;
+
+          dispatch(
+            feedApiEndpoints.util.updateQueryData(
+              'feed',
+              { pageSize: FEED_PAGE_SIZE },
+              (draft) => {
+                draft.pages.forEach((page) => {
+                  page.data?.items.forEach((item) => {
+                    if (item.id === params.messageId) {
+                      item.rating = rating;
+                    }
+                  });
+                });
+              },
+            ),
+          );
+        } catch {
+          // the caller reverts and shows the error
+        }
+      },
+    }),
   }),
 });
 
-export const { useFeedInfiniteQuery } = feedApiEndpoints;
+export const { useFeedInfiniteQuery, useSetMessageRatingMutation } =
+  feedApiEndpoints;

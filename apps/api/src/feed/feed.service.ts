@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common';
 
+import { Prisma } from 'generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 import { GetFeedServiceDto } from './feed.types';
-import { buildFeedOrder, buildFeedWhere, mapToFeedItem } from './feed.utils';
+import {
+  buildFeedOrderSql,
+  buildFeedWhere,
+  buildFeedWhereSql,
+  mapToFeedItem,
+} from './feed.utils';
 
 @Injectable()
 export class FeedService {
@@ -14,31 +20,44 @@ export class FeedService {
    * so the next call returns the following notes
    */
   async getNextPage(dto: GetFeedServiceDto) {
-    const where = buildFeedWhere(dto.userId);
-
     return this.prismaService.$transaction(async (tx) => {
+      // the order is an expression, Prisma orderBy can't express it
+      const rows = await tx.$queryRaw<{ id: string }[]>(
+        Prisma.sql`
+          SELECT m.id FROM messages m
+          JOIN chats c ON c.id = m.chat_id
+          ${buildFeedWhereSql(dto.userId)}
+          ${buildFeedOrderSql()}
+          LIMIT ${dto.pageSize}
+        `,
+      );
+      const ids = rows.map((row) => row.id);
+
       const messages = await tx.message.findMany({
-        where,
+        where: { id: { in: ids } },
         select: {
           id: true,
           createdAt: true,
           chatId: true,
+          rating: true,
           textMessage: { select: { content: true } },
           chat: { select: { title: true } },
         },
-        orderBy: buildFeedOrder(),
-        take: dto.pageSize,
       });
+      const messageById = new Map(messages.map((m) => [m.id, m]));
+      const orderedMessages = ids.flatMap((id) => messageById.get(id) ?? []);
 
       await tx.message.updateMany({
-        where: { id: { in: messages.map((message) => message.id) } },
+        where: { id: { in: ids } },
         data: { seenAt: new Date() },
       });
 
-      const total = await tx.message.count({ where });
+      const total = await tx.message.count({
+        where: buildFeedWhere(dto.userId),
+      });
 
       return {
-        items: messages.map(mapToFeedItem),
+        items: orderedMessages.map(mapToFeedItem),
         total,
       };
     });

@@ -98,3 +98,16 @@ export interface MoveChatMessagesRequestBody {
 }
 
 export interface MoveChatMessagesSuccessResponse extends BaseSuccessResponse {}
+
+// set message rating
+
+export interface SetMessageRatingRequestBody {
+  rating: number;
+}
+
+export type MessageRatingEntity = {
+  id: string;
+  rating: number;
+};
+
+export interface SetMessageRatingSuccessResponse extends BaseSuccessResponse<MessageRatingEntity> {}

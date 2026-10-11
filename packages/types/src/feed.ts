@@ -6,6 +6,7 @@ export type FeedItemEntity = {
   createdAt: string;
   chatId: string;
   chatTitle: string;
+  rating: number;
 };
 
 // get feed

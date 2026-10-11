@@ -20,6 +20,7 @@ import {
   MoveChatMessagesSuccessResponse,
   MoveMessageSuccessResponse,
   ResolveMessageSuccessResponse,
+  SetMessageRatingSuccessResponse,
   UnresolveMessageSuccessResponse,
   UpdateTextMessageSuccessResponse,
 } from '@later/types';
@@ -32,6 +33,7 @@ import {
   MoveChatMessagesDto,
   MoveMessageDto,
   ResolveMessageDto,
+  SetMessageRatingDto,
   UpdateTextMessageDto,
 } from './messages.dto';
 
@@ -199,6 +201,28 @@ export class MessagesController {
       message: 'Message resolve successful',
     };
   }
+  @Put('/:messageId/rating')
+  async setMessageRating(
+    @Req() req: Request,
+    @Param('messageId') messageId: string,
+    @Param('chatId') chatId: string,
+    @Body() dto: SetMessageRatingDto,
+  ): Promise<SetMessageRatingSuccessResponse> {
+    const userId = req['user']?.id as string;
+
+    const rating = await this.messagesService.setMessageRating({
+      messageId,
+      userId,
+      chatId,
+      rating: dto.rating,
+    });
+
+    return {
+      message: 'Message rating update successful',
+      data: rating,
+    };
+  }
+
   @Delete('/:messageId/resolution/:resolutionId')
   async unresolveMessage(
     @Req() req: Request,

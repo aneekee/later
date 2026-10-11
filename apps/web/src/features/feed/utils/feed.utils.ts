@@ -1,5 +1,7 @@
 import type { FeedItemEntity, GetFeedSuccessResponse } from '@later/types';
 
+import { FEED_RATING_MAX, FEED_RATING_MIN } from '../const/feed.constants';
+
 /**
  * Flattens the feed pages. A note returned again in a later page
  * is rendered only at its latest position.
@@ -56,3 +58,6 @@ export const formatRelativeTime = (
     ...(date.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}),
   });
 };
+
+export const clampRating = (rating: number): number =>
+  Math.min(FEED_RATING_MAX, Math.max(FEED_RATING_MIN, rating));

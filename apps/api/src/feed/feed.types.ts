@@ -7,6 +7,7 @@ export type DbFeedItem = {
   id: string;
   createdAt: Date;
   chatId: string;
+  rating: number;
   textMessage: { content: string } | null;
   chat: { title: string };
 };

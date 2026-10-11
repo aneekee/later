@@ -3,6 +3,7 @@ import {
   MoveChatMessagesRequestBody,
   MoveMessageRequestBody,
   ResolveMessageRequestBody,
+  SetMessageRatingRequestBody,
   UpdateTextMessageRequestBody,
 } from '@later/types';
 import { ApiProperty } from '@nestjs/swagger';
@@ -14,8 +15,11 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   Min,
 } from 'class-validator';
+
+import { MESSAGE_RATING_MAX, MESSAGE_RATING_MIN } from './messages.constants';
 
 // TODO: create a pagination dto
 export class ListResolvedMessagesDto {
@@ -120,4 +124,15 @@ export class MoveChatMessagesDto implements MoveChatMessagesRequestBody {
   @IsUUID()
   @IsNotEmpty()
   targetChatId!: string;
+}
+
+export class SetMessageRatingDto implements SetMessageRatingRequestBody {
+  @ApiProperty({
+    example: 12,
+    description: `The new note rating, an integer from ${String(MESSAGE_RATING_MIN)} to ${String(MESSAGE_RATING_MAX)}`,
+  })
+  @IsInt()
+  @Min(MESSAGE_RATING_MIN)
+  @Max(MESSAGE_RATING_MAX)
+  rating!: number;
 }
