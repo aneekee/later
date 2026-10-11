@@ -34,12 +34,13 @@ export const useHoldRepeat = (onStep: () => void, disabled: boolean) => {
     const tick = () => {
       onStepRef.current();
       const elapsed = performance.now() - startedAt;
-      timerRef.current = window.setTimeout(
-        tick,
-        elapsed < FEED_RATING_HOLD_FAST_AFTER_MS
-          ? FEED_RATING_HOLD_SLOW_INTERVAL_MS
-          : FEED_RATING_HOLD_FAST_INTERVAL_MS,
-      );
+      let interval = FEED_RATING_HOLD_FAST_INTERVAL_MS / 2; // max speed
+      if (elapsed < FEED_RATING_HOLD_FAST_AFTER_MS) {
+        interval = FEED_RATING_HOLD_SLOW_INTERVAL_MS;
+      } else if (elapsed < FEED_RATING_HOLD_FAST_AFTER_MS * 2) {
+        interval = FEED_RATING_HOLD_FAST_INTERVAL_MS;
+      }
+      timerRef.current = window.setTimeout(tick, interval);
     };
 
     onStepRef.current();
