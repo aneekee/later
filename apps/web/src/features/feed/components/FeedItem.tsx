@@ -15,7 +15,6 @@ import {
 import { formatIsoDateTime } from '@/shared/utils/date.util';
 
 import { useBatchedRating } from '../hooks/useBatchedRating';
-import { formatRelativeTime } from '../utils/feed.utils';
 import { DeleteFeedNoteDialog } from './DeleteFeedNoteDialog';
 import { FeedRating } from './FeedRating';
 
@@ -39,12 +38,8 @@ export const FeedItem = ({ item }: Props) => {
               <span aria-hidden="true">·</span>
             </>
           )}
-          <time
-            dateTime={item.createdAt}
-            title={formatIsoDateTime(item.createdAt)}
-            className="shrink-0"
-          >
-            {formatRelativeTime(item.createdAt)}
+          <time dateTime={item.createdAt} className="shrink-0">
+            {formatIsoDateTime(item.createdAt)}
           </time>
         </CardDescription>
       </CardHeader>
