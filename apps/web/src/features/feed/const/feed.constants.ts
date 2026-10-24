@@ -1,5 +1,8 @@
 export const FEED_PAGE_SIZE = 10;
 
+// keep in sync with the API note validation
+export const FEED_NOTE_MAX_LENGTH = 1000;
+
 // keep in sync with the API rating validation
 export const FEED_RATING_MIN = 0;
 export const FEED_RATING_MAX = 10000;

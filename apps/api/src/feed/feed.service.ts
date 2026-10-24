@@ -1,10 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 
 import { Prisma } from 'generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
-import { GetFeedServiceDto } from './feed.types';
 import {
+  CheckFeedNoteAccessServiceDto,
+  CreateFeedNoteServiceDto,
+  DeleteFeedNoteServiceDto,
+  GetFeedServiceDto,
+  SetFeedNoteRatingServiceDto,
+} from './feed.types';
+import {
+  FEED_ITEM_SELECT,
   buildFeedOrderSql,
   buildFeedWhere,
   buildFeedWhereSql,
@@ -14,6 +21,16 @@ import {
 @Injectable()
 export class FeedService {
   constructor(private prismaService: PrismaService) {}
+
+  async checkNoteAccess(dto: CheckFeedNoteAccessServiceDto) {
+    const message = await this.prismaService.message.findUnique({
+      where: { id: dto.messageId, userId: dto.userId },
+    });
+
+    if (!message) {
+      throw new ForbiddenException("You don't have access to this note");
+    }
+  }
 
   /**
    * Returns the next feed page and marks it as seen,
@@ -25,7 +42,6 @@ export class FeedService {
       const rows = await tx.$queryRaw<{ id: string }[]>(
         Prisma.sql`
           SELECT m.id FROM messages m
-          JOIN chats c ON c.id = m.chat_id
           ${buildFeedWhereSql(dto.userId)}
           ${buildFeedOrderSql()}
           LIMIT ${dto.pageSize}
@@ -35,14 +51,7 @@ export class FeedService {
 
       const messages = await tx.message.findMany({
         where: { id: { in: ids } },
-        select: {
-          id: true,
-          createdAt: true,
-          chatId: true,
-          rating: true,
-          textMessage: { select: { content: true } },
-          chat: { select: { title: true } },
-        },
+        select: FEED_ITEM_SELECT,
       });
       const messageById = new Map(messages.map((m) => [m.id, m]));
       const orderedMessages = ids.flatMap((id) => messageById.get(id) ?? []);
@@ -60,6 +69,54 @@ export class FeedService {
         items: orderedMessages.map(mapToFeedItem),
         total,
       };
+    });
+  }
+
+  /**
+   * Creates a chat-less note. It's created as seen,
+   * so the feed returns it at the end of the rotation
+   */
+  async createNote(dto: CreateFeedNoteServiceDto) {
+    const message = await this.prismaService.message.create({
+      data: {
+        type: 'TEXT',
+        userId: dto.userId,
+        chatId: null,
+        seenAt: new Date(),
+        textMessage: {
+          create: { content: dto.content },
+        },
+      },
+      select: FEED_ITEM_SELECT,
+    });
+
+    return mapToFeedItem(message);
+  }
+
+  /**
+   * Sets the absolute note rating
+   */
+  async setNoteRating(dto: SetFeedNoteRatingServiceDto) {
+    await this.checkNoteAccess({
+      userId: dto.userId,
+      messageId: dto.messageId,
+    });
+
+    return this.prismaService.message.update({
+      where: { id: dto.messageId },
+      data: { rating: dto.rating },
+      select: { id: true, rating: true },
+    });
+  }
+
+  async deleteNote(dto: DeleteFeedNoteServiceDto) {
+    await this.checkNoteAccess({
+      userId: dto.userId,
+      messageId: dto.messageId,
+    });
+
+    await this.prismaService.message.delete({
+      where: { id: dto.messageId },
     });
   }
 }

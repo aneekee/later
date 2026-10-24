@@ -1,18 +1,20 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
 import type {
-  DeleteMessageSuccessResponse,
+  CreateFeedNoteSuccessResponse,
+  DeleteFeedNoteSuccessResponse,
   GetFeedSuccessResponse,
-  SetMessageRatingSuccessResponse,
+  SetFeedNoteRatingSuccessResponse,
 } from '@later/types';
 
 import { baseQueryWithCookies } from '@/shared/api/api';
 
 import { FEED_PAGE_SIZE } from '../const/feed.constants';
 import type {
+  CreateFeedNoteParams,
   DeleteFeedNoteParams,
   GetFeedParams,
-  SetMessageRatingParams,
+  SetFeedNoteRatingParams,
 } from '../types/feed.types';
 import { removeFeedItem } from '../utils/feed.utils';
 
@@ -55,13 +57,28 @@ export const feedApiEndpoints = feedApi.injectEndpoints({
       },
     }),
 
-    setMessageRating: builder.mutation<
-      SetMessageRatingSuccessResponse,
-      SetMessageRatingParams
+    createFeedNote: builder.mutation<
+      CreateFeedNoteSuccessResponse,
+      CreateFeedNoteParams
     >({
       query: (params) => {
         return {
-          url: `v1/chats/${params.chatId}/messages/${params.messageId}/rating`,
+          url: 'v1/feed/notes',
+          method: 'POST',
+          body: params.body,
+        };
+      },
+      // no tags and no cache patch: the note is created as seen on BE,
+      // the feed returns it later, at the end of the rotation
+    }),
+
+    setFeedNoteRating: builder.mutation<
+      SetFeedNoteRatingSuccessResponse,
+      SetFeedNoteRatingParams
+    >({
+      query: (params) => {
+        return {
+          url: `v1/feed/notes/${params.messageId}/rating`,
           method: 'PUT',
           body: params.body,
         };
@@ -95,12 +112,12 @@ export const feedApiEndpoints = feedApi.injectEndpoints({
     }),
 
     deleteFeedNote: builder.mutation<
-      DeleteMessageSuccessResponse,
+      DeleteFeedNoteSuccessResponse,
       DeleteFeedNoteParams
     >({
       query: (params) => {
         return {
-          url: `v1/chats/${params.chatId}/messages/${params.messageId}`,
+          url: `v1/feed/notes/${params.messageId}`,
           method: 'DELETE',
         };
       },
@@ -126,6 +143,7 @@ export const feedApiEndpoints = feedApi.injectEndpoints({
 
 export const {
   useFeedInfiniteQuery,
-  useSetMessageRatingMutation,
+  useCreateFeedNoteMutation,
+  useSetFeedNoteRatingMutation,
   useDeleteFeedNoteMutation,
 } = feedApiEndpoints;

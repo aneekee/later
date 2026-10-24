@@ -1,16 +1,21 @@
-import type { SetMessageRatingRequestBody } from '@later/types';
+import type {
+  CreateFeedNoteRequestBody,
+  SetFeedNoteRatingRequestBody,
+} from '@later/types';
 
 export interface GetFeedParams {
   pageSize: number;
 }
 
-export interface SetMessageRatingParams {
-  chatId: string;
+export interface CreateFeedNoteParams {
+  body: CreateFeedNoteRequestBody;
+}
+
+export interface SetFeedNoteRatingParams {
   messageId: string;
-  body: SetMessageRatingRequestBody;
+  body: SetFeedNoteRatingRequestBody;
 }
 
 export interface DeleteFeedNoteParams {
-  chatId: string;
   messageId: string;
 }

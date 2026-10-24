@@ -42,10 +42,7 @@ export const DeleteFeedNoteDialog = ({
   const onDelete = async () => {
     onBeforeDelete();
     try {
-      await deleteFeedNote({
-        chatId: item.chatId,
-        messageId: item.id,
-      }).unwrap();
+      await deleteFeedNote({ messageId: item.id }).unwrap();
     } catch (e) {
       console.error('Delete note error:', e);
       displayErrorToast(e, 'Note delete failed');

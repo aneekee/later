@@ -163,6 +163,7 @@ export class MessagesService {
       data: {
         type: 'TEXT',
         chatId: dto.chatId,
+        userId: dto.userId,
         textMessage: {
           create: { content: dto.content },
         },

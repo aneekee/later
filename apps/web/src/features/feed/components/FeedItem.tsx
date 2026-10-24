@@ -31,10 +31,14 @@ export const FeedItem = ({ item }: Props) => {
     <Card className="gap-2">
       <CardHeader>
         <CardDescription className="flex min-w-0 items-center gap-1">
-          <span className="truncate font-semibold text-foreground">
-            {item.chatTitle}
-          </span>
-          <span aria-hidden="true">·</span>
+          {item.chatTitle !== null && (
+            <>
+              <span className="truncate font-semibold text-foreground">
+                {item.chatTitle}
+              </span>
+              <span aria-hidden="true">·</span>
+            </>
+          )}
           <time
             dateTime={item.createdAt}
             title={formatIsoDateTime(item.createdAt)}
