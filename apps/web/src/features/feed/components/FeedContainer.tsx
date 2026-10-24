@@ -10,6 +10,7 @@ import { FeedEnd } from './FeedEnd';
 import { FeedError } from './FeedError';
 import { FeedItem } from './FeedItem';
 import { FeedLoadMoreError } from './FeedLoadMoreError';
+import { FeedNoteInput } from './FeedNoteInput';
 import { FeedSentinel } from './FeedSentinel';
 import { FeedSkeleton } from './FeedSkeleton';
 
@@ -77,8 +78,11 @@ export const FeedContainer = () => {
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto">
       <div className="mx-auto flex min-h-full w-full max-w-150 flex-col">
-        <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center bg-background/80 px-4 backdrop-blur">
-          <h1 className="text-lg font-semibold">Feed</h1>
+        <header className="sticky top-0 z-10 flex shrink-0 flex-col bg-background/80 px-3 pb-3 backdrop-blur md:px-4">
+          <div className="flex h-12 items-center px-1 md:px-0">
+            <h1 className="text-lg font-semibold">Feed</h1>
+          </div>
+          <FeedNoteInput />
         </header>
         <div className="flex flex-1 flex-col gap-3 px-3 pt-1 pb-3 md:px-4">
           {renderContent()}

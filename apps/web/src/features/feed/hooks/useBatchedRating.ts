@@ -4,7 +4,7 @@ import type { FeedItemEntity } from '@later/types';
 
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
-import { useSetMessageRatingMutation } from '../api/feed.api';
+import { useSetFeedNoteRatingMutation } from '../api/feed.api';
 import { FEED_RATING_DEBOUNCE_MS } from '../const/feed.constants';
 import { clampRating } from '../utils/feed.utils';
 
@@ -26,7 +26,7 @@ export const useBatchedRating = (item: FeedItemEntity) => {
   const isMountedRef = useRef(false);
   const isCancelledRef = useRef(false);
 
-  const [setMessageRating] = useSetMessageRatingMutation();
+  const [setFeedNoteRating] = useSetFeedNoteRatingMutation();
   const { displayErrorToast } = useDisplayErrorToast();
 
   const send = useCallback(async () => {
@@ -45,8 +45,7 @@ export const useBatchedRating = (item: FeedItemEntity) => {
       ) {
         const value = ratingRef.current;
         try {
-          const response = await setMessageRating({
-            chatId: item.chatId,
+          const response = await setFeedNoteRating({
             messageId: item.id,
             body: { rating: value },
           }).unwrap();
@@ -71,7 +70,7 @@ export const useBatchedRating = (item: FeedItemEntity) => {
     } finally {
       isSendingRef.current = false;
     }
-  }, [item.chatId, item.id, setMessageRating, displayErrorToast]);
+  }, [item.id, setFeedNoteRating, displayErrorToast]);
 
   const change = useCallback(
     (delta: number) => {

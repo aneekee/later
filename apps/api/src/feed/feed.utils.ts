@@ -6,22 +6,34 @@ import { FEED_RATING_STEP_HOURS } from './feed.constants';
 import { DbFeedItem } from './feed.types';
 
 /**
+ * The fields mapToFeedItem needs
+ */
+export const FEED_ITEM_SELECT = {
+  id: true,
+  createdAt: true,
+  chatId: true,
+  rating: true,
+  textMessage: { select: { content: true } },
+  chat: { select: { title: true } },
+} satisfies Prisma.MessageSelect;
+
+/**
  * Prisma equivalent of buildFeedWhereSql, keep them in sync
  */
 export function buildFeedWhere(userId: string): Prisma.MessageWhereInput {
   return {
-    chat: { userId },
+    userId,
     messageResolution: { is: null },
   };
 }
 
 /**
  * Raw SQL equivalent of buildFeedWhere, keep them in sync.
- * Expects `messages m JOIN chats c`
+ * Expects `messages m`
  */
 export function buildFeedWhereSql(userId: string): Prisma.Sql {
   return Prisma.sql`
-    WHERE c.user_id = ${userId}
+    WHERE m.user_id = ${userId}
       AND NOT EXISTS (
         SELECT 1 FROM message_resolutions r WHERE r.message_id = m.id
       )
@@ -50,7 +62,7 @@ export function mapToFeedItem(message: DbFeedItem): FeedItemEntity {
     content: message.textMessage?.content ?? '',
     createdAt: message.createdAt.toISOString(),
     chatId: message.chatId,
-    chatTitle: message.chat.title,
+    chatTitle: message.chat?.title ?? null,
     rating: message.rating,
   };
 }
