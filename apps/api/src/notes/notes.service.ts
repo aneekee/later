@@ -15,7 +15,7 @@ export class NotesService {
   constructor(private prismaService: PrismaService) {}
 
   async checkNoteAccess(dto: CheckNoteAccessServiceDto) {
-    const note = await this.prismaService.message.findUnique({
+    const note = await this.prismaService.note.findUnique({
       where: { id: dto.noteId, userId: dto.userId },
     });
 
@@ -29,12 +29,12 @@ export class NotesService {
    * so the feed returns it at the end of the rotation
    */
   async createNote(dto: CreateNoteServiceDto) {
-    const note = await this.prismaService.message.create({
+    const note = await this.prismaService.note.create({
       data: {
         type: 'TEXT',
         userId: dto.userId,
         seenAt: new Date(),
-        textMessage: {
+        textNote: {
           create: { content: dto.content },
         },
       },
@@ -53,7 +53,7 @@ export class NotesService {
       noteId: dto.noteId,
     });
 
-    return this.prismaService.message.update({
+    return this.prismaService.note.update({
       where: { id: dto.noteId },
       data: { rating: dto.rating },
       select: { id: true, rating: true },
@@ -66,7 +66,7 @@ export class NotesService {
       noteId: dto.noteId,
     });
 
-    await this.prismaService.message.delete({
+    await this.prismaService.note.delete({
       where: { id: dto.noteId },
     });
   }

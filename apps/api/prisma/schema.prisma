@@ -15,39 +15,39 @@ model User {
   isVerified Boolean  @default(false) @map("is_verified")
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  messages Message[]
+  notes Note[]
 
   @@map("users")
 }
 
-enum MessageType {
+enum NoteType {
   TEXT
 
-  @@map("message_type")
+  @@map("note_type")
 }
 
-model Message {
-  id        String      @id @default(uuid())
-  type      MessageType @default(TEXT)
-  userId    String      @map("user_id")
-  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
-  seenAt    DateTime?   @map("seen_at") @db.Timestamptz(3)
-  rating    Int         @default(0)
+model Note {
+  id        String    @id @default(uuid())
+  type      NoteType  @default(TEXT)
+  userId    String    @map("user_id")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  seenAt    DateTime? @map("seen_at") @db.Timestamptz(3)
+  rating    Int       @default(0)
 
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  textMessage TextMessage?
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  textNote TextNote?
 
   @@index([seenAt, createdAt])
   @@index([userId, seenAt])
-  @@map("messages")
+  @@map("notes")
 }
 
-model TextMessage {
-  id        String @id @default(uuid())
-  messageId String @unique @map("message_id")
-  content   String
+model TextNote {
+  id      String @id @default(uuid())
+  noteId  String @unique @map("note_id")
+  content String
 
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
 
-  @@map("text_messages")
+  @@map("text_notes")
 }

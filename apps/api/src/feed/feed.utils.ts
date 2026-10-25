@@ -5,17 +5,17 @@ import { FEED_RATING_STEP_HOURS } from './feed.constants';
 /**
  * Prisma equivalent of buildFeedWhereSql, keep them in sync
  */
-export function buildFeedWhere(userId: string): Prisma.MessageWhereInput {
+export function buildFeedWhere(userId: string): Prisma.NoteWhereInput {
   return { userId };
 }
 
 /**
  * Raw SQL equivalent of buildFeedWhere, keep them in sync.
- * Expects `messages m`
+ * Expects `notes n`
  */
 export function buildFeedWhereSql(userId: string): Prisma.Sql {
   return Prisma.sql`
-    WHERE m.user_id = ${userId}
+    WHERE n.user_id = ${userId}
   `;
 }
 
@@ -28,9 +28,9 @@ export function buildFeedWhereSql(userId: string): Prisma.Sql {
 export function buildFeedOrderSql(): Prisma.Sql {
   return Prisma.sql`
     ORDER BY
-      m.seen_at - make_interval(hours => m.rating * ${FEED_RATING_STEP_HOURS}::int) ASC NULLS FIRST,
-      m.rating DESC,
-      m.created_at ASC,
-      m.id ASC
+      n.seen_at - make_interval(hours => n.rating * ${FEED_RATING_STEP_HOURS}::int) ASC NULLS FIRST,
+      n.rating DESC,
+      n.created_at ASC,
+      n.id ASC
   `;
 }

@@ -11,13 +11,13 @@ export const NOTE_SELECT = {
   id: true,
   createdAt: true,
   rating: true,
-  textMessage: { select: { content: true } },
-} satisfies Prisma.MessageSelect;
+  textNote: { select: { content: true } },
+} satisfies Prisma.NoteSelect;
 
 export function mapToNoteEntity(note: DbNote): NoteEntity {
   return {
     id: note.id,
-    content: note.textMessage?.content ?? '',
+    content: note.textNote?.content ?? '',
     createdAt: note.createdAt.toISOString(),
     rating: note.rating,
   };

@@ -24,7 +24,7 @@ export class FeedService {
       // the order is an expression, Prisma orderBy can't express it
       const rows = await tx.$queryRaw<{ id: string }[]>(
         Prisma.sql`
-          SELECT m.id FROM messages m
+          SELECT n.id FROM notes n
           ${buildFeedWhereSql(dto.userId)}
           ${buildFeedOrderSql()}
           LIMIT ${dto.pageSize}
@@ -32,19 +32,19 @@ export class FeedService {
       );
       const ids = rows.map((row) => row.id);
 
-      const notes = await tx.message.findMany({
+      const notes = await tx.note.findMany({
         where: { id: { in: ids } },
         select: NOTE_SELECT,
       });
       const noteById = new Map(notes.map((n) => [n.id, n]));
       const orderedNotes = ids.flatMap((id) => noteById.get(id) ?? []);
 
-      await tx.message.updateMany({
+      await tx.note.updateMany({
         where: { id: { in: ids } },
         data: { seenAt: new Date() },
       });
 
-      const total = await tx.message.count({
+      const total = await tx.note.count({
         where: buildFeedWhere(dto.userId),
       });
 

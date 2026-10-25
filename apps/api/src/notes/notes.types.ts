@@ -23,5 +23,5 @@ export type DbNote = {
   id: string;
   createdAt: Date;
   rating: number;
-  textMessage: { content: string } | null;
+  textNote: { content: string } | null;
 };

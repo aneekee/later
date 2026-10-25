@@ -11,7 +11,7 @@ export class StatsService {
   constructor(private prismaService: PrismaService) {}
 
   async getNotesTotals(dto: GetNotesTotalsServiceDto): Promise<NotesTotals> {
-    const total = await this.prismaService.message.count({
+    const total = await this.prismaService.note.count({
       where: { userId: dto.userId },
     });
 
