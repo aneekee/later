@@ -1,5 +1,8 @@
 export const FEED_PAGE_SIZE = 10;
 
+// links in the note text are rendered as anchors
+export const URL_REGEX = /https?:\/\/[^\s]+/g;
+
 // keep in sync with the API note validation
 export const FEED_NOTE_MAX_LENGTH = 1000;
 

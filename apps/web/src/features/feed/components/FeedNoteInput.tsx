@@ -10,7 +10,7 @@ import { useCreateFeedNoteMutation } from '../api/feed.api';
 import { FEED_NOTE_MAX_LENGTH } from '../const/feed.constants';
 
 /**
- * A copy of the inbox MessageInput, creates chat-less notes.
+ * Creates a note; it's created as seen, so the feed returns it at the end of the rotation.
  * Pessimistic: the text is cleared only after the note is created
  */
 export const FeedNoteInput = () => {

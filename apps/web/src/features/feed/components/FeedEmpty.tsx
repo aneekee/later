@@ -1,7 +1,4 @@
-import { Link } from 'react-router';
 import { Newspaper } from 'lucide-react';
-
-import { Button } from '@/shared/components/ui/button';
 
 export const FeedEmpty = () => {
   return (
@@ -11,16 +8,11 @@ export const FeedEmpty = () => {
           <Newspaper className="size-6 text-muted-foreground" />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-sm font-medium text-foreground">
-            Nothing to revisit
-          </h3>
+          <h3 className="text-sm font-medium text-foreground">No notes yet</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Your inbox is clear.
+            Write your first note above.
           </p>
         </div>
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/inbox">Go to inbox</Link>
-        </Button>
       </div>
     </div>
   );

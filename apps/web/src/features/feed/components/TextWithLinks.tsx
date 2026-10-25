@@ -1,4 +1,4 @@
-import { URL_REGEX } from '../../const/message.constants';
+import { URL_REGEX } from '../const/feed.constants';
 
 interface Props {
   text: string;
