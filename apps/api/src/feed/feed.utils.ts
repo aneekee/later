@@ -6,10 +6,7 @@ import { FEED_RATING_STEP_HOURS } from './feed.constants';
  * Prisma equivalent of buildFeedWhereSql, keep them in sync
  */
 export function buildFeedWhere(userId: string): Prisma.MessageWhereInput {
-  return {
-    userId,
-    messageResolution: { is: null },
-  };
+  return { userId };
 }
 
 /**
@@ -19,9 +16,6 @@ export function buildFeedWhere(userId: string): Prisma.MessageWhereInput {
 export function buildFeedWhereSql(userId: string): Prisma.Sql {
   return Prisma.sql`
     WHERE m.user_id = ${userId}
-      AND NOT EXISTS (
-        SELECT 1 FROM message_resolutions r WHERE r.message_id = m.id
-      )
   `;
 }
 

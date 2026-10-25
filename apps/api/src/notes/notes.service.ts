@@ -33,7 +33,6 @@ export class NotesService {
       data: {
         type: 'TEXT',
         userId: dto.userId,
-        chatId: null,
         seenAt: new Date(),
         textMessage: {
           create: { content: dto.content },

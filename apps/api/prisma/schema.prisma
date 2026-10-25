@@ -15,23 +15,9 @@ model User {
   isVerified Boolean  @default(false) @map("is_verified")
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  chats    Chat[]
   messages Message[]
 
   @@map("users")
-}
-
-model Chat {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  title     String
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-
-  messages Message[]
-  user     User      @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@map("chats")
 }
 
 enum MessageType {
@@ -43,18 +29,14 @@ enum MessageType {
 model Message {
   id        String      @id @default(uuid())
   type      MessageType @default(TEXT)
-  chatId    String?     @map("chat_id")
-  userId    String?     @map("user_id")
+  userId    String      @map("user_id")
   createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
   seenAt    DateTime?   @map("seen_at") @db.Timestamptz(3)
   rating    Int         @default(0)
 
-  chat              Chat?              @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  user              User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  textMessage       TextMessage?
-  messageResolution MessageResolution?
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  textMessage TextMessage?
 
-  @@index([chatId, createdAt])
   @@index([seenAt, createdAt])
   @@index([userId, seenAt])
   @@map("messages")
@@ -68,15 +50,4 @@ model TextMessage {
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@map("text_messages")
-}
-
-model MessageResolution {
-  id        String   @id @default(uuid())
-  messageId String   @unique @map("message_id")
-  note      String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
-  @@map("message_resolutions")
 }
