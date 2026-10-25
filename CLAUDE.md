@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 It's a pnpm + Turborepo monorepo (Node >= 20.19, pnpm 9):
 
-- `apps/api`: NestJS 11 API. Postgres goes through Prisma 7 (`@prisma/adapter-pg`), and MongoDB through Mongoose.
+- `apps/api`: NestJS 11 API. Postgres goes through Prisma 7 (`@prisma/adapter-pg`).
 - `apps/web`: React 19 + Vite SPA, using Redux Toolkit / RTK Query, react-router 7, shadcn/ui (Tailwind 4), react-hook-form + zod. Deployed to Vercel.
 - `packages/types` (`@later/types`): request/response types shared by both apps. Its `exports` points at `src/index.ts`, so consumers read the source directly.
 
@@ -29,7 +29,7 @@ pnpm --filter web run dev            # one app only
 API (`apps/api`):
 
 ```sh
-docker compose up -d                 # local Postgres 17 (5432) + Mongo 8 (27017)
+docker compose up -d                 # local Postgres 17 (5432)
 pnpm db:migrate:local                # prisma migrate dev, using .env
 pnpm test                            # jest unit tests (*.spec.ts under src/)
 pnpm test -- src/auth/auth.service.spec.ts     # a single test file
@@ -37,7 +37,7 @@ pnpm test -- -t "name of test"       # a single test by name
 pnpm test:e2e
 ```
 
-The API needs `DATABASE_URL`, `MONGODB_URI`, `FRONTEND_URL`, `PORT`, `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` in `apps/api/.env`. The web app needs `VITE_BASE_URL` in `apps/web/.env`. Swagger is served at `/api/docs`.
+The API needs `DATABASE_URL`, `FRONTEND_URL`, `PORT`, `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` in `apps/api/.env`. The web app needs `VITE_BASE_URL` in `apps/web/.env`. Swagger is served at `/api/docs`.
 
 CI (`.github/workflows/ci.yaml`) runs `prisma generate`, `turbo build` and `turbo lint`. Tests don't run in CI.
 
@@ -50,7 +50,7 @@ CI (`.github/workflows/ci.yaml`) runs `prisma generate`, `turbo build` and `turb
 - **Auth is global and on by default.** `AuthGuard` is registered as `APP_GUARD`. It reads a JWT from the `access_token` cookie and sets `req['user']`. Use `@Public()` to opt a route out. Controllers get the user id from `req['user']?.id`.
 - The global `ValidationPipe` uses `whitelist` + `forbidNonWhitelisted` + `transform`, so a DTO must declare every field the client sends.
 - **Ownership checks:** `NotesService.checkNoteAccess` (a missing note or someone else's note → 403). Every write path to a note must call it.
-- **Two databases.** Postgres (Prisma, `prisma/schema.prisma`) holds the domain data: `users`, `notes` and `text_notes`. A note is a `Note` with a `TextNote`. Stats are computed from Postgres only. MongoDB holds performance analytics only: `PerformanceInterceptor` (global `APP_INTERCEPTOR`) records the duration of every request through `PerformanceAnalyticsService`.
+- **One database.** Postgres (Prisma, `prisma/schema.prisma`) holds the domain data (`users`, `notes` and `text_notes`; a note is a `Note` with a `TextNote`) and performance analytics: `PerformanceInterceptor` (global `APP_INTERCEPTOR`) records the duration of every request into `performance_events` through `PerformanceAnalyticsService`. Stats are computed from the domain tables only.
 - Prisma generates DROP/CREATE for a renamed model or column, which loses the data. Create such migrations with `--create-only` and hand-write `ALTER … RENAME` statements (see `prisma/migrations/*_rename_messages_to_notes`).
 - The Prisma client is generated into `apps/api/generated/prisma` (gitignored) and imported as `generated/prisma/client`.
 - `src/prisma/DEV__prisma.service.ts` is a drop-in `PrismaService` that logs every query with its inlined params to `logs/prisma-queries.log`. Swap it in by hand for SQL performance work. `sql/backfills/` holds one-off data scripts that the owner runs by hand.

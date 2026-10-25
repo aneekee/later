@@ -7,7 +7,6 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { MongoModule } from './mongo/mongo.module';
 import { PerformanceAnalyticsModule } from './performance-analytics/performance-analytics.module';
 import { PerformanceInterceptor } from './shared/interceptors/performance.interceptor';
 import { StatsModule } from './stats/stats.module';
@@ -20,7 +19,6 @@ import { NotesModule } from './notes/notes.module';
     PrismaModule,
     UsersModule,
     AuthModule,
-    MongoModule,
     PerformanceAnalyticsModule,
     StatsModule,
     FeedModule,
