@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router';
-import { HomeIcon, NewspaperIcon } from 'lucide-react';
+import { LayoutDashboardIcon, NewspaperIcon } from 'lucide-react';
 
 import { UserMenu } from '@/features/auth/components/UserMenu';
 
@@ -16,8 +16,13 @@ import {
 } from '@/shared/components/ui/sidebar';
 
 const navItems = [
-  { to: '/', label: 'Home', icon: HomeIcon, end: true },
   { to: '/feed', label: 'Feed', icon: NewspaperIcon, end: false },
+  {
+    to: '/dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboardIcon,
+    end: false,
+  },
 ];
 
 export const AppSidebar = () => {

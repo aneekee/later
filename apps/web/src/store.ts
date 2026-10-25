@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 
 import { authApi } from './features/auth/api/auth.api';
-import { statsApi } from './features/home/api/stats.api';
+import { statsApi } from './features/dashboard/api/stats.api';
 import { feedApi } from './features/feed/api/feed.api';
 
 export const store = configureStore({
