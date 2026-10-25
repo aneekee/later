@@ -13,17 +13,5 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  mongodb:
-    image: mongo:8-noble
-    restart: unless-stopped
-    ports:
-      - '27017:27017'
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: mongo
-      MONGO_INITDB_ROOT_PASSWORD: mongo
-    volumes:
-      - mongodata:/data/db
-
 volumes:
   pgdata:
-  mongodata:

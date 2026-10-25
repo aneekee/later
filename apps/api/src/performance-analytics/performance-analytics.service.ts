@@ -1,24 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 
-import {
-  PerformanceEvent,
-  PerformanceEventDocument,
-} from './performance-analytics.schema';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePerformanceEventDto } from './performance-analytics.types';
 
 @Injectable()
 export class PerformanceAnalyticsService {
-  constructor(
-    @InjectModel(PerformanceEvent.name)
-    private readonly performanceEventModel: Model<PerformanceEventDocument>,
-  ) {}
+  constructor(private prismaService: PrismaService) {}
 
   async record(dto: CreatePerformanceEventDto): Promise<void> {
-    await this.performanceEventModel.create({
-      ...dto,
-      createdAt: new Date(),
-    });
+    await this.prismaService.performanceEvent.create({ data: dto });
   }
 }

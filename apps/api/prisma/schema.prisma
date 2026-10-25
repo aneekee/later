@@ -51,3 +51,13 @@ model TextNote {
 
   @@map("text_notes")
 }
+
+model PerformanceEvent {
+  id        String   @id @default(uuid())
+  target    String
+  params    Json?
+  duration  Float
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("performance_events")
+}
