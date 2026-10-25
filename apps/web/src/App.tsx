@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Route, Routes } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
 
 import { Toaster } from '@/shared/components/ui/sonner';
 
@@ -7,14 +7,9 @@ import { AppLayout } from './widgets/AppLayout';
 
 import { WithAuth } from './features/auth/components/WithAuth';
 
-const HomePage = lazy(() =>
-  import('./features/home/pages/Home.page').then((m) => ({
-    default: m.HomePage,
-  })),
-);
-const InboxPage = lazy(() =>
-  import('./features/inbox/pages/Inbox.page').then((m) => ({
-    default: m.InboxPage,
+const DashboardPage = lazy(() =>
+  import('./features/dashboard/pages/Dashboard.page').then((m) => ({
+    default: m.DashboardPage,
   })),
 );
 const FeedPage = lazy(() =>
@@ -46,9 +41,9 @@ export const App = () => {
               </WithAuth>
             }
           >
-            <Route path="/" element={<HomePage />} />
-            <Route path="/inbox" element={<InboxPage />} />
+            <Route path="/" element={<Navigate to="/feed" replace />} />
             <Route path="/feed" element={<FeedPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
           </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="*" element={<NotFoundPage />} />

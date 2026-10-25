@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Trash2Icon } from 'lucide-react';
 
-import type { FeedItemEntity } from '@later/types';
+import type { NoteEntity } from '@later/types';
 
-import { TextWithLinks } from '@/features/inbox/components/messages/TextWithLinks';
 import { Button } from '@/shared/components/ui/button';
 import {
   Card,
@@ -17,9 +16,10 @@ import { formatIsoDateTime } from '@/shared/utils/date.util';
 import { useBatchedRating } from '../hooks/useBatchedRating';
 import { DeleteFeedNoteDialog } from './DeleteFeedNoteDialog';
 import { FeedRating } from './FeedRating';
+import { TextWithLinks } from './TextWithLinks';
 
 interface Props {
-  item: FeedItemEntity;
+  item: NoteEntity;
 }
 
 export const FeedItem = ({ item }: Props) => {
@@ -30,14 +30,6 @@ export const FeedItem = ({ item }: Props) => {
     <Card className="gap-2">
       <CardHeader>
         <CardDescription className="flex min-w-0 items-center gap-1">
-          {item.chatTitle !== null && (
-            <>
-              <span className="truncate font-semibold text-foreground">
-                {item.chatTitle}
-              </span>
-              <span aria-hidden="true">·</span>
-            </>
-          )}
           <time dateTime={item.createdAt} className="shrink-0">
             {formatIsoDateTime(item.createdAt)}
           </time>

@@ -7,14 +7,12 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { ChatsModule } from './chats/chats.module';
-import { MessagesModule } from './messages/messages.module';
 import { MongoModule } from './mongo/mongo.module';
 import { PerformanceAnalyticsModule } from './performance-analytics/performance-analytics.module';
 import { PerformanceInterceptor } from './shared/interceptors/performance.interceptor';
-import { UserActionsModule } from './user-actions/user-actions.module';
 import { StatsModule } from './stats/stats.module';
 import { FeedModule } from './feed/feed.module';
+import { NotesModule } from './notes/notes.module';
 
 @Module({
   imports: [
@@ -22,13 +20,11 @@ import { FeedModule } from './feed/feed.module';
     PrismaModule,
     UsersModule,
     AuthModule,
-    ChatsModule,
-    MessagesModule,
     MongoModule,
     PerformanceAnalyticsModule,
-    UserActionsModule,
     StatsModule,
     FeedModule,
+    NotesModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,42 +1,21 @@
 import { Prisma } from 'generated/prisma/client';
 
-import { FeedItemEntity } from '@later/types';
-
 import { FEED_RATING_STEP_HOURS } from './feed.constants';
-import { DbFeedItem } from './feed.types';
-
-/**
- * The fields mapToFeedItem needs
- */
-export const FEED_ITEM_SELECT = {
-  id: true,
-  createdAt: true,
-  chatId: true,
-  rating: true,
-  textMessage: { select: { content: true } },
-  chat: { select: { title: true } },
-} satisfies Prisma.MessageSelect;
 
 /**
  * Prisma equivalent of buildFeedWhereSql, keep them in sync
  */
-export function buildFeedWhere(userId: string): Prisma.MessageWhereInput {
-  return {
-    userId,
-    messageResolution: { is: null },
-  };
+export function buildFeedWhere(userId: string): Prisma.NoteWhereInput {
+  return { userId };
 }
 
 /**
  * Raw SQL equivalent of buildFeedWhere, keep them in sync.
- * Expects `messages m`
+ * Expects `notes n`
  */
 export function buildFeedWhereSql(userId: string): Prisma.Sql {
   return Prisma.sql`
-    WHERE m.user_id = ${userId}
-      AND NOT EXISTS (
-        SELECT 1 FROM message_resolutions r WHERE r.message_id = m.id
-      )
+    WHERE n.user_id = ${userId}
   `;
 }
 
@@ -49,20 +28,9 @@ export function buildFeedWhereSql(userId: string): Prisma.Sql {
 export function buildFeedOrderSql(): Prisma.Sql {
   return Prisma.sql`
     ORDER BY
-      m.seen_at - make_interval(hours => m.rating * ${FEED_RATING_STEP_HOURS}::int) ASC NULLS FIRST,
-      m.rating DESC,
-      m.created_at ASC,
-      m.id ASC
+      n.seen_at - make_interval(hours => n.rating * ${FEED_RATING_STEP_HOURS}::int) ASC NULLS FIRST,
+      n.rating DESC,
+      n.created_at ASC,
+      n.id ASC
   `;
-}
-
-export function mapToFeedItem(message: DbFeedItem): FeedItemEntity {
-  return {
-    id: message.id,
-    content: message.textMessage?.content ?? '',
-    createdAt: message.createdAt.toISOString(),
-    chatId: message.chatId,
-    chatTitle: message.chat?.title ?? null,
-    rating: message.rating,
-  };
 }

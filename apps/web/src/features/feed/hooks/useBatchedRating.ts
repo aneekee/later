@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { FeedItemEntity } from '@later/types';
+import type { NoteEntity } from '@later/types';
 
+import { useSetNoteRatingMutation } from '@/features/notes/api/notes.api';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
-import { useSetFeedNoteRatingMutation } from '../api/feed.api';
 import { FEED_RATING_DEBOUNCE_MS } from '../const/feed.constants';
 import { clampRating } from '../utils/feed.utils';
 
@@ -15,7 +15,7 @@ import { clampRating } from '../utils/feed.utils';
  * cancel() drops the pending change and silences an in-flight one, e.g. before
  * the note is deleted; the next change resumes sending.
  */
-export const useBatchedRating = (item: FeedItemEntity) => {
+export const useBatchedRating = (item: NoteEntity) => {
   const [rating, setRating] = useState(item.rating);
 
   // the latest local value, readable from timers and async code
@@ -26,7 +26,7 @@ export const useBatchedRating = (item: FeedItemEntity) => {
   const isMountedRef = useRef(false);
   const isCancelledRef = useRef(false);
 
-  const [setFeedNoteRating] = useSetFeedNoteRatingMutation();
+  const [setNoteRating] = useSetNoteRatingMutation();
   const { displayErrorToast } = useDisplayErrorToast();
 
   const send = useCallback(async () => {
@@ -45,8 +45,8 @@ export const useBatchedRating = (item: FeedItemEntity) => {
       ) {
         const value = ratingRef.current;
         try {
-          const response = await setFeedNoteRating({
-            messageId: item.id,
+          const response = await setNoteRating({
+            noteId: item.id,
             body: { rating: value },
           }).unwrap();
           confirmedRef.current = response.data?.rating ?? value;
@@ -70,7 +70,7 @@ export const useBatchedRating = (item: FeedItemEntity) => {
     } finally {
       isSendingRef.current = false;
     }
-  }, [item.id, setFeedNoteRating, displayErrorToast]);
+  }, [item.id, setNoteRating, displayErrorToast]);
 
   const change = useCallback(
     (delta: number) => {
