@@ -12,6 +12,7 @@ import { PerformanceAnalyticsModule } from './performance-analytics/performance-
 import { PerformanceInterceptor } from './shared/interceptors/performance.interceptor';
 import { StatsModule } from './stats/stats.module';
 import { FeedModule } from './feed/feed.module';
+import { NotesModule } from './notes/notes.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { FeedModule } from './feed/feed.module';
     PerformanceAnalyticsModule,
     StatsModule,
     FeedModule,
+    NotesModule,
   ],
   controllers: [AppController],
   providers: [

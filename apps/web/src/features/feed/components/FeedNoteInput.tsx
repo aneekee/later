@@ -1,12 +1,12 @@
 import { Send } from 'lucide-react';
 import { useRef, useState } from 'react';
 
+import { useCreateNoteMutation } from '@/features/notes/api/notes.api';
 import { Button } from '@/shared/components/ui/button';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
-import { useCreateFeedNoteMutation } from '../api/feed.api';
 import { FEED_NOTE_MAX_LENGTH } from '../const/feed.constants';
 
 /**
@@ -17,7 +17,7 @@ export const FeedNoteInput = () => {
   const [content, setContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const [createFeedNote, { isLoading }] = useCreateFeedNoteMutation();
+  const [createNote, { isLoading }] = useCreateNoteMutation();
 
   const { displayErrorToast } = useDisplayErrorToast();
 
@@ -25,7 +25,7 @@ export const FeedNoteInput = () => {
 
   const onNoteSubmit = async () => {
     try {
-      await createFeedNote({ body: { content } }).unwrap();
+      await createNote({ body: { content } }).unwrap();
       setContent('');
       // the Send button takes the focus on click, keep typing the next note
       textareaRef.current?.focus();

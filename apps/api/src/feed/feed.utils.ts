@@ -1,21 +1,6 @@
 import { Prisma } from 'generated/prisma/client';
 
-import { FeedItemEntity } from '@later/types';
-
 import { FEED_RATING_STEP_HOURS } from './feed.constants';
-import { DbFeedItem } from './feed.types';
-
-/**
- * The fields mapToFeedItem needs
- */
-export const FEED_ITEM_SELECT = {
-  id: true,
-  createdAt: true,
-  chatId: true,
-  rating: true,
-  textMessage: { select: { content: true } },
-  chat: { select: { title: true } },
-} satisfies Prisma.MessageSelect;
 
 /**
  * Prisma equivalent of buildFeedWhereSql, keep them in sync
@@ -54,15 +39,4 @@ export function buildFeedOrderSql(): Prisma.Sql {
       m.created_at ASC,
       m.id ASC
   `;
-}
-
-export function mapToFeedItem(message: DbFeedItem): FeedItemEntity {
-  return {
-    id: message.id,
-    content: message.textMessage?.content ?? '',
-    createdAt: message.createdAt.toISOString(),
-    chatId: message.chatId,
-    chatTitle: message.chat?.title ?? null,
-    rating: message.rating,
-  };
 }

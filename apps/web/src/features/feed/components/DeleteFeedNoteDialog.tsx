@@ -1,5 +1,6 @@
-import type { FeedItemEntity } from '@later/types';
+import type { NoteEntity } from '@later/types';
 
+import { useDeleteNoteMutation } from '@/features/notes/api/notes.api';
 import { Button } from '@/shared/components/ui/button';
 import {
   Dialog,
@@ -12,10 +13,8 @@ import {
 import { Spinner } from '@/shared/components/ui/spinner';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
-import { useDeleteFeedNoteMutation } from '../api/feed.api';
-
 interface Props {
-  item: FeedItemEntity;
+  item: NoteEntity;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onBeforeDelete: () => void;
@@ -28,7 +27,7 @@ export const DeleteFeedNoteDialog = ({
   onBeforeDelete,
 }: Props) => {
   const { displayErrorToast } = useDisplayErrorToast();
-  const [deleteFeedNote, { isLoading }] = useDeleteFeedNoteMutation();
+  const [deleteNote, { isLoading }] = useDeleteNoteMutation();
 
   // can't be dismissed while the request is pending
   const handleOpenChange = (isOpen: boolean) => {
@@ -42,7 +41,7 @@ export const DeleteFeedNoteDialog = ({
   const onDelete = async () => {
     onBeforeDelete();
     try {
-      await deleteFeedNote({ messageId: item.id }).unwrap();
+      await deleteNote({ noteId: item.id }).unwrap();
     } catch (e) {
       console.error('Delete note error:', e);
       displayErrorToast(e, 'Note delete failed');

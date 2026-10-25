@@ -1,4 +1,4 @@
-import type { FeedItemEntity, GetFeedSuccessResponse } from '@later/types';
+import type { GetFeedSuccessResponse, NoteEntity } from '@later/types';
 
 import { FEED_RATING_MAX, FEED_RATING_MIN } from '../const/feed.constants';
 
@@ -8,7 +8,7 @@ import { FEED_RATING_MAX, FEED_RATING_MIN } from '../const/feed.constants';
  */
 export const dedupeKeepLast = (
   pages: GetFeedSuccessResponse[],
-): FeedItemEntity[] => {
+): NoteEntity[] => {
   const items = pages.flatMap((page) => page.data?.items ?? []);
 
   const lastIndexById = new Map<string, number>();
@@ -23,14 +23,14 @@ export const dedupeKeepLast = (
  */
 export const removeFeedItem = (
   pages: GetFeedSuccessResponse[],
-  messageId: string,
+  noteId: string,
 ) => {
   pages.forEach((page) => {
     if (!page.data) {
       return;
     }
 
-    page.data.items = page.data.items.filter((item) => item.id !== messageId);
+    page.data.items = page.data.items.filter((item) => item.id !== noteId);
     page.data.total = Math.max(page.data.total - 1, 0);
   });
 };
