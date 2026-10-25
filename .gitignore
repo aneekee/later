@@ -37,3 +37,5 @@ logs/
 # Misc
 .DS_Store
 *.pem
+
+data/
