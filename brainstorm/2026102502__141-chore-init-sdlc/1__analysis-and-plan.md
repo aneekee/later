@@ -305,7 +305,7 @@ These use the domain-modeling ADR format (a few sentences each). Each one passes
 
 | ADR  | Decision                                                                                                                                  | Source           |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| 0001 | Postgres holds the domain data, and MongoDB holds only request performance analytics.                                                     | #40, `CLAUDE.md` |
+| 0001 | Postgres holds the domain data.                                                                                                           | #40, `CLAUDE.md` |
 | 0002 | Notes belong to a user directly. Chats, the inbox and resolutions were removed (the move from chat-like to feed-like notes).              | #145, #157       |
 | 0003 | `GET v1/feed` isn't idempotent: serving a page marks it seen. The web app never refetches or invalidates the feed; it patches the cache.  | #122, #146, #150 |
 | 0004 | Auth uses a JWT in cookies, behind a global guard that's on by default (`@Public()` opts out). The web app refreshes once behind a mutex. | #14, `CLAUDE.md` |
