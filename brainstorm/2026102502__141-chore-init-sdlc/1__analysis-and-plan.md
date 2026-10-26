@@ -207,7 +207,7 @@ later/
 └── .gitignore                            # T6, + .claude/settings.local.json
 ```
 
-### 4.1 `openspec/config.yaml` (draft)
+### 4.1 `openspec/config.yaml` (written in T2, checked against the code on 2026-10-26)
 
 OpenSpec's own guidance for `context`: list only the constraints an agent can't infer from the code. Claude Code already loads `CLAUDE.md`, so `context` points to it rather than repeating it.
 
@@ -216,30 +216,33 @@ schema: spec-driven
 
 context: |
   Later is a feed-like notes app: a user creates, rates and deletes notes, works through the stalest ones in a feed, and sees totals on a dashboard.
-  CLAUDE.md is the source of truth for commands, architecture and conventions. CONTEXT.md is the domain glossary: use its terms, never the retired ones (message, chat, inbox, resolution).
-  A change is named after its git branch: <issue#>-<type>-<slug>, where type is feature, chore, refactor or fix.
+  CLAUDE.md is the source of truth for commands, architecture and conventions. CONTEXT.md is the domain glossary: use its terms. Never call a note a message, and never bring back chat, inbox or resolution (the `message` field of API responses is unrelated).
+  A change is named after its git branch: <issue#>-<type>-<slug>, where type is feature, chore, refactor or bug.
   A change folder may hold ask.md (the owner's raw ask, verbatim) and analysis.md (research notes). They are inputs, not artifacts. Never rewrite ask.md.
-  Specs describe what a user or the web client can observe: routes, status codes, limits, ordering, UI behavior. One spec covers both the API and the web side of a capability.
+  Specs describe what a user or the web client can observe: routes, status codes, error messages, limits, ordering, UI behavior. One spec covers both the API and the web side of a capability.
   Verification today: `pnpm --filter api exec prisma generate`, `pnpm build`, `pnpm lint`, plus a manual check in the browser or with curl. Jest tests exist but don't run in CI.
+  Only the owner touches production. Prod migrations (`db:migrate:prod`, nothing runs them on deploy) and the one-off scripts in apps/api/sql/backfills/ are run by hand, in a set order around the merge.
 
 rules:
   proposal:
-    - When ask.md exists, every point in it is either covered in What Changes or listed under an "Out of scope" heading.
+    - End What Changes with an "Out of scope" list, even a short one. When ask.md exists, every point in it is either covered in What Changes or listed under Out of scope.
     - Reference the GitHub issue number from the change name in Why.
-    - End What Changes with an "Out of scope" list, even if it's short.
+    - Reuse an existing capability (auth, notes, feed, dashboard) before adding a new one. The dashboard capability owns the v1/stats routes.
+    - In Impact, name each part the change touches (apps/api, apps/web, @later/types, prisma/schema.prisma).
   specs:
-    - Reuse an existing capability (auth, notes, feed, dashboard) before adding a new one.
-    - Put limits (max lengths, ranges, page sizes) and error status codes into scenarios, with the exact numbers.
+    - Put limits (max lengths, ranges, page sizes), error status codes and error messages into scenarios, with the exact values.
     - When a behavior spans the API and the web app, give each side its own scenario (e.g. the API rejects it, the UI disables it).
   design:
     - Record every decision agreed while grilling as a Decision, with the alternatives that were rejected.
-    - When prisma/schema.prisma changes, add a "Data model and migrations" section. A renamed model or column needs a --create-only migration with hand-written ALTER ... RENAME statements.
-    - List the raw SQL that names tables or columns; tsc doesn't check it.
-    - List the @later/types changes.
+    - When prisma/schema.prisma changes, add a "Data model and migrations" section. A renamed model or column needs a --create-only migration with hand-written ALTER ... RENAME statements. Name any backfill script and the order of the steps on prod.
+    - When a table or column changes, list every raw SQL query (Prisma.sql, $queryRaw) that names it; tsc doesn't check them.
+    - List the @later/types changes, if any.
   tasks:
     - Make each task group one commit that leaves the build green.
     - Name the files each task touches.
     - End each group with the gate (prisma generate, pnpm build, pnpm lint). Add a browser or curl check when behavior changes.
+    - Cover every scenario in the delta specs with at least one task.
+    - Put owner-only steps (a prod migration, a backfill on prod) under `## Workflow follow-up` as plain bullets, in the order they must run.
     - If groups can run in parallel, say which ones, and note that they need separate git worktrees.
     - A group that changes a convention or a command updates CLAUDE.md in the same group.
 
@@ -247,7 +250,7 @@ operations:
   apply:
     guidance:
       - Before the first task, read CLAUDE.md, CONTEXT.md and the change's proposal, specs and design.
-      - Commit after each task group, using the repo's co-author trailer. Never push.
+      - Commit after each task group. Never push.
       - If a task turns out to be wrong, make the minimal fix and note it under the task. Stop and ask if the fix would change a spec.
   archive:
     guidance:
