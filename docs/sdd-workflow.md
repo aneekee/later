@@ -1,11 +1,10 @@
 # Spec-driven workflow: building a feature with OpenSpec
 
-- **Status:** draft, written for #141. In T5 it moves to `docs/sdd-workflow.md`, and `CLAUDE.md` links to it.
-- **Assumes:** #141 is done (T1..T8):
-  - the `openspec` CLI 1.15.x is on PATH;
+- **Assumes** the setup from #141:
+  - the `openspec` CLI 1.15.x is first on PATH (`openspec --version`);
   - `openspec/config.yaml` is filled in;
-  - `CONTEXT.md` exists;
-  - the baseline specs (`auth`, `notes`, `feed`, `dashboard`) exist.
+  - `CONTEXT.md` exists.
+- **Specs grow change by change.** There's no baseline. A capability (`auth`, `notes`, `feed`, `dashboard`) gets its spec from the first change that touches it (see "A capability has no spec yet" under Variants).
 - **Roles:** **you** are the owner: you decide, review and merge. **Claude** is the agent in a Claude Code session.
 - The running example is a made-up feature, `170-feature-edit-notes`. The full example is at the end.
 
@@ -118,7 +117,7 @@ Read in this order, and stop at the first artifact that's wrong: everything afte
 **`proposal.md`**
 
 - [ ] Every point in `ask.md` is either in What Changes or under Out of scope.
-- [ ] The capabilities reuse existing paths (`openspec list --specs`), with no near-duplicates (e.g. `note-editing` next to `notes`).
+- [ ] The capabilities use the existing names (`auth`, `notes`, `feed`, `dashboard`), with no near-duplicates (e.g. `note-editing` next to `notes`). `openspec list --specs` shows which of them have a spec yet.
 - [ ] Impact names the api, web, types and DB parts the change touches.
 
 **`specs/`** (this is the part that outlives the change)
@@ -128,6 +127,7 @@ Read in this order, and stop at the first artifact that's wrong: everything afte
 - [ ] Numbers are exact: limits, status codes, messages, page sizes.
 - [ ] A behavior that spans the API and the web app has a scenario for each side.
 - [ ] A MODIFIED block is the **whole** requirement, copied from `openspec/specs/…`, with an identical header.
+- [ ] A capability with no spec yet uses ADDED only, with a `## Purpose`. `validate` accepts MODIFIED there, but archive aborts.
 - [ ] There are no class names, file paths or libraries; those belong in `design.md`.
 - [ ] `openspec show 170-feature-edit-notes --deltas-only` reads like what you agreed.
 
@@ -206,7 +206,7 @@ Start a **new** session. The grilling context (rejected options, dead ends) stay
 
 **Then, per the `config.yaml` archive guidance:**
 
-- a Decision that is hard to reverse, surprising, and the result of a real trade-off → `docs/adr/NNNN-….md`;
+- a Decision that is hard to reverse, surprising, and the result of a real trade-off → `docs/adr/NNNN-….md` (the first one creates the folder);
 - a new term → `CONTEXT.md`.
 
 **Finish:**
@@ -219,8 +219,8 @@ git add -A && git commit -m "170: archive the change, update specs"
 
 ## Step 7: PR and merge (you)
 
-- Open the PR from the template. Link the archived change folder and put the delta spec first, so the review reads proposal → specs → code.
-- CI runs build, lint and "Validate specs".
+- Open the PR. Link the archived change folder and put the delta spec first, so the review reads proposal → specs → code.
+- CI runs build and lint. It doesn't validate specs yet, so run `openspec validate --all --strict --no-interactive` yourself before you push.
 - Squash-merge it as `170-feature-edit-notes`.
 - After the merge, run the owner-only steps from `## Workflow follow-up` (e.g. `prisma migrate deploy` on prod, a backfill script).
 
@@ -228,23 +228,26 @@ git add -A && git commit -m "170: archive the change, update specs"
 
 ## Variants
 
-| Situation                                                    | What changes in the loop                                                                                                                                                       |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Small, obvious UI or API tweak                               | Skip step 1 and run `/opsx:propose` with the ask. There's usually no `design.md`. Behavior still changes, so there's still a delta.                                            |
-| Chore, tooling, docs, pure refactor                          | Set `skip_specs: true` in `.openspec.yaml`. Write the proposal and tasks only. Say in Why that no observable behavior changes.                                                 |
-| Bug fix, and the spec already describes the correct behavior | Set `skip_specs: true`. Why names the requirement and scenario the code breaks.                                                                                                |
-| Bug fix, and the spec doesn't cover the case                 | MODIFIED: the whole requirement, plus a new scenario that captures the bug, so it can't come back unnoticed.                                                                   |
-| Large or cross-cutting change (#157-sized)                   | `/opsx:continue` one artifact at a time; `analysis.md` for the research; a dependency table on top of `tasks.md`; more, smaller groups.                                        |
-| Removing a feature                                           | REMOVED with **Reason** and **Migration**. If it was a capability's last requirement, also set `retire_capabilities: true` in `.openspec.yaml`, and archive deletes that spec. |
-| The spec is wrong but the code is right                      | A small change with a MODIFIED delta, so the history records it. Fix a pure typo or a `TBD` Purpose directly in `openspec/specs/…`.                                            |
-| Two open changes touch the same requirement                  | The second one to archive resolves the conflict in `openspec/specs/…/spec.md` like a merge conflict, keeping what the code actually does.                                      |
-| A follow-up needs the new spec before this PR merges         | `/opsx:sync 170-…` merges the deltas into `openspec/specs/` without archiving.                                                                                                 |
+| Situation                                                    | What changes in the loop                                                                                                                                                                                   |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A capability has no spec yet                                 | List it under New Capabilities and write its delta with a `## Purpose` and ADDED requirements only, covering just the behavior this change touches. Archive creates `openspec/specs/<capability>/spec.md`. |
+| Small, obvious UI or API tweak                               | Skip step 1 and run `/opsx:propose` with the ask. There's usually no `design.md`. Behavior still changes, so there's still a delta.                                                                        |
+| Chore, tooling, docs, pure refactor                          | Set `skip_specs: true` in `.openspec.yaml`. Write the proposal and tasks only. Say in Why that no observable behavior changes.                                                                             |
+| Bug fix, and the spec already describes the correct behavior | Set `skip_specs: true`. Why names the requirement and scenario the code breaks.                                                                                                                            |
+| Bug fix, and the spec doesn't cover the case                 | MODIFIED: the whole requirement, plus a new scenario that captures the bug, so it can't come back unnoticed.                                                                                               |
+| Large or cross-cutting change (#157-sized)                   | `/opsx:continue` one artifact at a time; `analysis.md` for the research; a dependency table on top of `tasks.md`; more, smaller groups.                                                                    |
+| Removing a feature                                           | REMOVED with **Reason** and **Migration**. If it was a capability's last requirement, also set `retire_capabilities: true` in `.openspec.yaml`, and archive deletes that spec.                             |
+| The spec is wrong but the code is right                      | A small change with a MODIFIED delta, so the history records it. Fix a pure typo or a `TBD` Purpose directly in `openspec/specs/…`.                                                                        |
+| Two open changes touch the same requirement                  | The second one to archive resolves the conflict in `openspec/specs/…/spec.md` like a merge conflict, keeping what the code actually does.                                                                  |
+| A follow-up needs the new spec before this PR merges         | `/opsx:sync 170-…` merges the deltas into `openspec/specs/` without archiving.                                                                                                                             |
 
 ---
 
 ## Worked example: `170-feature-edit-notes` (made up)
 
 This shows where each piece of the conversation ends up. The names follow the current code (`CreateNoteDto`, `notesApi`, `FeedItem.tsx`), but the feature doesn't exist.
+
+It assumes an earlier change already created `openspec/specs/notes/spec.md` with the "Only the owner can change a note" requirement. Without that spec, both requirements below go under ADDED, after a `## Purpose`.
 
 ### `ask.md`
 
@@ -337,7 +340,7 @@ The system SHALL reject rating, editing or deleting a note that doesn't exist or
 - **THEN** the API responds 403 "You don't have access to this note"
 ```
 
-The MODIFIED block is the baseline requirement copied whole from `openspec/specs/notes/spec.md`, with "editing" added. Copying only the changed sentence would drop the other scenarios on archive.
+The MODIFIED block is the existing requirement copied whole from `openspec/specs/notes/spec.md`, with "editing" added. Copying only the changed sentence would drop the other scenarios on archive.
 
 What isn't in the spec: the route shape, the DTO, the RTK Query cache patch. Those can change without changing what the user sees, so they belong in `design.md`.
 
@@ -396,7 +399,7 @@ Run the groups in order: group 2 needs the types and the route from group 1.
 | Revise a plan | `/opsx:update <name>`                             | `openspec validate <name> --strict`                         |
 | Read a delta  |                                                   | `openspec show <name> --deltas-only`                        |
 | Build         | `/opsx:apply <name>`                              | `openspec instructions apply --change <name>`               |
-| Check         | `/opsx:verify <name>`                             | `pnpm spec:validate`                                        |
+| Check         | `/opsx:verify <name>`                             | `openspec validate --all --strict --no-interactive`         |
 | Sync early    | `/opsx:sync <name>`                               |                                                             |
 | Finish        | `/opsx:archive <name>`                            | `openspec archive <name>`                                   |
 | Overview      |                                                   | `openspec view`, `openspec list`                            |

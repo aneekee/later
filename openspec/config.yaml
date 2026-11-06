@@ -6,6 +6,7 @@ context: |
   A change is named after its git branch: <issue#>-<type>-<slug>, where type is feature, chore, refactor or bug.
   A change folder may hold ask.md (the owner's raw ask, verbatim) and analysis.md (research notes). They are inputs, not artifacts. Never rewrite ask.md.
   Specs describe what a user or the web client can observe: routes, status codes, error messages, limits, ordering, UI behavior. One spec covers both the API and the web side of a capability.
+  Specs grow change by change, so a capability may have no spec yet. If openspec/specs/<capability>/spec.md doesn't exist, list it under New Capabilities and use ADDED with a Purpose, even when the feature already exists. MODIFIED, REMOVED and RENAMED need an existing spec: validate accepts them, but archive aborts.
   Verification today: `pnpm --filter api exec prisma generate`, `pnpm build`, `pnpm lint`, plus a manual check in the browser or with curl. Jest tests exist but don't run in CI.
   Only the owner touches production. Prod migrations (`db:migrate:prod`, nothing runs them on deploy) and the one-off scripts in apps/api/sql/backfills/ are run by hand, in a set order around the merge.
 
@@ -13,7 +14,7 @@ rules:
   proposal:
     - End What Changes with an "Out of scope" list, even a short one. When ask.md exists, every point in it is either covered in What Changes or listed under Out of scope.
     - Reference the GitHub issue number from the change name in Why.
-    - Reuse an existing capability (auth, notes, feed, dashboard) before adding a new one. The dashboard capability owns the v1/stats routes.
+    - Use one of the capability names auth, notes, feed and dashboard before adding a new one, whether or not its spec exists yet. The dashboard capability owns the v1/stats routes.
     - In Impact, name each part the change touches (apps/api, apps/web, @later/types, prisma/schema.prisma).
   specs:
     - Put limits (max lengths, ranges, page sizes), error status codes and error messages into scenarios, with the exact values.

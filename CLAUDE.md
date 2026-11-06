@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-"Later" is a feed-like notes app. Users create, rate and delete notes, and work through their stalest notes in a feed. A dashboard shows the total number of notes.
+"Later" is a feed-like notes app. Users create, rate and delete notes, and work through their stalest notes in a feed. A dashboard shows the total number of notes. The domain terms are defined in `CONTEXT.md`.
 
 It's a pnpm + Turborepo monorepo (Node >= 20.19, pnpm 9):
 
@@ -68,9 +68,12 @@ CI (`.github/workflows/ci.yaml`) runs `prisma generate`, `turbo build` and `turb
 ## Workflow conventions
 
 - Branches are named `<issue#>-<type>-<slug>` (e.g. `150-feature-add-deleting-notes-from-feed`), and PRs are squash-merged with that name.
-- `brainstorm/<YYYYMMDDNN>__<branch-name>/` holds a feature's design notes:
-  - `0__init.md` is the raw ask;
-  - `1__requirements-and-plan.md` holds the agreed requirements and a file-by-file implementation plan.
-
-  Read the matching folder before working on a feature, and follow the same format when planning a new one.
+- **Spec-driven development with OpenSpec** (`openspec/`). The `openspec` CLI 1.15.x must be first on PATH; the machine-wide profile is core + `continue` + `verify`, with delivery `both`.
+  - `openspec/specs/<capability>/spec.md` is the agreed current behavior. The capabilities are `auth`, `notes`, `feed` and `dashboard`, and each one gets its spec from the first change that touches it. Read the relevant spec, if there is one, before you change behavior.
+  - Each piece of work is one change, `openspec/changes/<branch-name>/`, holding `ask.md` (the raw ask), `proposal.md`, delta `specs/`, `design.md` and `tasks.md`.
+  - The loop: `/opsx:explore` + grilling → `/opsx:propose <branch-name>` → review → `/opsx:apply` in a fresh session → `/opsx:verify` → `/opsx:archive`, as the PR's last commit. The step-by-step runbook is `docs/sdd-workflow.md`.
+  - A change with no behavior change (tooling, docs, pure refactor) sets `skip_specs: true` in its `.openspec.yaml`.
+  - Don't edit `.claude/skills/openspec-*` or `.claude/commands/opsx/`; `openspec update` regenerates them. Customize in `openspec/config.yaml`.
+- `CONTEXT.md` is the domain glossary, and `docs/adr/` holds long-lived decisions (the first ADR creates the folder). Maintain both with the `domain-modeling` skill.
+- `brainstorm/` is the frozen pre-OpenSpec history. Read it for background, but don't add to it, and don't treat it as current behavior.
 - Project skills (`domain-modeling`, `grilling`) live in `.claude/skills/`.
