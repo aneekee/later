@@ -8,17 +8,22 @@ Serves a user's own notes as an endless queue, stalest first adjusted by each no
 
 ### Requirement: The rotation boosts notes by tier
 
-The feed SHALL order notes by never-seen first, then by effective staleness, oldest first. Effective staleness is the time the note was last seen, moved earlier by its tier's boost: S 8 weeks, A 4 weeks, B 2 weeks, C 1 week, D none. Every note SHALL stay in the rotation whatever its tier.
+The feed SHALL order notes by never-seen first, then by effective staleness, stalest first. Effective staleness is the time since the note was last seen, multiplied by its tier's factor: S ×16, A ×8, B ×4, C ×2, D ×1. A note the feed has just served SHALL have no staleness, whatever its tier, so it goes behind every note seen earlier. Every note SHALL stay in the rotation whatever its tier.
 
 #### Scenario: A higher tier comes back sooner
 
-- **WHEN** note X (tier D) was last seen 3 days ago and note Y (tier C) was last seen 1 day ago
-- **THEN** `GET /api/v1/feed` returns Y before X, because Y counts as seen 8 days ago
+- **WHEN** note X (tier D) was last seen 3 days ago and note Y (tier C) was last seen 2 days ago
+- **THEN** `GET /api/v1/feed` returns Y before X, because Y counts as 4 days stale
 
 #### Scenario: Staleness still wins over tier
 
-- **WHEN** note X (tier D) was last seen 10 weeks ago and note Y (tier S) was last seen 1 day ago
-- **THEN** the feed returns X before Y, because Y counts as seen 8 weeks and 1 day ago
+- **WHEN** note X (tier D) was last seen 20 weeks ago and note Y (tier S) was last seen 1 week ago
+- **THEN** the feed returns X before Y, because Y counts as 16 weeks stale
+
+#### Scenario: A served note does not come back on the next page
+
+- **WHEN** a feed page has just served notes of tier S, and note X (tier D) was last seen 1 day ago
+- **THEN** the next `GET /api/v1/feed` returns X before any of those S notes
 
 #### Scenario: Never-seen notes come first
 
@@ -27,13 +32,13 @@ The feed SHALL order notes by never-seen first, then by effective staleness, old
 
 #### Scenario: Equal effective staleness
 
-- **WHEN** note P (tier A) was last seen at time T and note Q (tier D) was last seen at T minus 4 weeks
+- **WHEN** notes P (tier A) and Q (tier D) have both never been served
 - **THEN** the feed returns P before Q
 - **AND** notes still tied after tier are ordered by older creation time first
 
 ### Requirement: A note without a tier ranks as D
 
-A note that has no stored tier SHALL get the D boost (none) in the rotation.
+A note that has no stored tier SHALL get the D factor (×1) in the rotation.
 
 #### Scenario: Untiered note
 

@@ -9,7 +9,7 @@ Issue #151: a note's rating is a number from 0 to 10000, changed by pressing and
 - **BREAKING (API):** a note carries a **tier** instead of a numeric rating. `NoteEntity` loses `rating: number` and gains `tier: 'S' | 'A' | 'B' | 'C' | 'D'`.
 - **BREAKING (API):** `PUT /api/v1/notes/:noteId/rating` is removed. `PUT /api/v1/notes/:noteId/tier` with `{ tier }` replaces it and returns `{ id, tier }`.
 - New notes are created at tier D. Creating a note still takes only `{ content }`.
-- The feed rotation uses the tier as a fixed staleness boost: S 8 weeks, A 4 weeks, B 2 weeks, C 1 week, D none. Every note keeps rotating; higher tiers come back sooner. This replaces the "1 hour sooner per rating point" rule.
+- The feed rotation multiplies the time since a note was last seen by its tier factor: S ×16, A ×8, B ×4, C ×2, D ×1. Every note keeps rotating; higher tiers come back sooner, and a just served note goes to the back. This replaces the "1 hour sooner per rating point" rule.
 - A note with no tier yet (existing notes, until the owner's prod backfill) is ranked and returned as D.
 - The feed card's upvote/downvote control is replaced by a chunky stepped tier slider in the card footer: D C B A S from left to right, each tier in its own color on a cold-to-hot scale (D purple, C blue, B green, A yellow, S orange). Changes are optimistic and saved once, 600 ms after the last change; a failed save reverts and shows an error toast.
 - The old rating implementation is removed from the web app (`FeedRating`, the press-and-hold hook, the batched rating hook, rating limits and constants).

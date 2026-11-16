@@ -31,16 +31,19 @@ For motivation, see `proposal.md` (Why); for the observable behavior, see `specs
 
 ### 1. The tier is a staleness boost, not a strict sort key
 
-The order becomes `seen_at - boost(tier) ASC NULLS FIRST`. Every note keeps rotating, and higher tiers come back sooner. This keeps today's model; only the input becomes discrete.
+The order becomes `(now() - seen_at) * factor(tier) DESC NULLS FIRST`. Every note keeps rotating, and higher tiers come back sooner. A just served note has no staleness to multiply, so it goes to the back whatever its tier.
+
+- _Rejected: a fixed shift, `seen_at - boost(tier) ASC` (today's rule with weeks instead of hours)._ It shipped first and was replaced after review: a just served S note still counts as 8 weeks stale, so it beats every note seen in the last 8 weeks and comes back on the next page. With a page's worth of S notes the feed loops on them.
+- _Rejected: a per-session cursor that skips notes served since the feed was opened._ It hides the repeats within one session only.
 
 - _Rejected: strict sort (`ORDER BY tier, seen_at`)._ The feed always serves something, so once there's a page's worth of S notes, A to D would never be served again.
 - _Rejected: tier as a revisit frequency_ ("due" when `seen_at + interval < now`). It's a different mental model and needs more design for no gain over the boost.
 
-### 2. Boosts are exponential: S 8 weeks, A 4, B 2, C 1, D 0
+### 2. Factors are exponential: S ×16, A ×8, B ×4, C ×2, D ×1
 
-Each tier roughly doubles the one below it, so the gaps stay meaningful, and the ends leave room (for example SSS 16 weeks, F -1 week).
+Each tier doubles the one below it, so the gaps stay meaningful, and the ends leave room (for example SSS ×32, F ×0.5).
 
-- _Rejected: linear weekly (S 4w ... D 0)._ The top tiers feel too alike.
+- _Rejected: linear (S ×5 ... D ×1)._ The top tiers feel too alike.
 - _Rejected: boosts derived from the prod numeric ranges._ It ties the design to data the owner maps by hand anyway.
 
 ### 3. The tier is stored as a Postgres enum through Prisma
@@ -80,7 +83,7 @@ The body is `{ tier }`, and the response is `{ message: 'Note tier update succes
 ### 8. Tier source: a type union in `@later/types`, plus a `Record<NoteTier, …>` in each app
 
 - `@later/types` has `type NoteTier = 'S' | 'A' | 'B' | 'C' | 'D'`.
-- The API keeps `FEED_TIER_BOOST_WEEKS: Record<NoteTier, number>` and a compile-time check that the Prisma enum and the shared union are the same set.
+- The API keeps `FEED_TIER_FACTOR: Record<NoteTier, number>` and a compile-time check that the Prisma enum and the shared union are the same set.
 - The web keeps `FEED_TIER_STYLES: Record<NoteTier, { rank, colors… }>` and derives its left-to-right order from `rank`.
 
 Adding a tier means changing the enum and migration and the union, after which tsc fails until both Records have the new tier.
@@ -148,7 +151,7 @@ The owner maps numeric ratings to tiers with ad-hoc SQL on prod.
 
 ### 16. Tie-break: the higher tier first
 
-`boost DESC` replaces `rating DESC` as the second ORDER BY key, followed by `created_at ASC, id ASC`. It mirrors today's rule.
+`COALESCE(tier, 'D') ASC` (the enum is declared highest first) replaces `rating DESC` as the second ORDER BY key, followed by `created_at ASC, id ASC`. It mirrors today's rule.
 
 ## Data model and migrations
 
@@ -183,7 +186,7 @@ model Note {
 
 **Raw SQL that names the changed columns** (tsc doesn't check these):
 
-- `apps/api/src/feed/feed.utils.ts` `buildFeedOrderSql`: uses `n.rating` today and must switch to the tier boost. The boost is a `CASE COALESCE(n.tier::text, 'D') WHEN $1 THEN $2::int … ELSE 0 END` built with `Prisma.join` from `FEED_TIER_BOOST_WEEKS`, used as `make_interval(weeks => <boost>)` in the first key and as `<boost> DESC` in the second. The `::text` cast keeps the bound parameters comparable, because an enum compared with a text parameter fails.
+- `apps/api/src/feed/feed.utils.ts` `buildFeedOrderSql`: uses `n.rating` today and must switch to the tier factor. The factor is a `CASE COALESCE(n.tier::text, 'D') WHEN $1 THEN $2::float8 … ELSE 1 END` built with `Prisma.join` from `FEED_TIER_FACTOR`, used as `(now() - n.seen_at) * <factor>` in the first key; the second key is `COALESCE(n.tier, 'D') ASC`. The `::text` cast keeps the bound parameters comparable, because an enum compared with a text parameter fails.
 - `apps/api/src/feed/feed.service.ts` `$queryRaw`: selects only `n.id`, with the where and order above; no change itself.
 - `buildFeedWhereSql`: names only `user_id`; no change.
 - `apps/api/sql/backfills/2026102501__delete-resolved-notes.sql`: historical, doesn't name `rating` or `tier`.
@@ -205,7 +208,7 @@ model Note {
   - `createNote` writes `tier: 'D'`.
   - `NOTE_SELECT` selects `tier`, not `rating`. `DbNote.tier` is `NoteTier | null`, and `mapToNoteEntity` coalesces it.
   - `NOTE_RATING_MIN/MAX` are removed.
-- **API, feed:** `FEED_TIER_BOOST_WEEKS` replaces `FEED_RATING_STEP_HOURS`, plus the type-equality check between the Prisma enum and the shared union.
+- **API, feed:** `FEED_TIER_FACTOR` replaces `FEED_RATING_STEP_HOURS`, plus the type-equality check between the Prisma enum and the shared union.
 - **Web:**
   - `shared/components/ui/slider.tsx` comes from `shadcn add slider`. Fix the bogus `cn` import, and add `thumbProps`.
   - `features/feed/components/FeedTierSlider.tsx` (props `tier`, `onChange`) holds the local drag value and the overlays.

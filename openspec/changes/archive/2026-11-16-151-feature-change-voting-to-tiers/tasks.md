@@ -38,16 +38,17 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
   Check that Swagger at `/api/docs` shows the enum.
 
 - [x] 2.4 Switch the feed order:
-  - `apps/api/src/feed/feed.constants.ts`: replace `FEED_RATING_STEP_HOURS` with `FEED_TIER_BOOST_WEEKS: Record<NoteTier, number> = { S: 8, A: 4, B: 2, C: 1, D: 0 }`, plus a compile-time check that the Prisma `NoteTier` and the `@later/types` `NoteTier` are the same set.
-  - `apps/api/src/feed/feed.utils.ts`: rewrite `buildFeedOrderSql` to `seen_at - make_interval(weeks => <boost>) ASC NULLS FIRST, <boost> DESC, created_at ASC, id ASC`. `<boost>` is `CASE COALESCE(n.tier::text, 'D') WHEN … THEN …::int … ELSE 0 END`, built with `Prisma.join` from the map. Update the doc comment.
+  - `apps/api/src/feed/feed.constants.ts`: replace `FEED_RATING_STEP_HOURS` with `FEED_TIER_FACTOR: Record<NoteTier, number> = { S: 16, A: 8, B: 4, C: 2, D: 1 }`, plus a compile-time check that the Prisma `NoteTier` and the `@later/types` `NoteTier` are the same set.
+  - `apps/api/src/feed/feed.utils.ts`: rewrite `buildFeedOrderSql` to `(now() - seen_at) * <factor> DESC NULLS FIRST, COALESCE(tier, 'D') ASC, created_at ASC, id ASC`. `<factor>` is `CASE COALESCE(n.tier::text, 'D') WHEN … THEN …::float8 … ELSE 1 END`, built with `Prisma.join` from the map. Update the doc comment.
 
   Verify that the build fails if one tier is removed from the map (then restore it).
 
 - [x] 2.5 Check the rotation locally (the raw SQL is only checked at runtime). With psql, set `tier` and `seen_at` on local notes for each `specs/feed` rotation scenario, then call `GET /api/v1/feed` with curl and confirm the order each time:
-  - D seen 3 days ago vs C seen 1 day ago: C first.
-  - D seen 10 weeks ago vs S seen 1 day ago: D first.
+  - D seen 3 days ago vs C seen 2 days ago: C first.
+  - D seen 20 weeks ago vs S seen 1 week ago: D first.
+  - S notes served by the previous page vs D seen 1 day ago: D first.
   - never seen (`seen_at` NULL) vs S seen 1 year ago: never-seen first.
-  - A seen at T vs D seen at T minus 4 weeks: A first.
+  - A and D both never seen: A first.
   - `tier` NULL seen 2 days ago vs D seen 1 day ago: NULL first, and it's returned with `"tier":"D"`.
 
   Every item has a `tier` field.
