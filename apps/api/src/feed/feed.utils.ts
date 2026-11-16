@@ -35,16 +35,15 @@ function buildTierBoostSql(): Prisma.Sql {
  * The feed order: never seen notes first, then the ones not seen for the longest time.
  * The tier boost shifts the note's seen_at back by FEED_TIER_BOOST_WEEKS,
  * so higher tiers come back sooner; on a tie the higher tier goes first.
+ * Postgres sorts an enum by its declared order, and note_tier is declared highest first.
  * Extend the ranking rules here.
  * Expects `notes n`
  */
 export function buildFeedOrderSql(): Prisma.Sql {
-  const boost = buildTierBoostSql();
-
   return Prisma.sql`
     ORDER BY
-      n.seen_at - make_interval(weeks => ${boost}) ASC NULLS FIRST,
-      ${boost} DESC,
+      n.seen_at - make_interval(weeks => ${buildTierBoostSql()}) ASC NULLS FIRST,
+      COALESCE(n.tier, 'D') ASC,
       n.created_at ASC,
       n.id ASC
   `;

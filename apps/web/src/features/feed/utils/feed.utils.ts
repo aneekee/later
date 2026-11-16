@@ -1,10 +1,4 @@
-import type {
-  GetFeedSuccessResponse,
-  NoteEntity,
-  NoteTier,
-} from '@later/types';
-
-import { FEED_TIER_STYLES } from '../const/feed.constants';
+import type { GetFeedSuccessResponse, NoteEntity } from '@later/types';
 
 /**
  * Flattens the feed pages. A note returned again in a later page
@@ -38,11 +32,3 @@ export const removeFeedItem = (
     page.data.total = Math.max(page.data.total - 1, 0);
   });
 };
-
-/**
- * The tiers in slider order, lowest (D) first
- */
-export const getOrderedTiers = (): NoteTier[] =>
-  (Object.keys(FEED_TIER_STYLES) as NoteTier[]).sort(
-    (a, b) => FEED_TIER_STYLES[a].rank - FEED_TIER_STYLES[b].rank,
-  );

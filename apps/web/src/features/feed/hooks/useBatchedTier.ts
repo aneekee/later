@@ -56,6 +56,10 @@ export const useBatchedTier = (item: NoteEntity) => {
           if (isCancelledRef.current) {
             return;
           }
+          // the user already went back to the saved tier, the failed value isn't wanted anymore
+          if (tierRef.current === confirmedRef.current) {
+            return;
+          }
           window.clearTimeout(debounceRef.current);
           debounceRef.current = undefined;
           tierRef.current = confirmedRef.current;

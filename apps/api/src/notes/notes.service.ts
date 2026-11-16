@@ -46,7 +46,7 @@ export class NotesService {
   }
 
   /**
-   * Sets the note tier, returns it with NULL read as D
+   * Sets the note tier, returns the stored value
    */
   async setNoteTier(dto: SetNoteTierServiceDto) {
     await this.checkNoteAccess({
@@ -57,10 +57,10 @@ export class NotesService {
     const note = await this.prismaService.note.update({
       where: { id: dto.noteId },
       data: { tier: dto.tier },
-      select: { id: true, tier: true },
+      select: { id: true },
     });
 
-    return { id: note.id, tier: note.tier ?? 'D' };
+    return { id: note.id, tier: dto.tier };
   }
 
   async deleteNote(dto: DeleteNoteServiceDto) {
