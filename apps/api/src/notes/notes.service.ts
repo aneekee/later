@@ -6,7 +6,6 @@ import {
   CheckNoteAccessServiceDto,
   CreateNoteServiceDto,
   DeleteNoteServiceDto,
-  SetNoteRatingServiceDto,
   SetNoteTierServiceDto,
 } from './notes.types';
 import { NOTE_SELECT, mapToNoteEntity } from './notes.utils';
@@ -44,22 +43,6 @@ export class NotesService {
     });
 
     return mapToNoteEntity(note);
-  }
-
-  /**
-   * Sets the absolute note rating
-   */
-  async setNoteRating(dto: SetNoteRatingServiceDto) {
-    await this.checkNoteAccess({
-      userId: dto.userId,
-      noteId: dto.noteId,
-    });
-
-    return this.prismaService.note.update({
-      where: { id: dto.noteId },
-      data: { rating: dto.rating },
-      select: { id: true, rating: true },
-    });
   }
 
   /**

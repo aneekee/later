@@ -21,19 +21,19 @@ A note is seen once the feed has served it. A new note is created already seen, 
 _Avoid_: read, viewed, resolved
 
 **Rotation**:
-The order in which the feed cycles through notes: never-seen notes first, then the ones unseen for the longest, adjusted by rating.
+The order in which the feed cycles through notes: never-seen notes first, then the ones unseen for the longest, adjusted by tier.
 
-**Rating**:
-A whole number from 0 to 10000 on a note. Each point brings the note back one hour sooner in the rotation.
-_Avoid_: score, likes, votes
-
-**Upvote / Downvote**:
-The feed actions that raise or lower a note's rating by one point.
+**Tier**:
+One of a fixed, ordered set of grades on a note: S, A, B, C, D, with S the highest. New notes are D; a higher tier brings the note back sooner in the rotation.
+_Avoid_: rating, score, votes
 
 **Dashboard**:
 The page with a user's note totals.
 _Avoid_: home, stats page
 
-## Retired terms (removed in #157)
+## Retired terms
 
-Message, Chat, Inbox and Resolution no longer exist. Don't use them in code, specs or UI text.
+Don't use these in code, specs or UI text.
+
+- Removed in #157: Message, Chat, Inbox and Resolution no longer exist.
+- Removed in #151: Rating (the numeric 0 to 10000 grade), Upvote and Downvote. A note has a Tier instead.

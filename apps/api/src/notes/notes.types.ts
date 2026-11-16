@@ -10,12 +10,6 @@ export interface CreateNoteServiceDto {
   userId: string;
 }
 
-export interface SetNoteRatingServiceDto {
-  noteId: string;
-  userId: string;
-  rating: number;
-}
-
 export interface SetNoteTierServiceDto {
   noteId: string;
   userId: string;
@@ -30,7 +24,6 @@ export interface DeleteNoteServiceDto {
 export type DbNote = {
   id: string;
   createdAt: Date;
-  rating: number;
   tier: NoteTier | null;
   textNote: { content: string } | null;
 };

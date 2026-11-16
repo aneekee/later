@@ -12,12 +12,11 @@ import type { Request } from 'express';
 import {
   CreateNoteSuccessResponse,
   DeleteNoteSuccessResponse,
-  SetNoteRatingSuccessResponse,
   SetNoteTierSuccessResponse,
 } from '@later/types';
 
 import { NotesService } from './notes.service';
-import { CreateNoteDto, SetNoteRatingDto, SetNoteTierDto } from './notes.dto';
+import { CreateNoteDto, SetNoteTierDto } from './notes.dto';
 
 @Controller('v1/notes')
 export class NotesController {
@@ -38,26 +37,6 @@ export class NotesController {
     return {
       message: 'Create note successful',
       data: note,
-    };
-  }
-
-  @Put(':noteId/rating')
-  async setNoteRating(
-    @Req() req: Request,
-    @Param('noteId') noteId: string,
-    @Body() dto: SetNoteRatingDto,
-  ): Promise<SetNoteRatingSuccessResponse> {
-    const userId = req['user']?.id as string;
-
-    const rating = await this.notesService.setNoteRating({
-      userId,
-      noteId,
-      rating: dto.rating,
-    });
-
-    return {
-      message: 'Note rating update successful',
-      data: rating,
     };
   }
 

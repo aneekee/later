@@ -10,7 +10,6 @@ import { DbNote } from './notes.types';
 export const NOTE_SELECT = {
   id: true,
   createdAt: true,
-  rating: true,
   tier: true,
   textNote: { select: { content: true } },
 } satisfies Prisma.NoteSelect;
@@ -20,7 +19,6 @@ export function mapToNoteEntity(note: DbNote): NoteEntity {
     id: note.id,
     content: note.textNote?.content ?? '',
     createdAt: note.createdAt.toISOString(),
-    rating: note.rating,
     // NULL until the owner's backfill, ranked as D by the feed too
     tier: note.tier ?? 'D',
   };

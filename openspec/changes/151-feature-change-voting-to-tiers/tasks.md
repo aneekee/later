@@ -98,7 +98,7 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
 ## 4. Remove the numeric rating from the API and the docs
 
-- [ ] 4.1 Remove the rating surface:
+- [x] 4.1 Remove the rating surface:
   - `@Put(':noteId/rating')` and `setNoteRating` in `apps/api/src/notes/notes.controller.ts` and `notes.service.ts`.
   - `SetNoteRatingDto` in `notes.dto.ts`, `SetNoteRatingServiceDto` in `notes.types.ts`, and `NOTE_RATING_MIN/MAX` in `notes.constants.ts`.
   - `rating` from `NOTE_SELECT`, `DbNote` and `mapToNoteEntity`.
@@ -106,15 +106,15 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
   Keep the `rating` column in `schema.prisma`. Verify with curl that `PUT /api/v1/notes/<id>/rating` with `{"rating":5}` returns 404 and that `GET /api/v1/feed` items have `tier` and no `rating`. Also verify that `grep -rn "rating" apps/api/src packages/types/src` finds nothing.
 
-- [ ] 4.2 Use the `domain-modeling` skill to update `CONTEXT.md`:
+- [x] 4.2 Use the `domain-modeling` skill to update `CONTEXT.md`:
   - Add **Tier** (S, A, B, C, D; new notes are D; a higher tier brings the note back sooner; avoid: rating, score, votes).
   - Rotation becomes "adjusted by tier".
   - Move Rating, Upvote and Downvote to the retired terms, under "removed in #151".
 
   Verify that `CONTEXT.md` doesn't define Rating as a current term.
 
-- [ ] 4.3 In `CLAUDE.md`, replace "rate" / "rating" wording with tier wording ("create, tier and delete notes"; "note create, tier and delete live in the `notes` module"). Verify that `grep -n -i "rat" CLAUDE.md` shows no stale rating wording.
-- [ ] 4.4 Gate: prisma generate, `pnpm build`, `pnpm lint`, plus a final browser pass of the feed (load the feed, change a tier, delete a note).
+- [x] 4.3 In `CLAUDE.md`, replace "rate" / "rating" wording with tier wording ("create, tier and delete notes"; "note create, tier and delete live in the `notes` module"). Verify that `grep -n -i "rat" CLAUDE.md` shows no stale rating wording.
+- [x] 4.4 Gate: prisma generate, `pnpm build`, `pnpm lint`, plus a final browser pass of the feed (load the feed, change a tier, delete a note).
 
 ## Workflow follow-up
 

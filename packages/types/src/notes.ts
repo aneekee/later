@@ -10,7 +10,6 @@ export type NoteEntity = {
   id: string;
   content: string;
   createdAt: string;
-  rating: number;
   tier: NoteTier;
 };
 
@@ -21,19 +20,6 @@ export interface CreateNoteRequestBody {
 }
 
 export interface CreateNoteSuccessResponse extends BaseSuccessResponse<NoteEntity> {}
-
-// set note rating
-
-export interface SetNoteRatingRequestBody {
-  rating: number;
-}
-
-export type NoteRatingEntity = {
-  id: string;
-  rating: number;
-};
-
-export interface SetNoteRatingSuccessResponse extends BaseSuccessResponse<NoteRatingEntity> {}
 
 // set note tier
 
