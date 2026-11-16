@@ -10,7 +10,8 @@ import { FEED_TIER_DEBOUNCE_MS } from '../const/feed.constants';
 /**
  * Optimistic note tier. Changes are batched: one request with the latest value
  * is sent after a pause, requests never overlap, a failure reverts to the last
- * confirmed value. A pending change is flushed on unmount.
+ * confirmed value. A pending change is flushed on unmount. A confirmed tier
+ * arriving from the cache is adopted unless a local change is pending or in flight.
  * cancel() drops the pending change and silences an in-flight one, e.g. before
  * the note is deleted; the next change resumes sending.
  */
@@ -102,6 +103,21 @@ export const useBatchedTier = (item: NoteEntity) => {
     tierRef.current = confirmedRef.current;
     setTier(confirmedRef.current);
   }, []);
+
+  // a confirmed tier patched into the cache, e.g. by the flushed request of a
+  // previous mount of this card; local pending or in-flight changes win
+  useEffect(() => {
+    confirmedRef.current = item.tier;
+    if (
+      debounceRef.current !== undefined ||
+      isSendingRef.current ||
+      tierRef.current === item.tier
+    ) {
+      return;
+    }
+    tierRef.current = item.tier;
+    setTier(item.tier);
+  }, [item.tier]);
 
   const sendRef = useRef(send);
   useEffect(() => {
