@@ -12,15 +12,18 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
 ## 2. API: tiers in the notes module and the feed order
 
-- [ ] 2.1 In `packages/types/src/notes.ts`, add `type NoteTier = 'S' | 'A' | 'B' | 'C' | 'D'`, `tier: NoteTier` on `NoteEntity` (keep `rating` for now), and `SetNoteTierRequestBody`, `NoteTierEntity` and `SetNoteTierSuccessResponse`. Verify that `pnpm check-types` passes.
-- [ ] 2.2 Read `tier` everywhere a note is read:
+- [x] 2.1 In `packages/types/src/notes.ts`, add `type NoteTier = 'S' | 'A' | 'B' | 'C' | 'D'`, `tier: NoteTier` on `NoteEntity` (keep `rating` for now), and `SetNoteTierRequestBody`, `NoteTierEntity` and `SetNoteTierSuccessResponse`. Verify that `pnpm check-types` passes.
+
+  > Note (apply): `pnpm check-types` is a no-op, because no package defines a `check-types` script ("No tasks were executed"). Every "verify with `pnpm check-types`" step in this change was run as `pnpm --filter api exec tsc --noEmit -p tsconfig.json` or `pnpm --filter web exec tsc -b` instead. Also, `NoteEntity.tier` makes the API fail type checks until 2.2, so 2.1 was checked together with 2.2.
+
+- [x] 2.2 Read `tier` everywhere a note is read:
   - `apps/api/src/notes/notes.utils.ts`: `NOTE_SELECT` selects `tier`, and `mapToNoteEntity` returns `tier: note.tier ?? 'D'`.
   - `apps/api/src/notes/notes.types.ts`: `DbNote.tier` is `NoteTier | null`.
   - `apps/api/src/notes/notes.service.ts`: `createNote` writes `tier: 'D'`.
 
   Verify with curl: `POST /api/v1/notes` with `{"content":"Book a dentist check-up"}` returns 201 with `data.tier` `"D"`. With `{"content":"x","tier":"S"}` it returns 400 with `"property tier should not exist"`.
 
-- [ ] 2.3 Add the tier endpoint:
+- [x] 2.3 Add the tier endpoint:
   - `notes.dto.ts`: `SetNoteTierDto` with `@IsEnum(NoteTier)` (the generated Prisma enum) and `@ApiProperty({ enum: NoteTier, example: 'A' })`.
   - `notes.types.ts`: `SetNoteTierServiceDto`.
   - `notes.service.ts`: `setNoteTier`, which runs `checkNoteAccess` first, then `update` with `select { id, tier }`, and returns the tier coalesced.
@@ -34,13 +37,13 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
   Check that Swagger at `/api/docs` shows the enum.
 
-- [ ] 2.4 Switch the feed order:
+- [x] 2.4 Switch the feed order:
   - `apps/api/src/feed/feed.constants.ts`: replace `FEED_RATING_STEP_HOURS` with `FEED_TIER_BOOST_WEEKS: Record<NoteTier, number> = { S: 8, A: 4, B: 2, C: 1, D: 0 }`, plus a compile-time check that the Prisma `NoteTier` and the `@later/types` `NoteTier` are the same set.
   - `apps/api/src/feed/feed.utils.ts`: rewrite `buildFeedOrderSql` to `seen_at - make_interval(weeks => <boost>) ASC NULLS FIRST, <boost> DESC, created_at ASC, id ASC`. `<boost>` is `CASE COALESCE(n.tier::text, 'D') WHEN … THEN …::int … ELSE 0 END`, built with `Prisma.join` from the map. Update the doc comment.
 
   Verify that the build fails if one tier is removed from the map (then restore it).
 
-- [ ] 2.5 Check the rotation locally (the raw SQL is only checked at runtime). With psql, set `tier` and `seen_at` on local notes for each `specs/feed` rotation scenario, then call `GET /api/v1/feed` with curl and confirm the order each time:
+- [x] 2.5 Check the rotation locally (the raw SQL is only checked at runtime). With psql, set `tier` and `seen_at` on local notes for each `specs/feed` rotation scenario, then call `GET /api/v1/feed` with curl and confirm the order each time:
   - D seen 3 days ago vs C seen 1 day ago: C first.
   - D seen 10 weeks ago vs S seen 1 day ago: D first.
   - never seen (`seen_at` NULL) vs S seen 1 year ago: never-seen first.
@@ -49,7 +52,7 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
   Every item has a `tier` field.
 
-- [ ] 2.6 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+- [x] 2.6 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## 3. Web: the tier slider replaces the rating control
 

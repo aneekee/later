@@ -13,10 +13,11 @@ import {
   CreateNoteSuccessResponse,
   DeleteNoteSuccessResponse,
   SetNoteRatingSuccessResponse,
+  SetNoteTierSuccessResponse,
 } from '@later/types';
 
 import { NotesService } from './notes.service';
-import { CreateNoteDto, SetNoteRatingDto } from './notes.dto';
+import { CreateNoteDto, SetNoteRatingDto, SetNoteTierDto } from './notes.dto';
 
 @Controller('v1/notes')
 export class NotesController {
@@ -57,6 +58,26 @@ export class NotesController {
     return {
       message: 'Note rating update successful',
       data: rating,
+    };
+  }
+
+  @Put(':noteId/tier')
+  async setNoteTier(
+    @Req() req: Request,
+    @Param('noteId') noteId: string,
+    @Body() dto: SetNoteTierDto,
+  ): Promise<SetNoteTierSuccessResponse> {
+    const userId = req['user']?.id as string;
+
+    const tier = await this.notesService.setNoteTier({
+      userId,
+      noteId,
+      tier: dto.tier,
+    });
+
+    return {
+      message: 'Note tier update successful',
+      data: tier,
     };
   }
 

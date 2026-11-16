@@ -1,6 +1,11 @@
-import { CreateNoteRequestBody, SetNoteRatingRequestBody } from '@later/types';
+import {
+  CreateNoteRequestBody,
+  SetNoteRatingRequestBody,
+  SetNoteTierRequestBody,
+} from '@later/types';
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsString,
@@ -9,6 +14,8 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+
+import { NoteTier } from 'generated/prisma/client';
 
 import {
   NOTE_MAX_LENGTH,
@@ -37,4 +44,14 @@ export class SetNoteRatingDto implements SetNoteRatingRequestBody {
   @Min(NOTE_RATING_MIN)
   @Max(NOTE_RATING_MAX)
   rating!: number;
+}
+
+export class SetNoteTierDto implements SetNoteTierRequestBody {
+  @ApiProperty({
+    enum: NoteTier,
+    example: 'A',
+    description: 'The new note tier, S is the highest',
+  })
+  @IsEnum(NoteTier)
+  tier!: NoteTier;
 }

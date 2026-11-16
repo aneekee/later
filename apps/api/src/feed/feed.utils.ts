@@ -1,6 +1,6 @@
 import { Prisma } from 'generated/prisma/client';
 
-import { FEED_RATING_STEP_HOURS } from './feed.constants';
+import { FEED_TIER_BOOST_WEEKS } from './feed.constants';
 
 /**
  * Prisma equivalent of buildFeedWhereSql, keep them in sync
@@ -20,16 +20,31 @@ export function buildFeedWhereSql(userId: string): Prisma.Sql {
 }
 
 /**
+ * The note's tier boost in weeks, see FEED_TIER_BOOST_WEEKS. A note without a tier counts as D.
+ * The enum is cast to text, it can't be compared with text parameters
+ */
+function buildTierBoostSql(): Prisma.Sql {
+  const cases = Object.entries(FEED_TIER_BOOST_WEEKS).map(
+    ([tier, weeks]) => Prisma.sql`WHEN ${tier} THEN ${weeks}::int`,
+  );
+
+  return Prisma.sql`(CASE COALESCE(n.tier::text, 'D') ${Prisma.join(cases, ' ')} ELSE 0 END)`;
+}
+
+/**
  * The feed order: never seen notes first, then the ones not seen for the longest time.
- * Every rating point shifts the note's seen_at back by FEED_RATING_STEP_HOURS,
- * so higher rated notes come back sooner.
+ * The tier boost shifts the note's seen_at back by FEED_TIER_BOOST_WEEKS,
+ * so higher tiers come back sooner; on a tie the higher tier goes first.
  * Extend the ranking rules here.
+ * Expects `notes n`
  */
 export function buildFeedOrderSql(): Prisma.Sql {
+  const boost = buildTierBoostSql();
+
   return Prisma.sql`
     ORDER BY
-      n.seen_at - make_interval(hours => n.rating * ${FEED_RATING_STEP_HOURS}::int) ASC NULLS FIRST,
-      n.rating DESC,
+      n.seen_at - make_interval(weeks => ${boost}) ASC NULLS FIRST,
+      ${boost} DESC,
       n.created_at ASC,
       n.id ASC
   `;
