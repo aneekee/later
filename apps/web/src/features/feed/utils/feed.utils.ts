@@ -1,6 +1,10 @@
-import type { GetFeedSuccessResponse, NoteEntity } from '@later/types';
+import type {
+  GetFeedSuccessResponse,
+  NoteEntity,
+  NoteTier,
+} from '@later/types';
 
-import { FEED_RATING_MAX, FEED_RATING_MIN } from '../const/feed.constants';
+import { FEED_TIER_STYLES } from '../const/feed.constants';
 
 /**
  * Flattens the feed pages. A note returned again in a later page
@@ -35,5 +39,10 @@ export const removeFeedItem = (
   });
 };
 
-export const clampRating = (rating: number): number =>
-  Math.min(FEED_RATING_MAX, Math.max(FEED_RATING_MIN, rating));
+/**
+ * The tiers in slider order, lowest (D) first
+ */
+export const getOrderedTiers = (): NoteTier[] =>
+  (Object.keys(FEED_TIER_STYLES) as NoteTier[]).sort(
+    (a, b) => FEED_TIER_STYLES[a].rank - FEED_TIER_STYLES[b].rank,
+  );

@@ -56,10 +56,10 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
 ## 3. Web: the tier slider replaces the rating control
 
-- [ ] 3.1 Run `pnpm dlx shadcn@latest add slider` in `apps/web`. Check the generated `apps/web/src/shared/components/ui/slider.tsx` for a bogus `cn` import or dependency and fix it to `@/shared/lib/utils`. Add a `thumbProps` passthrough to each `SliderPrimitive.Thumb`. Verify that `pnpm --filter web run build` passes and that `package.json` gained no stray dependency.
-- [ ] 3.2 In `apps/web/src/features/feed/const/feed.constants.ts`, add `FEED_TIER_STYLES: Record<NoteTier, { rank: number; light: string; dark: string; glow?: boolean }>` with the design.md Decision 12 colors (D 0 … S 4, `glow` on S) and `FEED_TIER_DEBOUNCE_MS = 600`. Remove `FEED_RATING_MIN/MAX`, `FEED_RATING_DEBOUNCE_MS` and the `FEED_RATING_HOLD_*` constants. Add a helper in `features/feed/utils/feed.utils.ts` that returns the tiers ordered by `rank`, and remove `clampRating`. Verify with `pnpm check-types`.
-- [ ] 3.3 In `apps/web/src/features/notes/api/notes.api.ts` and `features/notes/types/notes.types.ts`, replace `setNoteRating` with `setNoteTier` (`PUT v1/notes/:noteId/tier`, body `{ tier }`). On success it patches `item.tier` in the `feed` cache through `feedApiEndpoints.util.updateQueryData`, with no tags and no refetch. Remove `SetNoteRatingParams` and `useSetNoteRatingMutation`. Verify with `pnpm check-types`.
-- [ ] 3.4 Create `apps/web/src/features/feed/hooks/useBatchedTier.ts` from `useBatchedRating.ts`, keeping its loop:
+- [x] 3.1 Run `pnpm dlx shadcn@latest add slider` in `apps/web`. Check the generated `apps/web/src/shared/components/ui/slider.tsx` for a bogus `cn` import or dependency and fix it to `@/shared/lib/utils`. Add a `thumbProps` passthrough to each `SliderPrimitive.Thumb`. Verify that `pnpm --filter web run build` passes and that `package.json` gained no stray dependency.
+- [x] 3.2 In `apps/web/src/features/feed/const/feed.constants.ts`, add `FEED_TIER_STYLES: Record<NoteTier, { rank: number; light: string; dark: string; glow?: boolean }>` with the design.md Decision 12 colors (D 0 … S 4, `glow` on S) and `FEED_TIER_DEBOUNCE_MS = 600`. Remove `FEED_RATING_MIN/MAX`, `FEED_RATING_DEBOUNCE_MS` and the `FEED_RATING_HOLD_*` constants. Add a helper in `features/feed/utils/feed.utils.ts` that returns the tiers ordered by `rank`, and remove `clampRating`. Verify with `pnpm check-types`.
+- [x] 3.3 In `apps/web/src/features/notes/api/notes.api.ts` and `features/notes/types/notes.types.ts`, replace `setNoteRating` with `setNoteTier` (`PUT v1/notes/:noteId/tier`, body `{ tier }`). On success it patches `item.tier` in the `feed` cache through `feedApiEndpoints.util.updateQueryData`, with no tags and no refetch. Remove `SetNoteRatingParams` and `useSetNoteRatingMutation`. Verify with `pnpm check-types`.
+- [x] 3.4 Create `apps/web/src/features/feed/hooks/useBatchedTier.ts` from `useBatchedRating.ts`, keeping its loop:
   - `change(tier)` sets the absolute tier and restarts the `FEED_TIER_DEBOUNCE_MS` debounce;
   - one request at a time, latest value, no request when equal to the confirmed tier;
   - revert and `displayErrorToast(e, 'Error of setting a note tier')` on failure;
@@ -68,7 +68,7 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
   Delete `useBatchedRating.ts`. Verify with `pnpm check-types`.
 
-- [ ] 3.5 Create `apps/web/src/features/feed/components/FeedTierSlider.tsx` (props `tier`, `onChange`):
+- [x] 3.5 Create `apps/web/src/features/feed/components/FeedTierSlider.tsx` (props `tier`, `onChange`):
   - Uses the shared `Slider` with `min 0`, `max n-1`, `step 1`, `value=[rank]`.
   - Keeps a local drag value from `onValueChange`; `onValueCommit` calls `onChange(tier)`.
   - Styling (design.md Decision 12): the track, range and thumb are 24 px and fully rounded, the range is in the tier color through the inline `--tier-light` / `--tier-dark` variables, the thumb is a white disc with a 3 px ring and a focus ring, and S gets the glow.
@@ -78,8 +78,8 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
   Match the Claude Design canvas (https://claude.ai/artifact/9YPz1AoNAx7e4nTBL1aJC6). Verify with `pnpm check-types`.
 
-- [ ] 3.6 In `apps/web/src/features/feed/components/FeedItem.tsx`, render `FeedTierSlider` with `useBatchedTier` in the footer in place of `FeedRating`, and keep `onBeforeDelete={cancel}`. Delete `FeedRating.tsx` and `hooks/useHoldRepeat.ts`. Verify that `grep -rn "Rating\|HoldRepeat\|clampRating" apps/web/src` finds nothing.
-- [ ] 3.7 Browser check (web + api servers, desktop and 375 px mobile, light and dark):
+- [x] 3.6 In `apps/web/src/features/feed/components/FeedItem.tsx`, render `FeedTierSlider` with `useBatchedTier` in the footer in place of `FeedRating`, and keep `onBeforeDelete={cancel}`. Delete `FeedRating.tsx` and `hooks/useHoldRepeat.ts`. Verify that `grep -rn "Rating\|HoldRepeat\|clampRating" apps/web/src` finds nothing.
+- [x] 3.7 Browser check (web + api servers, desktop and 375 px mobile, light and dark):
   - Card scenarios: a B note shows D C B A S with the thumb on B, a bold B label and a green fill. An S note is fully filled in orange with the glow. A newly created note sits on D. No up/down buttons or number are shown.
   - Interaction: tapping A on a D note jumps there in yellow. Dragging snaps to stops. With the thumb focused, Right Arrow steps one tier and Home/End go to D/S. `read_page` shows the thumb as a slider with value text equal to the tier letter.
   - Saving, in the network panel:
@@ -91,7 +91,10 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
     - Delete a note with curl, then change its tier in the UI: the thumb reverts and the toast says `"You don't have access to this note"`.
     - Stop the API and change a tier: it reverts and the toast says `"Error of setting a note tier"`.
     - Change a tier and confirm deletion within 600 ms: no tier request and no tier toast.
-- [ ] 3.8 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+
+  > Note (apply): the web app has no dark-mode switch (nothing sets the `.dark` class, and it doesn't follow `prefers-color-scheme`), so dark was checked by adding `.dark` to `<html>` by hand. The track, range, thumb ring and dots all switch to their dark values. The feed drops its cache when you leave the page (`keepUnusedDataFor: 0`), so going back to `/feed` refetches it. That's existing behavior, not caused by a tier change.
+
+- [x] 3.8 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## 4. Remove the numeric rating from the API and the docs
 

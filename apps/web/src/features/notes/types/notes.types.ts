@@ -1,15 +1,15 @@
 import type {
   CreateNoteRequestBody,
-  SetNoteRatingRequestBody,
+  SetNoteTierRequestBody,
 } from '@later/types';
 
 export interface CreateNoteParams {
   body: CreateNoteRequestBody;
 }
 
-export interface SetNoteRatingParams {
+export interface SetNoteTierParams {
   noteId: string;
-  body: SetNoteRatingRequestBody;
+  body: SetNoteTierRequestBody;
 }
 
 export interface DeleteNoteParams {

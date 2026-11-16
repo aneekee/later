@@ -1,32 +1,31 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { NoteEntity } from '@later/types';
+import type { NoteEntity, NoteTier } from '@later/types';
 
-import { useSetNoteRatingMutation } from '@/features/notes/api/notes.api';
+import { useSetNoteTierMutation } from '@/features/notes/api/notes.api';
 import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
-import { FEED_RATING_DEBOUNCE_MS } from '../const/feed.constants';
-import { clampRating } from '../utils/feed.utils';
+import { FEED_TIER_DEBOUNCE_MS } from '../const/feed.constants';
 
 /**
- * Optimistic note rating. Changes are batched: one request with the latest value
+ * Optimistic note tier. Changes are batched: one request with the latest value
  * is sent after a pause, requests never overlap, a failure reverts to the last
  * confirmed value. A pending change is flushed on unmount.
  * cancel() drops the pending change and silences an in-flight one, e.g. before
  * the note is deleted; the next change resumes sending.
  */
-export const useBatchedRating = (item: NoteEntity) => {
-  const [rating, setRating] = useState(item.rating);
+export const useBatchedTier = (item: NoteEntity) => {
+  const [tier, setTier] = useState(item.tier);
 
   // the latest local value, readable from timers and async code
-  const ratingRef = useRef(item.rating);
-  const confirmedRef = useRef(item.rating);
+  const tierRef = useRef(item.tier);
+  const confirmedRef = useRef(item.tier);
   const debounceRef = useRef<number | undefined>(undefined);
   const isSendingRef = useRef(false);
   const isMountedRef = useRef(false);
   const isCancelledRef = useRef(false);
 
-  const [setNoteRating] = useSetNoteRatingMutation();
+  const [setNoteTier] = useSetNoteTierMutation();
   const { displayErrorToast } = useDisplayErrorToast();
 
   const send = useCallback(async () => {
@@ -41,17 +40,17 @@ export const useBatchedRating = (item: NoteEntity) => {
       while (
         !isCancelledRef.current &&
         debounceRef.current === undefined &&
-        ratingRef.current !== confirmedRef.current
+        tierRef.current !== confirmedRef.current
       ) {
-        const value = ratingRef.current;
+        const value = tierRef.current;
         try {
-          const response = await setNoteRating({
+          const response = await setNoteTier({
             noteId: item.id,
-            body: { rating: value },
+            body: { tier: value },
           }).unwrap();
-          confirmedRef.current = response.data?.rating ?? value;
+          confirmedRef.current = response.data?.tier ?? value;
         } catch (e) {
-          // the note is being deleted, its rating doesn't matter anymore;
+          // the note is being deleted, its tier doesn't matter anymore;
           // TS keeps the loop narrowing, but cancel() may run during the await
           // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           if (isCancelledRef.current) {
@@ -59,36 +58,35 @@ export const useBatchedRating = (item: NoteEntity) => {
           }
           window.clearTimeout(debounceRef.current);
           debounceRef.current = undefined;
-          ratingRef.current = confirmedRef.current;
+          tierRef.current = confirmedRef.current;
           if (isMountedRef.current) {
-            setRating(confirmedRef.current);
+            setTier(confirmedRef.current);
           }
-          displayErrorToast(e, 'Error of rating a note');
+          displayErrorToast(e, 'Error of setting a note tier');
           return;
         }
       }
     } finally {
       isSendingRef.current = false;
     }
-  }, [item.id, setNoteRating, displayErrorToast]);
+  }, [item.id, setNoteTier, displayErrorToast]);
 
   const change = useCallback(
-    (delta: number) => {
-      const next = clampRating(ratingRef.current + delta);
-      if (next === ratingRef.current) {
+    (next: NoteTier) => {
+      if (next === tierRef.current) {
         return;
       }
 
       // a new change after a failed delete, the note still exists
       isCancelledRef.current = false;
-      ratingRef.current = next;
-      setRating(next);
+      tierRef.current = next;
+      setTier(next);
 
       window.clearTimeout(debounceRef.current);
       debounceRef.current = window.setTimeout(() => {
         debounceRef.current = undefined;
         void send();
-      }, FEED_RATING_DEBOUNCE_MS);
+      }, FEED_TIER_DEBOUNCE_MS);
     },
     [send],
   );
@@ -97,8 +95,8 @@ export const useBatchedRating = (item: NoteEntity) => {
     isCancelledRef.current = true;
     window.clearTimeout(debounceRef.current);
     debounceRef.current = undefined;
-    ratingRef.current = confirmedRef.current;
-    setRating(confirmedRef.current);
+    tierRef.current = confirmedRef.current;
+    setTier(confirmedRef.current);
   }, []);
 
   const sendRef = useRef(send);
@@ -120,5 +118,5 @@ export const useBatchedRating = (item: NoteEntity) => {
     };
   }, []);
 
-  return { rating, change, cancel };
+  return { tier, change, cancel };
 };
