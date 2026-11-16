@@ -53,9 +53,9 @@ Each tier doubles the one below it, so the gaps stay meaningful, and the ends le
 - _Rejected: a text column with validation only in code._ The DB would accept any string.
 - _Rejected: a `note_tiers` lookup table (code, boost, order)._ It's the most flexible, but it adds a join, and adding a tier becomes a data change rather than a reviewed migration.
 
-### 4. Transition: a nullable column with no DB default; NULL counts as D
+### 4. Transition: a nullable column with DB default D; NULL counts as D
 
-`tier NoteTier?`. Postgres `ADD COLUMN … DEFAULT` would fill every existing row, so there's no default: existing notes stay NULL until the owner's backfill can target `WHERE tier IS NULL`. The API writes D explicitly on create. The feed ranks NULL as D, and the API returns it as D (Decision 7). The follow-up PR makes the column `NOT NULL DEFAULT 'D'`.
+`tier NoteTier? @default(D)`. Postgres `ADD COLUMN … DEFAULT` would fill every existing row, so the column is added without a default and the default is set by a second migration (`ALTER COLUMN … SET DEFAULT 'D'`), which applies only to new rows. Existing notes stay NULL until the owner's backfill can target `WHERE tier IS NULL`, and every new note gets D. The feed ranks NULL as D, and the API returns it as D (Decision 7). The follow-up PR makes the column `NOT NULL`.
 
 - _Rejected: falling back to the old numeric rating (as hours) for NULL rows._ It's extra SQL that the follow-up PR deletes again, for a window of minutes to hours.
 - _Rejected: `NOT NULL DEFAULT 'D'` right away._ It's simpler, but it loses the "not backfilled yet" state.
@@ -83,17 +83,17 @@ The body is `{ tier }`, and the response is `{ message: 'Note tier update succes
 ### 8. Tier source: a type union in `@later/types`, plus a `Record<NoteTier, …>` in each app
 
 - `@later/types` has `type NoteTier = 'S' | 'A' | 'B' | 'C' | 'D'`.
-- The API keeps `FEED_TIER_FACTOR: Record<NoteTier, number>` and a compile-time check that the Prisma enum and the shared union are the same set.
-- The web keeps `FEED_TIER_STYLES: Record<NoteTier, { rank, colors… }>` and derives its left-to-right order from `rank`.
+- The API keeps `FEED_TIER_FACTOR: Record<NoteTier, number>`.
+- The web keeps `FEED_TIER_STYLES: Record<NoteTier, { colors… }>`, declared left to right; its key order is the slider order.
 
-Adding a tier means changing the enum and migration and the union, after which tsc fails until both Records have the new tier.
+Adding a tier means changing the Prisma enum and migration and the union, after which tsc fails until both Records have the new tier. Nothing checks that the Prisma enum and the union stay the same set; keeping them in sync is part of adding a tier.
 
 - _Rejected: a runtime `NOTE_TIERS` array in `@later/types`._ It needs the package to emit JS and to change how both apps resolve it: a tooling change inside a feature PR.
 - _Rejected: a server-driven tier list (`GET v1/notes/tiers`)._ It's an extra request and cache for a list that changes about once a year.
 
 ### 9. Control: the shadcn Slider, stepped by index and restyled
 
-`value = [rank]`, `min 0`, `max n-1`, `step 1`. Radix snaps to stops and gives keyboard support (arrows, Home/End), drag, touch and `role="slider"` for free. Styling uses `data-slot` selectors from the parent's `className`. The only change to the generated `ui/slider.tsx` is a `thumbProps` passthrough, so the thumb can get `aria-label="Tier"` and `aria-valuetext={tier}`.
+`value = [index]` (the tier's position in `FEED_TIER_STYLES`), `min 0`, `max n-1`, `step 1`. Radix snaps to stops and gives keyboard support (arrows, Home/End), drag, touch and `role="slider"` for free. Styling uses `data-slot` selectors from the parent's `className`. The only change to the generated `ui/slider.tsx` is a `thumbProps` passthrough, so the thumb can get `aria-label="Tier"` and `aria-valuetext={tier}`.
 
 - _Rejected: a custom segmented picker (toggle group)._ We'd own its a11y, and it doesn't feel like a slider.
 - _Rejected: leaving the control to the design jam._ The jam was run with the shadcn Slider in mind.
@@ -171,7 +171,7 @@ enum NoteTier {
 model Note {
   // ...
   rating Int       @default(0) // unused since #151, dropped by the follow-up PR
-  tier   NoteTier?
+  tier   NoteTier? @default(D) // NULL only on notes from before #151, until the backfill
 }
 ```
 
@@ -180,6 +180,8 @@ model Note {
   - `ALTER TABLE "notes" ADD COLUMN "tier" "note_tier";`
 
   It must have no DEFAULT, no NOT NULL and no change to `rating`.
+
+- Then add `@default(D)` and create `add_note_tier_default`: `ALTER TABLE "notes" ALTER COLUMN "tier" SET DEFAULT 'D';`. It leaves existing rows NULL.
 
 - Future tiers: `ALTER TYPE "note_tier" ADD VALUE 'SSS'` (or `'F'`). The enum's declared order doesn't matter, because nothing sorts by it; the rank comes from the boost map.
 - No backfill script (Decision 14).
@@ -205,10 +207,10 @@ model Note {
 - **API, notes:**
   - `SetNoteTierDto` with `@IsEnum(NoteTier)` (the generated Prisma enum) and `@ApiProperty({ enum: NoteTier, example: 'A' })`. `IsEnum`'s message yields the spec's `"tier must be one of the following values: S, A, B, C, D"`.
   - `NotesService.setNoteTier` runs `checkNoteAccess` first, then `update … select { id, tier }`, and returns the tier coalesced.
-  - `createNote` writes `tier: 'D'`.
+  - New notes get D from the DB default; `createNote` also writes `tier: 'D'`.
   - `NOTE_SELECT` selects `tier`, not `rating`. `DbNote.tier` is `NoteTier | null`, and `mapToNoteEntity` coalesces it.
   - `NOTE_RATING_MIN/MAX` are removed.
-- **API, feed:** `FEED_TIER_FACTOR` replaces `FEED_RATING_STEP_HOURS`, plus the type-equality check between the Prisma enum and the shared union.
+- **API, feed:** `FEED_TIER_FACTOR` replaces `FEED_RATING_STEP_HOURS`.
 - **Web:**
   - `shared/components/ui/slider.tsx` comes from `shadcn add slider`. Fix the bogus `cn` import, and add `thumbProps`.
   - `features/feed/components/FeedTierSlider.tsx` (props `tier`, `onChange`) holds the local drag value and the overlays.
@@ -220,7 +222,7 @@ model Note {
 ## Risks / Trade-offs
 
 - **[Risk] The raw SQL CASE is only checked at runtime.** → Call `GET v1/feed` locally after the change (tasks), with notes in several tiers and one NULL.
-- **[Risk] The Prisma enum and the shared union drift apart.** → A compile-time equality check in the API fails the build.
+- **[Trade-off] The Prisma enum and the shared union can drift apart.** A tier added to the union only is rejected by the API with 400. Accepted to keep things simple: tiers change about once a year, together.
 - **[Risk] Deploy skew.** A new web against the old API gets 404 on tier saves (revert and toast) and items without `tier`. → Run the migration first, then deploy the API, then let the web go live (Migration Plan). The window is minutes and only affects tier saves.
 - **[Risk] Radix's thumb inset and the overlays drift apart** (labels and dots not centered on stops). → Both use the same `12px + i/(n-1) * (100% - 24px)` formula, tied to the 24 px thumb constant. Check it in the browser at phone width.
 - **[Trade-off] Until the backfill runs, every existing note ranks as D,** so the rotation briefly ignores the old ratings. This was accepted in Decision 4.
@@ -229,9 +231,9 @@ model Note {
 ## Migration Plan
 
 1. Merge the PR.
-2. The owner runs `pnpm --filter api db:migrate:prod`. This adds the nullable `tier`; the old API keeps working with the extra column.
+2. The owner runs `pnpm --filter api db:migrate:prod`. This adds the nullable `tier` with default D for new rows; the old API keeps working with the extra column.
 3. Deploy the API, then the web (Vercel).
 4. The owner backfills tiers by hand: `UPDATE notes SET tier = … WHERE tier IS NULL`, with their own thresholds.
-5. Follow-up PR (separate issue): make `tier` `NOT NULL DEFAULT 'D'`, drop `rating`, and remove the NULL coalescing.
+5. Follow-up PR (separate issue): make `tier` `NOT NULL`, drop `rating`, and remove the NULL coalescing.
 
 **Rollback:** revert the PR and redeploy. The `tier` column can stay: it's nullable and unknown to the old code, and the old `rating` values were never touched.

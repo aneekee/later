@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { CSSProperties } from 'react';
 
 import type { NoteTier } from '@later/types';
@@ -22,12 +23,18 @@ const stopLeft = (position: number) =>
 
 /**
  * A stepped tier slider, D on the left to S on the right, controlled by `tier`.
- * Every stop the thumb reaches is reported, the caller batches the saves.
+ * While dragging, the thumb follows a local value; the tier is reported only
+ * on release (or on each key press), the caller batches the saves.
  */
 export const FeedTierSlider = ({ tier, onChange }: Props) => {
+  // the drag in progress, valid only while `tier` is still the one it started from,
+  // so a revert or a cache update from outside wins
+  const [drag, setDrag] = useState<{ from: NoteTier; position: number }>();
+
   // a tier this app doesn't know (e.g. from an API without tiers) shows as the lowest
   // instead of breaking the card
-  const position = Math.max(FEED_TIERS.indexOf(tier), 0);
+  const position =
+    drag?.from === tier ? drag.position : Math.max(FEED_TIERS.indexOf(tier), 0);
   const shownTier = FEED_TIERS[position];
   const style = FEED_TIER_STYLES[shownTier];
 
@@ -51,7 +58,12 @@ export const FeedTierSlider = ({ tier, onChange }: Props) => {
         step={1}
         value={[position]}
         // one thumb, so one value
-        onValueChange={([value]) => onChange(FEED_TIERS[value])}
+        onValueChange={([value]) => setDrag({ from: tier, position: value })}
+        // Radix commits on release and on each key press, only when the value changed
+        onValueCommit={([value]) => {
+          setDrag(undefined);
+          onChange(FEED_TIERS[value]);
+        }}
         // tall enough to cover the labels, so a tap on a label picks its tier
         className={cn(
           'h-[54px] cursor-pointer items-start pt-2',

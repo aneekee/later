@@ -88,12 +88,18 @@ The slider SHALL snap only to tier stops. Clicking or tapping a stop, or draggin
 
 ### Requirement: Tier changes are saved once, after a pause
 
-The web app SHALL save a tier change optimistically with one `PUT /api/v1/notes/:noteId/tier` carrying the latest tier, sent 600 ms after the last change. Changes within that pause SHALL be merged into that one request, requests for a note SHALL NOT overlap, and no request SHALL be sent when the latest tier equals the last saved one.
+The web app SHALL save a tier change optimistically with one `PUT /api/v1/notes/:noteId/tier` carrying the latest tier, sent 600 ms after the last change. A change by dragging SHALL count only when the thumb is released: holding the thumb on a stop SHALL NOT save it. Changes within that pause SHALL be merged into that one request, requests for a note SHALL NOT overlap, and no request SHALL be sent when the latest tier equals the last saved one.
 
 #### Scenario: Quick consecutive changes
 
 - **WHEN** the user moves a D note to C, then B, then A within 600 ms
 - **THEN** exactly one request is sent, 600 ms after the last change, with `{ "tier": "A" }`
+
+#### Scenario: Holding the thumb mid-drag
+
+- **WHEN** the user drags a D note's thumb to B and holds it there for more than 600 ms before releasing it on A
+- **THEN** no request is sent while the thumb is held
+- **AND** exactly one request is sent, 600 ms after the release, with `{ "tier": "A" }`
 
 #### Scenario: Back to the saved tier
 

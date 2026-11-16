@@ -8,6 +8,8 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
 - [x] 1.1 In `apps/api/prisma/schema.prisma`, add `enum NoteTier { S A B C D }` with `@@map("note_tier")`, and `tier NoteTier?` on `Note` with no default. Leave `rating` as it is, with a comment saying it's unused since #151. Verify that `pnpm --filter api exec prisma generate` succeeds.
 - [x] 1.2 Create the migration with `pnpm --filter api db:migrate:local --name add_note_tier`. Verify that the new `apps/api/prisma/migrations/*_add_note_tier/migration.sql` contains only `CREATE TYPE "note_tier" AS ENUM ('S', 'A', 'B', 'C', 'D');` and `ALTER TABLE "notes" ADD COLUMN "tier" "note_tier";`: no DEFAULT, no NOT NULL, and no change to `rating`.
+
+  > Note (QA): a second migration, `add_note_tier_default`, sets `DEFAULT 'D'` (`@default(D)`) for new rows only; existing rows stay NULL for the backfill (design.md Decision 4).
 - [x] 1.3 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## 2. API: tiers in the notes module and the feed order
@@ -38,7 +40,7 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
   Check that Swagger at `/api/docs` shows the enum.
 
 - [x] 2.4 Switch the feed order:
-  - `apps/api/src/feed/feed.constants.ts`: replace `FEED_RATING_STEP_HOURS` with `FEED_TIER_FACTOR: Record<NoteTier, number> = { S: 16, A: 8, B: 4, C: 2, D: 1 }`, plus a compile-time check that the Prisma `NoteTier` and the `@later/types` `NoteTier` are the same set.
+  - `apps/api/src/feed/feed.constants.ts`: replace `FEED_RATING_STEP_HOURS` with `FEED_TIER_FACTOR: Record<NoteTier, number> = { S: 16, A: 8, B: 4, C: 2, D: 1 }`.
   - `apps/api/src/feed/feed.utils.ts`: rewrite `buildFeedOrderSql` to `(now() - seen_at) * <factor> DESC NULLS FIRST, COALESCE(tier, 'D') ASC, created_at ASC, id ASC`. `<factor>` is `CASE COALESCE(n.tier::text, 'D') WHEN … THEN …::float8 … ELSE 1 END`, built with `Prisma.join` from the map. Update the doc comment.
 
   Verify that the build fails if one tier is removed from the map (then restore it).
@@ -58,7 +60,7 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 ## 3. Web: the tier slider replaces the rating control
 
 - [x] 3.1 Run `pnpm dlx shadcn@latest add slider` in `apps/web`. Check the generated `apps/web/src/shared/components/ui/slider.tsx` for a bogus `cn` import or dependency and fix it to `@/shared/lib/utils`. Add a `thumbProps` passthrough to each `SliderPrimitive.Thumb`. Verify that `pnpm --filter web run build` passes and that `package.json` gained no stray dependency.
-- [x] 3.2 In `apps/web/src/features/feed/const/feed.constants.ts`, add `FEED_TIER_STYLES: Record<NoteTier, { rank: number; light: string; dark: string; glow?: boolean }>` with the design.md Decision 12 colors (D 0 … S 4, `glow` on S) and `FEED_TIER_DEBOUNCE_MS = 600`. Remove `FEED_RATING_MIN/MAX`, `FEED_RATING_DEBOUNCE_MS` and the `FEED_RATING_HOLD_*` constants. Add a helper in `features/feed/utils/feed.utils.ts` that returns the tiers ordered by `rank`, and remove `clampRating`. Verify with `pnpm check-types`.
+- [x] 3.2 In `apps/web/src/features/feed/const/feed.constants.ts`, add `FEED_TIER_STYLES: Record<NoteTier, { light: string; dark: string; glow?: boolean }>`, declared D to S (the key order is the slider order), with the design.md Decision 12 colors (`glow` on S) and `FEED_TIER_DEBOUNCE_MS = 600`. Remove `FEED_RATING_MIN/MAX`, `FEED_RATING_DEBOUNCE_MS` and the `FEED_RATING_HOLD_*` constants. Derive `FEED_TIERS` (slider order) from its keys, and remove `clampRating`. Verify with `pnpm check-types`.
 - [x] 3.3 In `apps/web/src/features/notes/api/notes.api.ts` and `features/notes/types/notes.types.ts`, replace `setNoteRating` with `setNoteTier` (`PUT v1/notes/:noteId/tier`, body `{ tier }`). On success it patches `item.tier` in the `feed` cache through `feedApiEndpoints.util.updateQueryData`, with no tags and no refetch. Remove `SetNoteRatingParams` and `useSetNoteRatingMutation`. Verify with `pnpm check-types`.
 - [x] 3.4 Create `apps/web/src/features/feed/hooks/useBatchedTier.ts` from `useBatchedRating.ts`, keeping its loop:
   - `change(tier)` sets the absolute tier and restarts the `FEED_TIER_DEBOUNCE_MS` debounce;
@@ -70,7 +72,7 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
   Delete `useBatchedRating.ts`. Verify with `pnpm check-types`.
 
 - [x] 3.5 Create `apps/web/src/features/feed/components/FeedTierSlider.tsx` (props `tier`, `onChange`):
-  - Uses the shared `Slider` with `min 0`, `max n-1`, `step 1`, `value=[rank]`.
+  - Uses the shared `Slider` with `min 0`, `max n-1`, `step 1`, `value=[index in FEED_TIERS]`.
   - Keeps a local drag value from `onValueChange`; `onValueCommit` calls `onChange(tier)`.
   - Styling (design.md Decision 12): the track, range and thumb are 24 px and fully rounded, the range is in the tier color through the inline `--tier-light` / `--tier-dark` variables, the thumb is a white disc with a 3 px ring and a focus ring, and S gets the glow.
   - Overlays use `pointer-events: none`, at `calc(12px + i/(n-1) * (100% - 24px))`: 6 px stop dots and 12 px labels (the current one bold `foreground`).
@@ -79,7 +81,7 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
   Match the Claude Design canvas (https://claude.ai/artifact/9YPz1AoNAx7e4nTBL1aJC6). Verify with `pnpm check-types`.
 
-  > Note (verify follow-up): the slider value is the tier's index in the rank-sorted list, not `rank` itself, so `rank` only orders the tiers. A future F (`rank: -1`) or SSS with gaps can't push the value out of `0…n-1`. Checked with gapped ranks (D -1, C 5, B 10, A 20, S 99): the feed renders and steps the same.
+  > Note (QA): `rank` was dropped; the order is the key order of `FEED_TIER_STYLES`. A tier is saved only on release (`onValueCommit`), not while dragging.
 
 - [x] 3.6 In `apps/web/src/features/feed/components/FeedItem.tsx`, render `FeedTierSlider` with `useBatchedTier` in the footer in place of `FeedRating`, and keep `onBeforeDelete={cancel}`. Delete `FeedRating.tsx` and `hooks/useHoldRepeat.ts`. Verify that `grep -rn "Rating\|HoldRepeat\|clampRating" apps/web/src` finds nothing.
 - [x] 3.7 Browser check (web + api servers, desktop and 375 px mobile, light and dark):
@@ -124,5 +126,5 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 - Owner, after merge: run `pnpm --filter api db:migrate:prod` before the new API goes live.
 - Owner: deploy the API, then let the web (Vercel) go live.
 - Owner: backfill tiers on prod by hand (`UPDATE notes SET tier = … WHERE tier IS NULL`, with your own mapping from the old numeric `rating`).
-- Follow-up PR (new issue): make `tier` `NOT NULL DEFAULT 'D'`, drop the `rating` column, and remove the NULL → D coalescing.
+- Follow-up PR (new issue): make `tier` `NOT NULL`, drop the `rating` column, and remove the NULL → D coalescing.
 - Before merge, `/opsx:verify 151-feature-change-voting-to-tiers`, then `/opsx:archive 151-feature-change-voting-to-tiers` as the PR's last commit.

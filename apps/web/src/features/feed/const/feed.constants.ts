@@ -1,5 +1,7 @@
 import type { NoteTier } from '@later/types';
 
+import type { FeedTierStyle } from '../types/feed.types';
+
 export const FEED_PAGE_SIZE = 10;
 
 // links in the note text are rendered as anchors
@@ -13,10 +15,7 @@ export const FEED_NOTE_MAX_LENGTH = 1000;
  * light / dark are the filled track color per theme, glow marks the top tier.
  * A new tier in @later/types fails type checks until it's added here.
  */
-export const FEED_TIER_STYLES: Record<
-  NoteTier,
-  { light: string; dark: string; glow?: boolean }
-> = {
+export const FEED_TIER_STYLES: Record<NoteTier, FeedTierStyle> = {
   D: { light: '#af52de', dark: '#bf5af2' },
   C: { light: '#007aff', dark: '#0a84ff' },
   B: { light: '#34c759', dark: '#30d158' },
