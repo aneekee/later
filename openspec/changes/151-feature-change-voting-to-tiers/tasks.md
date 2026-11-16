@@ -6,9 +6,9 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
 ## 1. Data model: the tier enum and column
 
-- [ ] 1.1 In `apps/api/prisma/schema.prisma`, add `enum NoteTier { S A B C D }` with `@@map("note_tier")`, and `tier NoteTier?` on `Note` with no default. Leave `rating` as it is, with a comment saying it's unused since #151. Verify that `pnpm --filter api exec prisma generate` succeeds.
-- [ ] 1.2 Create the migration with `pnpm --filter api db:migrate:local --name add_note_tier`. Verify that the new `apps/api/prisma/migrations/*_add_note_tier/migration.sql` contains only `CREATE TYPE "note_tier" AS ENUM ('S', 'A', 'B', 'C', 'D');` and `ALTER TABLE "notes" ADD COLUMN "tier" "note_tier";`: no DEFAULT, no NOT NULL, and no change to `rating`.
-- [ ] 1.3 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+- [x] 1.1 In `apps/api/prisma/schema.prisma`, add `enum NoteTier { S A B C D }` with `@@map("note_tier")`, and `tier NoteTier?` on `Note` with no default. Leave `rating` as it is, with a comment saying it's unused since #151. Verify that `pnpm --filter api exec prisma generate` succeeds.
+- [x] 1.2 Create the migration with `pnpm --filter api db:migrate:local --name add_note_tier`. Verify that the new `apps/api/prisma/migrations/*_add_note_tier/migration.sql` contains only `CREATE TYPE "note_tier" AS ENUM ('S', 'A', 'B', 'C', 'D');` and `ALTER TABLE "notes" ADD COLUMN "tier" "note_tier";`: no DEFAULT, no NOT NULL, and no change to `rating`.
+- [x] 1.3 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## 2. API: tiers in the notes module and the feed order
 
