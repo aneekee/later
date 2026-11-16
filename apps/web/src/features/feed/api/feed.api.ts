@@ -5,6 +5,10 @@ import type { GetFeedSuccessResponse } from '@later/types';
 import { baseQueryWithCookies } from '@/shared/api/api';
 
 import type { GetFeedParams } from '../types/feed.types';
+import {
+  applyConfirmedTiersSince,
+  getTierConfirmationSeq,
+} from '../utils/confirmedTiers';
 
 /**
  * The feed request is not idempotent: every fetched page is marked as seen on BE.
@@ -34,14 +38,35 @@ export const feedApiEndpoints = feedApi.injectEndpoints({
           return total > pageSize ? lastPageParam + 1 : undefined;
         },
       },
-      query: ({ queryArg }) => {
+      queryFn: async ({ queryArg }, _api, _extraOptions, baseQuery) => {
         const queryParams = new URLSearchParams({
           pageSize: queryArg.pageSize.toString(),
         });
 
-        return {
+        // a tier save confirmed while this page is in flight is newer than the page
+        const sinceSeq = getTierConfirmationSeq();
+        const result = await baseQuery({
           url: `v1/feed?${queryParams}`,
           method: 'GET',
+        });
+
+        if (result.error) {
+          return { error: result.error };
+        }
+
+        const page = result.data as GetFeedSuccessResponse;
+        if (!page.data) {
+          return { data: page };
+        }
+
+        return {
+          data: {
+            ...page,
+            data: {
+              ...page.data,
+              items: applyConfirmedTiersSince(page.data.items, sinceSeq),
+            },
+          },
         };
       },
     }),
