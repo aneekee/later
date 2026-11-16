@@ -1,10 +1,16 @@
 import type { BaseSuccessResponse } from "./shared";
 
+/**
+ * A note's grade, S is the highest. Each app keeps a Record<NoteTier, …>,
+ * so adding a tier fails type checks until both apps handle it
+ */
+export type NoteTier = "S" | "A" | "B" | "C" | "D";
+
 export type NoteEntity = {
   id: string;
   content: string;
   createdAt: string;
-  rating: number;
+  tier: NoteTier;
 };
 
 // create note
@@ -15,18 +21,18 @@ export interface CreateNoteRequestBody {
 
 export interface CreateNoteSuccessResponse extends BaseSuccessResponse<NoteEntity> {}
 
-// set note rating
+// set note tier
 
-export interface SetNoteRatingRequestBody {
-  rating: number;
+export interface SetNoteTierRequestBody {
+  tier: NoteTier;
 }
 
-export type NoteRatingEntity = {
+export type NoteTierEntity = {
   id: string;
-  rating: number;
+  tier: NoteTier;
 };
 
-export interface SetNoteRatingSuccessResponse extends BaseSuccessResponse<NoteRatingEntity> {}
+export interface SetNoteTierSuccessResponse extends BaseSuccessResponse<NoteTierEntity> {}
 
 // delete note
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-"Later" is a feed-like notes app. Users create, rate and delete notes, and work through their stalest notes in a feed. A dashboard shows the total number of notes. The domain terms are defined in `CONTEXT.md`.
+"Later" is a feed-like notes app. Users create, tier and delete notes, and work through their stalest notes in a feed. A dashboard shows the total number of notes. The domain terms are defined in `CONTEXT.md`.
 
 It's a pnpm + Turborepo monorepo (Node >= 20.19, pnpm 9):
 
@@ -54,7 +54,7 @@ CI (`.github/workflows/ci.yaml`) runs `prisma generate`, `turbo build` and `turb
 - Prisma generates DROP/CREATE for a renamed model or column, which loses the data. Create such migrations with `--create-only` and hand-write `ALTER … RENAME` statements (see `prisma/migrations/*_rename_messages_to_notes`).
 - The Prisma client is generated into `apps/api/generated/prisma` (gitignored) and imported as `generated/prisma/client`.
 - `src/prisma/DEV__prisma.service.ts` is a drop-in `PrismaService` that logs every query with its inlined params to `logs/prisma-queries.log`. Swap it in by hand for SQL performance work. `sql/backfills/` holds one-off data scripts that the owner runs by hand.
-- The feed (`GET v1/feed`) is **not idempotent**: it returns the stalest unseen notes and sets their `seenAt`. It's the only feed route; note create, rate and delete live in the `notes` module (`v1/notes`), whose `notes.utils.ts` (`NOTE_SELECT`, `mapToNoteEntity`) the feed reuses.
+- The feed (`GET v1/feed`) is **not idempotent**: it returns the stalest unseen notes and sets their `seenAt`. It's the only feed route; note create, tier and delete live in the `notes` module (`v1/notes`), whose `notes.utils.ts` (`NOTE_SELECT`, `mapToNoteEntity`) the feed reuses.
 
 ### Web (`apps/web/src`)
 

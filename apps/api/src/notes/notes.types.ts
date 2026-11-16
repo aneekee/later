@@ -1,3 +1,5 @@
+import type { NoteTier } from '@later/types';
+
 export interface CheckNoteAccessServiceDto {
   noteId: string;
   userId: string;
@@ -8,10 +10,10 @@ export interface CreateNoteServiceDto {
   userId: string;
 }
 
-export interface SetNoteRatingServiceDto {
+export interface SetNoteTierServiceDto {
   noteId: string;
   userId: string;
-  rating: number;
+  tier: NoteTier;
 }
 
 export interface DeleteNoteServiceDto {
@@ -22,6 +24,6 @@ export interface DeleteNoteServiceDto {
 export type DbNote = {
   id: string;
   createdAt: Date;
-  rating: number;
+  tier: NoteTier | null;
   textNote: { content: string } | null;
 };

@@ -1,3 +1,7 @@
+import type { NoteTier } from '@later/types';
+
+import type { FeedTierStyle } from '../types/feed.types';
+
 export const FEED_PAGE_SIZE = 10;
 
 // links in the note text are rendered as anchors
@@ -6,16 +10,21 @@ export const URL_REGEX = /https?:\/\/[^\s]+/g;
 // keep in sync with the API note validation
 export const FEED_NOTE_MAX_LENGTH = 1000;
 
-// keep in sync with the API rating validation
-export const FEED_RATING_MIN = 0;
-export const FEED_RATING_MAX = 10000;
+/**
+ * The tier slider stops, declared left to right (D lowest): the key order is the slider order.
+ * light / dark are the filled track color per theme, glow marks the top tier.
+ * A new tier in @later/types fails type checks until it's added here.
+ */
+export const FEED_TIER_STYLES: Record<NoteTier, FeedTierStyle> = {
+  D: { light: '#af52de', dark: '#bf5af2' },
+  C: { light: '#007aff', dark: '#0a84ff' },
+  B: { light: '#34c759', dark: '#30d158' },
+  A: { light: '#ffcc00', dark: '#ffd60a' },
+  S: { light: '#ff9500', dark: '#ff9f0a', glow: true },
+};
 
-// changes are sent to BE in one request after this pause
-export const FEED_RATING_DEBOUNCE_MS = 600;
+// the tiers in slider order, lowest first
+export const FEED_TIERS = Object.keys(FEED_TIER_STYLES) as NoteTier[];
 
-// press-and-hold: repeat after HOLD_DELAY, slowly first, then fast after FAST_AFTER,
-// then twice as fast (max speed) after 2x FAST_AFTER
-export const FEED_RATING_HOLD_DELAY_MS = 400;
-export const FEED_RATING_HOLD_SLOW_INTERVAL_MS = 150;
-export const FEED_RATING_HOLD_FAST_AFTER_MS = 1900;
-export const FEED_RATING_HOLD_FAST_INTERVAL_MS = 50;
+// tier changes are sent to BE in one request after this pause
+export const FEED_TIER_DEBOUNCE_MS = 600;

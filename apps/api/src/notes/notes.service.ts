@@ -6,7 +6,7 @@ import {
   CheckNoteAccessServiceDto,
   CreateNoteServiceDto,
   DeleteNoteServiceDto,
-  SetNoteRatingServiceDto,
+  SetNoteTierServiceDto,
 } from './notes.types';
 import { NOTE_SELECT, mapToNoteEntity } from './notes.utils';
 
@@ -25,7 +25,7 @@ export class NotesService {
   }
 
   /**
-   * Creates a note. It's created as seen,
+   * Creates a note. It's created as seen at tier D,
    * so the feed returns it at the end of the rotation
    */
   async createNote(dto: CreateNoteServiceDto) {
@@ -34,6 +34,7 @@ export class NotesService {
         type: 'TEXT',
         userId: dto.userId,
         seenAt: new Date(),
+        tier: 'D',
         textNote: {
           create: { content: dto.content },
         },
@@ -45,19 +46,21 @@ export class NotesService {
   }
 
   /**
-   * Sets the absolute note rating
+   * Sets the note tier, returns the stored value
    */
-  async setNoteRating(dto: SetNoteRatingServiceDto) {
+  async setNoteTier(dto: SetNoteTierServiceDto) {
     await this.checkNoteAccess({
       userId: dto.userId,
       noteId: dto.noteId,
     });
 
-    return this.prismaService.note.update({
+    const note = await this.prismaService.note.update({
       where: { id: dto.noteId },
-      data: { rating: dto.rating },
-      select: { id: true, rating: true },
+      data: { tier: dto.tier },
+      select: { id: true },
     });
+
+    return { id: note.id, tier: dto.tier };
   }
 
   async deleteNote(dto: DeleteNoteServiceDto) {

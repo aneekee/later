@@ -1,20 +1,16 @@
-import { CreateNoteRequestBody, SetNoteRatingRequestBody } from '@later/types';
+import { CreateNoteRequestBody, SetNoteTierRequestBody } from '@later/types';
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsInt,
+  IsEnum,
   IsNotEmpty,
   IsString,
   Matches,
-  Max,
   MaxLength,
-  Min,
 } from 'class-validator';
 
-import {
-  NOTE_MAX_LENGTH,
-  NOTE_RATING_MAX,
-  NOTE_RATING_MIN,
-} from './notes.constants';
+import { NoteTier } from 'generated/prisma/client';
+
+import { NOTE_MAX_LENGTH } from './notes.constants';
 
 export class CreateNoteDto implements CreateNoteRequestBody {
   @ApiProperty({
@@ -28,13 +24,12 @@ export class CreateNoteDto implements CreateNoteRequestBody {
   content!: string;
 }
 
-export class SetNoteRatingDto implements SetNoteRatingRequestBody {
+export class SetNoteTierDto implements SetNoteTierRequestBody {
   @ApiProperty({
-    example: 12,
-    description: `The new note rating, an integer from ${String(NOTE_RATING_MIN)} to ${String(NOTE_RATING_MAX)}`,
+    enum: NoteTier,
+    example: 'A',
+    description: 'The new note tier, S is the highest',
   })
-  @IsInt()
-  @Min(NOTE_RATING_MIN)
-  @Max(NOTE_RATING_MAX)
-  rating!: number;
+  @IsEnum(NoteTier)
+  tier!: NoteTier;
 }

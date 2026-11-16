@@ -13,9 +13,9 @@ import {
 } from '@/shared/components/ui/card';
 import { formatIsoDateTime } from '@/shared/utils/date.util';
 
-import { useBatchedRating } from '../hooks/useBatchedRating';
+import { useBatchedTier } from '../hooks/useBatchedTier';
 import { DeleteFeedNoteDialog } from './DeleteFeedNoteDialog';
-import { FeedRating } from './FeedRating';
+import { FeedTierSlider } from './FeedTierSlider';
 import { TextWithLinks } from './TextWithLinks';
 
 interface Props {
@@ -23,7 +23,7 @@ interface Props {
 }
 
 export const FeedItem = ({ item }: Props) => {
-  const { rating, change, cancel } = useBatchedRating(item);
+  const { tier, change, cancel } = useBatchedTier(item);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   return (
@@ -40,8 +40,8 @@ export const FeedItem = ({ item }: Props) => {
           <TextWithLinks text={item.content} />
         </p>
       </CardContent>
-      <CardFooter className="justify-between">
-        <FeedRating rating={rating} change={change} />
+      <CardFooter className="justify-between gap-4 py-1">
+        <FeedTierSlider tier={tier} onChange={change} />
         <Button
           variant="ghost"
           size="icon-sm"

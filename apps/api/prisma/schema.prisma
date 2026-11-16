@@ -26,13 +26,24 @@ enum NoteType {
   @@map("note_type")
 }
 
+enum NoteTier {
+  S
+  A
+  B
+  C
+  D
+
+  @@map("note_tier")
+}
+
 model Note {
   id        String    @id @default(uuid())
   type      NoteType  @default(TEXT)
   userId    String    @map("user_id")
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   seenAt    DateTime? @map("seen_at") @db.Timestamptz(3)
-  rating    Int       @default(0)
+  rating    Int       @default(0) // unused since #151, dropped by the follow-up PR
+  tier      NoteTier? @default(D) // NULL only on notes from before #151, until the backfill
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   textNote TextNote?

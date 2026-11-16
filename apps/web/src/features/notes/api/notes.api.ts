@@ -3,7 +3,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import type {
   CreateNoteSuccessResponse,
   DeleteNoteSuccessResponse,
-  SetNoteRatingSuccessResponse,
+  SetNoteTierSuccessResponse,
 } from '@later/types';
 
 import { feedApiEndpoints } from '@/features/feed/api/feed.api';
@@ -14,7 +14,7 @@ import { baseQueryWithCookies } from '@/shared/api/api';
 import type {
   CreateNoteParams,
   DeleteNoteParams,
-  SetNoteRatingParams,
+  SetNoteTierParams,
 } from '../types/notes.types';
 
 /**
@@ -41,23 +41,23 @@ export const notesApiEndpoints = notesApi.injectEndpoints({
       // the feed returns it later, at the end of the rotation
     }),
 
-    setNoteRating: builder.mutation<
-      SetNoteRatingSuccessResponse,
-      SetNoteRatingParams
+    setNoteTier: builder.mutation<
+      SetNoteTierSuccessResponse,
+      SetNoteTierParams
     >({
       query: (params) => {
         return {
-          url: `v1/notes/${params.noteId}/rating`,
+          url: `v1/notes/${params.noteId}/tier`,
           method: 'PUT',
           body: params.body,
         };
       },
-      // no tags: the feed is never refetched, the confirmed rating is patched into the cache,
+      // no tags: the feed is never refetched, the confirmed tier is patched into the cache,
       // so a remounted card (e.g. moved by dedupe) starts from it
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          const rating = data.data?.rating ?? params.body.rating;
+          const tier = data.data?.tier ?? params.body.tier;
 
           dispatch(
             feedApiEndpoints.util.updateQueryData(
@@ -67,7 +67,7 @@ export const notesApiEndpoints = notesApi.injectEndpoints({
                 draft.pages.forEach((page) => {
                   page.data?.items.forEach((item) => {
                     if (item.id === params.noteId) {
-                      item.rating = rating;
+                      item.tier = tier;
                     }
                   });
                 });
@@ -109,6 +109,6 @@ export const notesApiEndpoints = notesApi.injectEndpoints({
 
 export const {
   useCreateNoteMutation,
-  useSetNoteRatingMutation,
+  useSetNoteTierMutation,
   useDeleteNoteMutation,
 } = notesApiEndpoints;
