@@ -13,29 +13,30 @@ interface Props {
   onChange: (tier: NoteTier) => void;
 }
 
+// slider positions are indexes into this list, so any rank values work
 const TIERS = getOrderedTiers();
-const LAST_RANK = TIERS.length - 1;
+const LAST_POSITION = TIERS.length - 1;
 
 // Radix keeps the 24 px thumb in bounds, so stop i is centered here;
 // the dot and label overlays use the same formula
-const stopLeft = (rank: number) =>
-  `calc(12px + ${String(rank / LAST_RANK)} * (100% - 24px))`;
+const stopLeft = (position: number) =>
+  `calc(12px + ${String(position / LAST_POSITION)} * (100% - 24px))`;
 
 /**
  * A stepped tier slider, D on the left to S on the right. The thumb follows
  * the drag at once, the tier is reported on commit (pointer up, key press).
  */
 export const FeedTierSlider = ({ tier, onChange }: Props) => {
-  const [rank, setRank] = useState(FEED_TIER_STYLES[tier].rank);
+  const [position, setPosition] = useState(TIERS.indexOf(tier));
 
   // follow the tier from outside, e.g. a revert after a failed save
   const [prevTier, setPrevTier] = useState(tier);
   if (tier !== prevTier) {
     setPrevTier(tier);
-    setRank(FEED_TIER_STYLES[tier].rank);
+    setPosition(TIERS.indexOf(tier));
   }
 
-  const shownTier = TIERS[rank] ?? tier;
+  const shownTier = TIERS[position] ?? tier;
   const style = FEED_TIER_STYLES[shownTier];
 
   return (
@@ -48,17 +49,17 @@ export const FeedTierSlider = ({ tier, onChange }: Props) => {
         {
           '--tier-light': style.light,
           '--tier-dark': style.dark,
-          '--tier-f': rank / LAST_RANK,
+          '--tier-f': position / LAST_POSITION,
         } as CSSProperties
       }
     >
       <Slider
         min={0}
-        max={LAST_RANK}
+        max={LAST_POSITION}
         step={1}
-        value={[rank]}
+        value={[position]}
         // one thumb, so one value
-        onValueChange={([value]) => setRank(value)}
+        onValueChange={([value]) => setPosition(value)}
         onValueCommit={([value]) => onChange(TIERS[value] ?? tier)}
         // tall enough to cover the labels, so a tap on a label picks its tier
         className={cn(
@@ -82,12 +83,12 @@ export const FeedTierSlider = ({ tier, onChange }: Props) => {
         className="pointer-events-none absolute inset-x-0 top-2 h-6"
       >
         {TIERS.map((t, i) =>
-          i === rank ? null : (
+          i === position ? null : (
             <span
               key={t}
               className={cn(
                 'absolute top-1/2 size-1.5 -translate-1/2 rounded-full',
-                i < rank ? 'bg-white/60' : 'bg-black/18 dark:bg-white/22',
+                i < position ? 'bg-white/60' : 'bg-black/18 dark:bg-white/22',
               )}
               style={{ left: stopLeft(i) }}
             />
@@ -104,7 +105,7 @@ export const FeedTierSlider = ({ tier, onChange }: Props) => {
             key={t}
             className={cn(
               'absolute top-0 -translate-x-1/2 text-xs leading-3.5 tracking-[0.02em]',
-              i === rank
+              i === position
                 ? 'font-bold text-foreground'
                 : 'font-medium text-muted-foreground',
             )}

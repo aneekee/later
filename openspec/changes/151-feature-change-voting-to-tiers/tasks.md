@@ -78,6 +78,8 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 
   Match the Claude Design canvas (https://claude.ai/artifact/9YPz1AoNAx7e4nTBL1aJC6). Verify with `pnpm check-types`.
 
+  > Note (verify follow-up): the slider value is the tier's index in the rank-sorted list, not `rank` itself, so `rank` only orders the tiers. A future F (`rank: -1`) or SSS with gaps can't push the value out of `0…n-1`. Checked with gapped ranks (D -1, C 5, B 10, A 20, S 99): the feed renders and steps the same.
+
 - [x] 3.6 In `apps/web/src/features/feed/components/FeedItem.tsx`, render `FeedTierSlider` with `useBatchedTier` in the footer in place of `FeedRating`, and keep `onBeforeDelete={cancel}`. Delete `FeedRating.tsx` and `hooks/useHoldRepeat.ts`. Verify that `grep -rn "Rating\|HoldRepeat\|clampRating" apps/web/src` finds nothing.
 - [x] 3.7 Browser check (web + api servers, desktop and 375 px mobile, light and dark):
   - Card scenarios: a B note shows D C B A S with the thumb on B, a bold B label and a green fill. An S note is fully filled in orange with the glow. A newly created note sits on D. No up/down buttons or number are shown.
