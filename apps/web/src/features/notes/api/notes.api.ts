@@ -8,7 +8,6 @@ import type {
 
 import { feedApiEndpoints } from '@/features/feed/api/feed.api';
 import { FEED_PAGE_SIZE } from '@/features/feed/const/feed.constants';
-import { recordConfirmedTier } from '@/features/feed/utils/confirmedTiers';
 import { removeFeedItem } from '@/features/feed/utils/feed.utils';
 import { baseQueryWithCookies } from '@/shared/api/api';
 
@@ -60,8 +59,6 @@ export const notesApiEndpoints = notesApi.injectEndpoints({
           const { data } = await queryFulfilled;
           const tier = data.data?.tier ?? params.body.tier;
 
-          // a feed page already in flight may carry the older tier
-          recordConfirmedTier(params.noteId, tier);
           dispatch(
             feedApiEndpoints.util.updateQueryData(
               'feed',
