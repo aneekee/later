@@ -23,6 +23,14 @@ _Avoid_: read, viewed, resolved
 **Rotation**:
 The order in which the feed cycles through notes: never-seen notes first, then the ones unseen for the longest, adjusted by tier.
 
+**Scrolled**:
+A note the user has scrolled to in the current visit to the feed, as opposed to Seen, which is about the server serving it. It lasts only for that visit and isn't stored.
+_Avoid_: seen, viewed, read
+
+**Round**:
+One pass of a feed visit through all of the user's notes. A new round starts once every note has been scrolled and a note comes back.
+_Avoid_: cycle, lap
+
 **Tier**:
 One of a fixed, ordered set of grades on a note: S, A, B, C, D, with S the highest. New notes are D; a higher tier brings the note back sooner in the rotation.
 _Avoid_: rating, score, votes
