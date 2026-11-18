@@ -64,7 +64,7 @@ A progress bar SHALL fill the "Feed" title row's space between the title (or the
 
 ### Requirement: A note counts as scrolled once its card is half visible
 
-A note SHALL count as scrolled once at least half of its card is visible in the feed's scroll area below the sticky header. A card taller than that area SHALL count once it covers half of it. Counting SHALL be immediate, with no dwell time, and a note SHALL count at most once per round. Notes that are loaded but not yet in view SHALL NOT count.
+A note SHALL count as scrolled once at least half of its card is visible in the feed's scroll area below the sticky header. A card taller than that area SHALL count once it covers half of it, whatever its height and the screen's height. Counting SHALL be immediate, with no dwell time, and a note SHALL count at most once per round. Notes that are loaded but not yet in view SHALL NOT count.
 
 #### Scenario: First page
 
@@ -91,6 +91,16 @@ A note SHALL count as scrolled once at least half of its card is visible in the 
 - **WHEN** a card is taller than the feed's scroll area and the user scrolls until it covers half of that area
 - **THEN** it counts, even though less than half of the card is visible
 
+#### Scenario: Tall card on a short screen
+
+- **WHEN** the feed is open on a 568×320 screen and the user scrolls a note of 500 short lines until it covers half of the scroll area below the header
+- **THEN** it counts
+
+#### Scenario: Card coming out from under the sticky header
+
+- **WHEN** the user scrolls back up and a card that was hidden under the sticky header moves down until half of it shows below the header
+- **THEN** it counts as half visible, like a card coming in from the bottom
+
 #### Scenario: Fast scroll
 
 - **WHEN** the user flings the feed and several cards pass through view in under a second, each at least half visible for a moment
@@ -105,6 +115,20 @@ A note SHALL count as scrolled once at least half of its card is visible in the 
 
 - **WHEN** a note that already counted in this round comes into view again, before every note has been scrolled
 - **THEN** the counter doesn't change
+
+### Requirement: Resizing the note input changes no count
+
+The sticky header growing or shrinking while the cards stay where they are on screen, as the note input gains or loses lines, SHALL NOT by itself make a card count or start a round. A card that the header uncovered SHALL count by the usual rule once the user scrolls.
+
+#### Scenario: Note input grows and shrinks at N/N
+
+- **WHEN** the counter shows `15/15`, the user types a multi-line note until the header covers a counted card, and then clears the note without scrolling
+- **THEN** the counter still shows `15/15` with no round pill
+
+#### Scenario: Scrolling after the note input shrinks
+
+- **WHEN** a long draft covers a card that never counted, the user clears the draft, and then scrolls until half of that card shows below the header
+- **THEN** it counts
 
 ### Requirement: The counter's total follows created and deleted notes
 

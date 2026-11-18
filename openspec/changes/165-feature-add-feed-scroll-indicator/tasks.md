@@ -3,7 +3,8 @@
 The groups run in order, one commit each, and none can run in parallel:
 
 - group 2 changes how group 1's count is derived;
-- group 3 extends group 1's counting function.
+- group 3 extends group 1's counting function;
+- group 4 reworks group 1's hook after the PR #177 review (design.md Decisions 7, 14, 15 and 18).
 
 Every group touches only `apps/web/src/features/feed`, except that group 1 adds `apps/web/src/shared/components/ui/progress.tsx`. Group 2 also touches `FeedNoteInput`, which lives in `features/feed` too.
 
@@ -47,6 +48,7 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
   - `observeCard`, a stable ref callback that reads `data-note-id`, observes the element and unobserves it on cleanup.
 
   `scrolled` is `Math.min(counted.size, total)`. All of this is React state inside the hook, with no Redux. Verify with `pnpm --filter web exec tsc -b`.
+  - _Note (review):_ group 4 (4.3) replaces the rebuilt observer, the thresholds and the qualifying test.
 
 - [x] 1.4 In `apps/web/src/features/feed/components/FeedItem.tsx`, accept a `ref` prop (React 19) and put it, with `data-note-id={item.id}`, on the `Card` root. Verify with `pnpm --filter web exec tsc -b`.
 - [x] 1.5 Add the shadcn Progress (design.md Decision 17): run `pnpm --filter web exec shadcn add progress`, then in `apps/web/src/shared/components/ui/progress.tsx` change the bogus `import { cn } from "cn"` to `@/shared/lib/utils` and check that `package.json` gained no bogus dependency. Keep everything else as generated, `transition-all` included. Verify with `pnpm --filter web exec tsc -b`.
@@ -115,10 +117,35 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
   - **Round 3:** scrolling on through round 2 starts `Round 3` and `1/15` the same way.
   - **Reload:** after a reload, the pill is gone and the count starts again.
   - **Header resize:** at `15/15`, typing a multi-line note (the header grows) doesn't start a round.
-  - _Note (apply):_ observed `15/15` (full, no pill) → `Round 2` + `1/15` (6.7%) → … → `Round 2` `15/15` → `Round 3` + `1/15`. Pill colors are neutral-700 on #f5f5f5 and neutral-300 on #262626. Growing the header at `15/15` (102 → 252 px) doesn't start a round. **Open question for the owner:** a header tall enough to cover a counted card, shrinking back (text cleared without sending), re-reveals that card, and at `15/15` that starts `Round 2` with no scrolling. That follows the spec's rule ("a card that already counted becomes half visible"), so the code is unchanged. _Owner decision 2026-11-18: keep the spec rule._ On the way to round 3 the feed stalled at the bottom (a page of only repeats doesn't grow the list, so the sentinel never leaves the view); that's the existing sentinel behavior, outside this change. Scrolling up and back down went on.
+  - _Note (apply):_ observed `15/15` (full, no pill) → `Round 2` + `1/15` (6.7%) → … → `Round 2` `15/15` → `Round 3` + `1/15`. Pill colors are neutral-700 on #f5f5f5 and neutral-300 on #262626. Growing the header at `15/15` (102 → 252 px) doesn't start a round. **Open question for the owner:** a header tall enough to cover a counted card, shrinking back (text cleared without sending), re-reveals that card, and at `15/15` that starts `Round 2` with no scrolling. That follows the spec's rule ("a card that already counted becomes half visible"), so the code is unchanged. _Owner decision 2026-11-18: keep the spec rule._ _Reversed by the owner after the PR #177 review: clearing the draft without scrolling starts no round (design.md Decision 7, task 4.3)._ On the way to round 3 the feed stalled at the bottom (a page of only repeats doesn't grow the list, so the sentinel never leaves the view); that's the existing sentinel behavior, outside this change. Scrolling up and back down went on.
 - [x] 3.3 Browser check as U8: at the end of the feed the counter stays `8/8` with a full bar and no pill, and no round 2 starts.
   - _Note (apply):_ observed `4/8` → … → `8/8` (full bar, no pill) at "That's all for now", with one feed request. **Open question for the owner:** scrolling back up after `8/8` starts `Round 2` (`1/8`, `2/8`, …), because a counted card becomes half visible again. design.md Decision 7 says a short feed "stays at N/N", assuming only re-served notes repeat. The spec rule allows the scroll-back flip, and the "Short feed" scenario only covers the end of the feed. Code unchanged. _Owner decision 2026-11-18: keep the spec rule; Decision 7's "stays at N/N" holds only while the user doesn't scroll back._
 - [x] 3.4 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+
+## 4. Review fixes (PR #177 findings 1, 2, 3 and 6, QA M1)
+
+Findings 4, 5, 7 and 8 and the `0/N` flash are deferred and stay as they are. No code comments.
+
+- [ ] 4.1 In `apps/web/src/features/feed/components/FeedItem.tsx`, wrap `FeedItem` in `memo` (design.md Decision 18). Confirm that its props stay the same references across a count: `item` from `dedupeKeepLast`, and `ref`, which is the stable `observeCard`. Verify with `pnpm --filter web exec tsc -b`.
+- [ ] 4.2 In `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts`, derive `scrolled` as `Math.min(state.counted.size, total)` and drop the per-render filter. Keep the render-time prune of deleted notes (Decisions 5 and 15).
+- [ ] 4.3 In the same hook, replace the rebuilt observer (design.md Decision 14):
+  - remove the `headerHeight` state, the `ResizeObserver` and the rebuild;
+  - create one `IntersectionObserver` in an effect with `root: scrollRef.current`, no `rootMargin` and `threshold: [0, 0.5]` (the constant in `const/feed.constants.ts` replaces the 51-step list). It keeps a map of the mounted cards that intersect the scroll container, and ignores entries for cards that aren't mounted;
+  - check the cards in that map on each observer callback and on the scroll container's passive `scroll` event, skipping a card whose top relative to the container hasn't moved since its last check;
+  - replace `isHalfVisible(entry)` in `utils/feed.utils.ts` with a pure function of the card's rect and the area's top (the header's bottom edge) and bottom: visible height below the header ≥ half of `min(card height, area height)`;
+  - keep `observerRef`, the set of mounted cards and `qualifyingRef`, which are still needed (Decision 14).
+
+  Verify with `pnpm --filter web exec tsc -b`.
+
+- [ ] 4.4 Browser check:
+  - **M1, tall card:** as `t165_u300`, the `Tall2` note (500 lines) counts at about 331 px visible at 375×812, and counts at all at 568×320 (about 85 px).
+  - **Normal scroll:** as U15, the first page, card coming into view, less than half visible, card under the sticky header, and card coming out from under the header on a scroll back.
+  - **Rounds:** `15/15`, then `Round 2` and `1/15`; a scroll back after `N/N` starts the next round.
+  - **Create and delete:** `n/15` → `n/16`; deleting a counted note → `(n-1)/15`.
+  - **Note input grows and shrinks:** at `15/15`, a draft that covers a counted card, cleared without scrolling, starts no round. A card that never counted, covered by a draft, then uncovered and scrolled to half visible, counts.
+  - **Requests:** no `GET /api/v1/feed` after a create, a tier change or a delete.
+- [ ] 4.5 Render check: with a render counter on `FeedItem` (temporary, not committed) or the React Profiler, a count re-renders no `FeedItem`, where before it re-rendered all of them.
+- [ ] 4.6 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## Workflow follow-up
 
