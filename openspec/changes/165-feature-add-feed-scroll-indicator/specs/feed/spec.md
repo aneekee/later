@@ -24,11 +24,11 @@ Every `GET /api/v1/feed` response SHALL include `data.total`: the number of note
 
 ### Requirement: The feed header shows a scroll counter
 
-The Feed page SHALL show the counter as `<scrolled>/<total>`, with no spaces and no other words, at the right end of the "Feed" title row in the sticky header, on every screen width. Showing it SHALL NOT change the header's height. The text SHALL change without animation and SHALL NOT be announced by a live region.
+The Feed page SHALL show the counter as `<scrolled>/<total>`, with no spaces and no other words, at the right end of the "Feed" title row in the sticky header, on every screen width. Showing the counter SHALL NOT change the header's height. The count text SHALL change without animation and SHALL NOT be announced by a live region.
 
 #### Scenario: Phone
 
-- **WHEN** the feed is open on a 390 px wide screen, with 12 notes scrolled out of 300
+- **WHEN** the feed is open on a 375 px wide screen, with 12 notes scrolled out of 300
 - **THEN** the "Feed" title row shows `12/300` at its right end
 - **AND** the note input below it is where it was before this change
 
@@ -42,6 +42,25 @@ The Feed page SHALL show the counter as `<scrolled>/<total>`, with no spaces and
 - **WHEN** a screen reader reaches the counter showing `12/300`
 - **THEN** it reads the text `12/300`
 - **AND** scrolling more cards into view announces nothing
+
+### Requirement: The scroll counter has a progress bar
+
+A progress bar SHALL fill the "Feed" title row's space between the title (or the round pill) and the count, and its filled part SHALL be scrolled ÷ total of its length. The bar SHALL be hidden from screen readers.
+
+#### Scenario: Bar on phone
+
+- **WHEN** the feed is open on a 375 px wide screen, with 12 notes scrolled out of 300
+- **THEN** a progress bar runs from just after "Feed" to the count, with its first 4% filled
+
+#### Scenario: Bar on desktop
+
+- **WHEN** the feed is open on a 1280 px wide screen, with 12 notes scrolled out of 300
+- **THEN** a progress bar runs from just after "Feed" to the count in the feed column's title row, with its first 4% filled
+
+#### Scenario: Bar and screen readers
+
+- **WHEN** a screen reader reaches the counter showing `12/300`
+- **THEN** it reads nothing for the bar
 
 ### Requirement: A note counts as scrolled once its card is half visible
 
@@ -104,7 +123,7 @@ The total SHALL be the `total` of the latest loaded feed page, plus the notes cr
 #### Scenario: Deleting a scrolled note
 
 - **WHEN** the counter shows `12/300` and the user deletes a note that counted
-- **THEN** the counter shows `11/299`
+- **THEN** the counter shows `11/299`, and the bar is filled to 11/299 of its length
 
 #### Scenario: Deleting a note that never counted
 
@@ -127,17 +146,19 @@ The counter SHALL keep its numbers only for the current visit to the Feed page. 
 
 ### Requirement: The counter starts a new round after every note was scrolled
 
-When every note has been scrolled the counter SHALL show `<total>/<total>`, and keep it until a card that already counted in this round becomes half visible. That card SHALL start the next round with a count of 1. From round 2 on, a `Round <n>` pill SHALL show before the count. Round 1 SHALL show no pill.
+When every note has been scrolled the counter SHALL show `<total>/<total>`, and keep it until a card that already counted in this round becomes half visible. That card SHALL start the next round with a count of 1. From round 2 on, a `Round <n>` pill SHALL show before the bar. Round 1 SHALL show no pill.
 
 #### Scenario: Every note scrolled
 
 - **WHEN** the user scrolls the last note that hadn't counted, out of 300
 - **THEN** the counter shows `300/300` with no round pill
+- **AND** the bar is full
 
 #### Scenario: Round 2 starts
 
 - **WHEN** the counter shows `300/300` and a card that already counted becomes half visible
-- **THEN** the counter shows a `Round 2` pill and `1/300`
+- **THEN** the counter shows a `Round 2` pill, then the bar, then `1/300`
+- **AND** the bar is filled to 1/300 of its length
 
 #### Scenario: Later rounds
 
@@ -147,16 +168,16 @@ When every note has been scrolled the counter SHALL show `<total>/<total>`, and 
 #### Scenario: Short feed
 
 - **WHEN** a user with 8 notes scrolls all of them and the feed shows its end, "That's all for now"
-- **THEN** the counter shows `8/8` with no round pill, and no round 2 follows
+- **THEN** the counter shows `8/8` with a full bar and no round pill, and no round 2 follows
 
 ### Requirement: The counter shows only while notes are loaded
 
-The counter SHALL be hidden while the first feed page loads, when the first page fails, and when the user has no notes. Otherwise it SHALL be shown, including while a next page loads, after a next page fails, and at the end of the feed.
+The counter, its bar included, SHALL be hidden while the first feed page loads, when the first page fails, and when the user has no notes. Otherwise it SHALL be shown, including while a next page loads, after a next page fails, and at the end of the feed.
 
 #### Scenario: Loading
 
 - **WHEN** the Feed page opens and the first page hasn't loaded yet
-- **THEN** the title row shows "Feed" and no counter
+- **THEN** the title row shows "Feed" and no counter or bar
 
 #### Scenario: First page fails
 

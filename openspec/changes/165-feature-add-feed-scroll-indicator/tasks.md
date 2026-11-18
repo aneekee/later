@@ -4,7 +4,7 @@ The groups run in order, one commit each, and none can run in parallel:
 - group 2 changes how group 1's count is derived;
 - group 3 extends group 1's counting function.
 
-Every group touches only `apps/web/src/features/feed`. Group 2 also touches `FeedNoteInput`, which lives there too.
+Every group touches only `apps/web/src/features/feed`, except that group 1 adds `apps/web/src/shared/components/ui/progress.tsx`. Group 2 also touches `FeedNoteInput`, which lives in `features/feed` too.
 
 **Setup**
 - **Gate:** from the repo root, run `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`.
@@ -41,36 +41,38 @@ Every group touches only `apps/web/src/features/feed`. Group 2 also touches `Fee
 
   `scrolled` is `Math.min(counted.size, total)`. All of this is React state inside the hook, with no Redux. Verify with `pnpm --filter web exec tsc -b`.
 - [ ] 1.4 In `apps/web/src/features/feed/components/FeedItem.tsx`, accept a `ref` prop (React 19) and put it, with `data-note-id={item.id}`, on the `Card` root. Verify with `pnpm --filter web exec tsc -b`.
-- [ ] 1.5 Create `apps/web/src/features/feed/components/FeedScrollCounter.tsx` (props `scrolled`, `total`, `round`), styled per design.md Decision 12 and `mockup.md`:
-  - the count `{scrolled}/{total}` in `text-sm font-medium text-muted-foreground tabular-nums`, with no spaces;
-  - when `round > 1`, a pill `Round {round}` in `rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-neutral-700 dark:text-neutral-300` before the count, inside a `flex items-center gap-2` group;
-  - no animation, no live region and no `aria-label`.
+- [ ] 1.5 Add the shadcn Progress (design.md Decision 17): run `pnpm --filter web exec shadcn add progress`, then in `apps/web/src/shared/components/ui/progress.tsx` change the bogus `import { cn } from "cn"` to `@/shared/lib/utils` and check that `package.json` gained no bogus dependency. Keep everything else as generated, `transition-all` included. Verify with `pnpm --filter web exec tsc -b`.
+- [ ] 1.6 Create `apps/web/src/features/feed/components/FeedScrollCounter.tsx` (props `scrolled`, `total`, `round`), styled per design.md Decisions 12 and 17 and `mockup.md`. Its root is a `flex min-w-0 flex-1 items-center gap-2 ml-2` group holding, in order:
+  - when `round > 1`, a pill `Round {round}` in `shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-neutral-700 dark:text-neutral-300`;
+  - `<Progress value={(scrolled / total) * 100} aria-hidden className="min-w-12 flex-1" />`;
+  - the count `{scrolled}/{total}` in `shrink-0 text-sm font-medium text-muted-foreground tabular-nums`, with no spaces.
 
-  Verify with `pnpm --filter web exec tsc -b`.
-- [ ] 1.6 Wire it up in `apps/web/src/features/feed/components/FeedContainer.tsx`:
+  No animation on the text, no live region and no `aria-label`. Verify with `pnpm --filter web exec tsc -b`.
+- [ ] 1.7 Wire it up in `apps/web/src/features/feed/components/FeedContainer.tsx`:
   - a `headerRef` on the sticky `<header>`;
   - `total` from the latest page (`data.pages.at(-1)?.data?.total ?? 0`);
   - `useFeedScrollCounter`, and `ref={observeCard}` on each `FeedItem`;
-  - the title row becomes `justify-between gap-3`, with `FeedScrollCounter` at its right end, shown only when `hasPages && total > 0` (Decision 8).
+  - the title row becomes `justify-between gap-3`, with `FeedScrollCounter` filling the rest of it after the `h1`, shown only when `hasPages && total > 0` (Decision 8).
 
   The row stays `h-12`. Nothing in this group may call `refetch`, `fetchNextPage` or invalidate the feed for the counter. Verify with `pnpm --filter web exec tsc -b`.
-- [ ] 1.7 Browser check, as U15 at phone and desktop width, against `mockup/A · In the Feed title row (chosen).png` and `mockup/Desktop · A.png`:
-  - **Placement:** the counter sits at the right of the "Feed" row, and the header height and note input are unchanged.
+- [ ] 1.8 Browser check, as U15 at phone and desktop width, in light and dark, against `mockup/A · In the Feed title row (chosen).png`, `mockup/Desktop · A.png` and `mockup/F · Track fills the title row.png`:
+  - **Placement:** the count sits at the right of the "Feed" row, and the header height and note input are unchanged.
+  - **Bar:** the bar runs from just after "Feed" to the count, and its filled part matches `n/15` (e.g. a third at `5/15`), on phone and desktop.
   - **First page:** the count equals the number of cards at least half visible.
   - **Scrolling:** scrolling a card to half visible adds 1; a card with only its top third visible doesn't count; a card half hidden under the sticky header doesn't count from there.
   - **Fling:** a fast fling counts every card that passed.
   - **Loaded, not in view:** after the second page loads below the view, the count doesn't change until its cards are in view.
   - **Tall card:** a 1000-character note made as U15 counts once it covers half of the scroll area.
   - **Requests:** the network panel shows no `GET /api/v1/feed` beyond the sentinel's pages while scrolling.
-  - **Screen reader:** the counter's accessibility node is the plain text `n/15`, with no live region.
-- [ ] 1.8 Browser check of reset and visibility:
+  - **Screen reader:** the counter's accessibility node is the plain text `n/15`, with no live region, and the bar isn't in the accessibility tree (no `progressbar` node).
+- [ ] 1.9 Browser check of reset and visibility:
   - **Reload:** after a reload, the counter starts again from the first page's half visible cards.
   - **Dashboard round trip:** after going to Dashboard and back, it starts again.
-  - **Loading:** while the first page loads (throttle the network), only "Feed" shows.
+  - **Loading:** while the first page loads (throttle the network), only "Feed" shows, with no bar.
   - **First page error:** with the API stopped and the page reloaded, only "Feed" shows next to the error.
   - **No notes:** as U0, only "Feed" shows above the empty state.
-  - **Next page error:** as U15, the counter keeps its number after the API is stopped and the sentinel's next page fails.
-- [ ] 1.9 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+  - **Next page error:** as U15, the counter and the bar keep their values after the API is stopped and the sentinel's next page fails.
+- [ ] 1.10 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## 2. The total follows created and deleted notes
 
@@ -81,6 +83,7 @@ Every group touches only `apps/web/src/features/feed`. Group 2 also touches `Fee
   - **Next page after a create:** once the next page loads (its `total` is 16), the total stays 16.
   - **Delete a counted note:** deleting a counted note shows `(n-1)/15`.
   - **Delete an uncounted note:** deleting a card that only peeks in at the bottom (never half visible) shows `n/15`, with only the total dropping.
+  - **Bar:** after each of these, the bar's fill matches the new count.
 - [ ] 2.4 Browser check as U8: scroll to the end ("That's all for now") at `8/8`, then create a note. The counter shows `8/9`, and the network panel shows no `GET /api/v1/feed` after the create.
 - [ ] 2.5 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
@@ -91,13 +94,13 @@ Every group touches only `apps/web/src/features/feed`. Group 2 also touches `Fee
   - any other known id returns the state unchanged.
 
   Update the doc comment to name Round. Verify with `pnpm --filter web exec tsc -b`.
-- [ ] 3.2 Browser check as U15, against `mockup/Counter states (A).png` and, in dark, `mockup/A · Dark, round 2.png`:
-  - **End of round 1:** scrolling the last uncounted note shows `15/15` with no pill, and it holds while those cards stay in view.
-  - **Round 2:** the first repeated card that becomes half visible shows the `Round 2` pill and `1/15`.
+- [ ] 3.2 Browser check as U15, against `mockup/Counter states (A).png`, `mockup/F · Track fills the title row.png` and, in dark, `mockup/A · Dark, round 2.png`:
+  - **End of round 1:** scrolling the last uncounted note shows `15/15` with a full bar and no pill, and it holds while those cards stay in view.
+  - **Round 2:** the first repeated card that becomes half visible shows the `Round 2` pill, then the bar back at 1/15, then `1/15`.
   - **Round 3:** scrolling on through round 2 starts `Round 3` and `1/15` the same way.
   - **Reload:** after a reload, the pill is gone and the count starts again.
   - **Header resize:** at `15/15`, typing a multi-line note (the header grows) doesn't start a round.
-- [ ] 3.3 Browser check as U8: at the end of the feed the counter stays `8/8` with no pill, and no round 2 starts.
+- [ ] 3.3 Browser check as U8: at the end of the feed the counter stays `8/8` with a full bar and no pill, and no round 2 starts.
 - [ ] 3.4 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## Workflow follow-up

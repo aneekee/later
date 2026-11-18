@@ -16,7 +16,8 @@ For motivation, see `proposal.md` (Why); for the observable behavior, see `specs
 - **Delete** (`notesApi.deleteNote`): on success, `removeFeedItem` drops the note from every page and lowers each page's `total` by 1.
 - **Create** (`notesApi.createNote`): it doesn't touch the feed cache. The note is created as seen and comes back later at the end of the rotation.
 - **Glossary:** `CONTEXT.md` already defines **Scrolled** and **Round**. Seen keeps its server meaning.
-- **UI reference:** `mockup.md` and `mockup/*.png` in this change folder, variant A.
+- **UI reference:** `mockup.md` and `mockup/*.png` in this change folder, variant A with progress bar F.
+- **shadcn:** the web app uses the `radix-nova` style (`components.json`) and the `radix-ui` package. There's no `progress.tsx` in `shared/components/ui` yet.
 
 ## Goals / Non-Goals
 
@@ -97,10 +98,11 @@ It shows when the feed has at least one loaded page and the total is above 0. So
 
 ### 9. No special handling for screen readers
 
-The counter is plain text, with no live region and no extra label.
+The counter is plain text, with no live region and no extra label. The progress bar gets `aria-hidden`: Radix Progress renders `role="progressbar"` with a percentage, which would repeat the text in another form.
 
 - _Rejected: a full label ("12 of 300 notes scrolled"), still not announced._ The owner preferred plain text.
 - _Rejected: announcing only round changes._ It adds a live region for a rare event.
+- _Rejected: exposing the bar as a progressbar._ A screen reader would read `12/300` and then "4%", the same fact twice.
 
 ### 10. The spec pins the existing `total`
 
@@ -110,28 +112,35 @@ The counter is plain text, with no live region and no extra label.
 
 ### 11. Manual verification on a test account with about 15 notes
 
-The checks run in the browser at phone width (the 375 px `mobile` preset; the mock is 390 px) and at desktop width. The test user has about 15 notes, so there are two pages and round 2 can be reached. Separate users cover 8 notes (a short feed) and 0 notes. The build gate runs at the end of each group.
+The checks run in the browser at phone width (the 375 px `mobile` preset; mock A is 390 px, the bar sheet F 375 px) and at desktop width. The test user has about 15 notes, so there are two pages and round 2 can be reached. Separate users cover 8 notes (a short feed) and 0 notes. The build gate runs at the end of each group.
 
 - _Rejected: adding Vitest to `apps/web` to unit-test the counting function._ It brings a new tool into the repo, which is a chore of its own.
 
-### 12. Placement: right end of the "Feed" title row (mock variant A)
+### 12. Placement: the "Feed" title row, with the bar filling it (mock variant A with bar F)
 
-The counter sits in the existing 48 px title row of the sticky header, in the same place on every screen width. The header's height stays the same. The look is in `mockup.md`:
+The counter sits in the existing 48 px title row of the sticky header, in the same place on every screen width. The header's height stays the same. The counter group takes the rest of the row after the title: the round pill (from round 2), the progress bar, then the count. The look is in `mockup.md`:
 
-- **Count:** `text-sm font-medium text-muted-foreground tabular-nums`.
-- **Round pill:** `rounded-full bg-muted px-2 py-0.5 text-xs font-medium`, with its text in `neutral-700` / `dark:neutral-300`. The theme's `muted-foreground` is too low in contrast on `bg-muted`, so it isn't used for the pill.
+- **Group:** `flex min-w-0 flex-1 items-center gap-2 ml-2`. With the row's `gap-3`, the bar starts 20 px after "Feed", so it reads as part of the counter, not as a rule under the title.
+- **Bar:** `<Progress className="min-w-12 flex-1" />` (Decision 17). It's about 225 px wide on a 375 px phone (about 155 px with the pill) and about 450 px in the 600 px desktop column.
+- **Count:** `shrink-0 text-sm font-medium text-muted-foreground tabular-nums`.
+- **Round pill:** `shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium`, with its text in `neutral-700` / `dark:neutral-300`. The theme's `muted-foreground` is too low in contrast on `bg-muted`, so it isn't used for the pill.
+
+The ask's 2026-11-18 update asked for a bar after the counter's look was settled, so the bar was added to A rather than reopening the placement.
 
 Rejected alternatives:
 
-- _B: a pill next to the title with a 2 px progress line along the header's bottom edge._ On 300 notes, each card moves the line by about 1 px, and the line adds a second element that changes on every card.
+- _B: a pill next to the title with a 2 px progress line along the header's bottom edge._ The line is apart from the count, across the whole header, and reads like a loading indicator.
 - _C: the app top bar (`AppLayout`)._ That bar is shared by every page, so the feed would need a portal or a layout context to fill it. That's more wiring for no gain.
+- _D: a 64 px bar before the count, and E: an 80 px bar under the count._ At `12/300` their fill is 2–3 px, a dot. F's bar shows about 9 px on a phone and 18 px on desktop.
+- _A ring next to the count, or a pill whose fill is the progress._ Neither is the plain shadcn Progress the ask names.
 
-### 13. No animation
+### 13. No animation on the text; the bar keeps the component's slide
 
-The text just changes. `tabular-nums` keeps the width steady while digits change.
+The text just changes. `tabular-nums` keeps the width steady while digits change. The bar keeps the plain Progress's `transition-all`, so its fill slides for about 150 ms on each change, and back to nearly empty when a round starts.
 
 - _Rejected: fading in the round pill (about 150 ms)._ A small effect for a rare event, plus a reduced-motion branch.
 - _Rejected: animating the digits._ It flickers on every card during a fast scroll.
+- _Rejected: removing `transition-all` from the generated `progress.tsx`._ The owner chose the component exactly as `shadcn add` writes it.
 
 ### 14. One IntersectionObserver, owned by a hook in `FeedContainer`
 
@@ -168,6 +177,16 @@ The hook calls it on each newly qualifying card. The scrolled count shown is the
 - _Rejected: a listener in the store on `createNote` fulfilled, plus a slice._ It's app-level state for a value that lives only as long as the page.
 - _Rejected: patching the cache (Decision 4)._
 
+### 17. The bar is the plain shadcn Progress
+
+`pnpm --filter web exec shadcn add progress` writes `shared/components/ui/progress.tsx` in the project's `radix-nova` style: a 4 px (`h-1`) `rounded-full` track in `bg-muted` and a `bg-primary` fill, moved with `translateX`. It's kept as generated, except for the bogus `cn` import the CLI writes (CLAUDE.md), which points to `@/shared/lib/utils`.
+
+`FeedScrollCounter` passes `value={(scrolled / total) * 100}` and `aria-hidden`. The component computes the fill from a 0–100 value and ignores `max`, so the percentage is worked out by the caller. The counter only shows when `total > 0` (Decision 8), so there's no division by 0.
+
+- _Rejected: the base-ui Progress the ask links to._ The project is set up for radix (`components.json`), so `shadcn add` writes the radix version, and it looks the same.
+- _Rejected: a hand-made bar (`div`s)._ The ask names the plain shadcn component.
+- _Rejected: `max={total}` with `value={scrolled}`._ The generated component's fill ignores `max`.
+
 ## Risks / Trade-offs
 
 - [A create that finishes while the next page's request is in flight can be counted twice, or not at all, until the following page.] → Accepted: it's off by 1 for one page, and the next page's `total` corrects it.
@@ -175,6 +194,8 @@ The hook calls it on each newly qualifying card. The scrolled count shown is the
 - [A very fast fling can skip a card that is never painted at least half visible in any frame.] → Accepted: the spec only asks to count cards that were half visible "for a moment".
 - [Rebuilding the observer when the header resizes re-reports every card.] → The qualifying set survives rebuilds (Decision 14), so nothing counts twice and no round flips by mistake.
 - [Dense thresholds on every card.] → The feed holds at most a few hundred cards, and the callbacks only compare numbers.
+- [In light mode the bar's empty track (`bg-muted` on the white header) is barely visible, so early in a round the bar is a short dark dash on its own.] → Accepted: it's the plain component's look, and dark mode shows the whole track.
+- [At 1–2% the fill is a sliver (`1/300` is under 1 px), and 99% looks full.] → Accepted: the count next to it gives the exact value.
 
 ## Migration Plan
 

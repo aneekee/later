@@ -4,3 +4,12 @@ The "seen" number should change on scroll by number of the fetched posts, `10/30
 The "seen" number should not live between reload sessions -- it's client only and we reset it on page reload
 I want this scroll indicator to be visible on both mobile and desktop, so probably I'd put it to the sticky header, but I'd like to jam with Claude Design on this
 If the user scrolls throught every their note, we can reset the counter and show an indicator they're on the second round of scrolling, but it's not likely to happen though
+
+---
+
+UPD 2026-11-18
+
+I think it would be also great to add a progress bar that would indicate the scroll more visually
+I want the plain shadcn component https://ui.shadcn.com/docs/components/base/progress
+It should be visible on both mobile and desktop
+I want to get designs for it as well
