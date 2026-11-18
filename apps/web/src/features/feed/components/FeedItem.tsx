@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type Ref } from 'react';
 import { Trash2Icon } from 'lucide-react';
 
 import type { NoteEntity } from '@later/types';
@@ -20,14 +20,15 @@ import { TextWithLinks } from './TextWithLinks';
 
 interface Props {
   item: NoteEntity;
+  ref?: Ref<HTMLDivElement>;
 }
 
-export const FeedItem = ({ item }: Props) => {
+export const FeedItem = ({ item, ref }: Props) => {
   const { tier, change, cancel } = useBatchedTier(item);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   return (
-    <Card className="gap-2">
+    <Card ref={ref} data-note-id={item.id} className="gap-2">
       <CardHeader>
         <CardDescription className="flex min-w-0 items-center gap-1">
           <time dateTime={item.createdAt} className="shrink-0">

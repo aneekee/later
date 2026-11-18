@@ -23,21 +23,23 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
 
 ## 1. Count scrolled cards and show the counter
 
-- [ ] 1.1 Check the API side of `specs/feed` with curl (no code change). Call `GET /api/v1/feed?pageSize=10` as each user and confirm:
+- [x] 1.1 Check the API side of `specs/feed` with curl (no code change). Call `GET /api/v1/feed?pageSize=10` as each user and confirm:
   - U15: 10 items and `data.total` 15;
   - U8: `data.total` 8, while U15 still has 15 notes;
   - U0: an empty `data.items` and `data.total` 0.
 
   Note it in the commit message if anything differs.
 
-- [ ] 1.2 Add the pure counting function to `apps/web/src/features/feed/utils/feed.utils.ts`:
+- [x] 1.2 Add the pure counting function to `apps/web/src/features/feed/utils/feed.utils.ts`:
   - The state type is `FeedScrollState = { counted: Set<string>; round: number }`, in `features/feed/types/feed.types.ts`.
   - `countScrolledCard(state, noteId, total)` returns a new state with `noteId` added, or the same state when the id is already counted (rounds come in group 3).
   - Add a doc comment naming Scrolled from `CONTEXT.md`.
 
   Verify with `pnpm --filter web exec tsc -b`.
 
-- [ ] 1.3 Create `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts` (design.md Decision 14). It takes `scrollRef`, `headerRef` and `total`, and returns `{ scrolled, round, observeCard }`. It owns:
+  - _Note (apply):_ `total` is unused until group 3, and `noUnusedParameters` rejects it, so it's named `_total` for now (with an eslint-disable line); 3.1 renames it back.
+
+- [x] 1.3 Create `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts` (design.md Decision 14). It takes `scrollRef`, `headerRef` and `total`, and returns `{ scrolled, round, observeCard }`. It owns:
   - one `IntersectionObserver` with `root: scrollRef.current`, `rootMargin` `-<header height>px 0px 0px 0px`, and thresholds every 0.02 from 0 to 1;
   - a `ResizeObserver` on the header that rebuilds the observer when the height changes;
   - the qualifying test (`intersectionRatio >= 0.5`, or `intersectionRect.height >= rootBounds.height / 2`);
@@ -46,16 +48,17 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
 
   `scrolled` is `Math.min(counted.size, total)`. All of this is React state inside the hook, with no Redux. Verify with `pnpm --filter web exec tsc -b`.
 
-- [ ] 1.4 In `apps/web/src/features/feed/components/FeedItem.tsx`, accept a `ref` prop (React 19) and put it, with `data-note-id={item.id}`, on the `Card` root. Verify with `pnpm --filter web exec tsc -b`.
-- [ ] 1.5 Add the shadcn Progress (design.md Decision 17): run `pnpm --filter web exec shadcn add progress`, then in `apps/web/src/shared/components/ui/progress.tsx` change the bogus `import { cn } from "cn"` to `@/shared/lib/utils` and check that `package.json` gained no bogus dependency. Keep everything else as generated, `transition-all` included. Verify with `pnpm --filter web exec tsc -b`.
-- [ ] 1.6 Create `apps/web/src/features/feed/components/FeedScrollCounter.tsx` (props `scrolled`, `total`, `round`), styled per design.md Decisions 12 and 17 and `mockup.md`. Its root is a `flex min-w-0 flex-1 items-center gap-2 ml-2` group holding, in order:
+- [x] 1.4 In `apps/web/src/features/feed/components/FeedItem.tsx`, accept a `ref` prop (React 19) and put it, with `data-note-id={item.id}`, on the `Card` root. Verify with `pnpm --filter web exec tsc -b`.
+- [x] 1.5 Add the shadcn Progress (design.md Decision 17): run `pnpm --filter web exec shadcn add progress`, then in `apps/web/src/shared/components/ui/progress.tsx` change the bogus `import { cn } from "cn"` to `@/shared/lib/utils` and check that `package.json` gained no bogus dependency. Keep everything else as generated, `transition-all` included. Verify with `pnpm --filter web exec tsc -b`.
+  - _Note (apply):_ the CLI also added a bogus `cn` dependency to `apps/web/package.json`; removed it with `pnpm --filter web remove cn`. The generated `value || 0` and `${number}` template fail the repo's strict lint (`prefer-nullish-coalescing`, `restrict-template-expressions`), so, as for `sidebar.tsx`, `eslint.config.js` downgrades those two rules to warnings for `progress.tsx` instead of editing the generated file.
+- [x] 1.6 Create `apps/web/src/features/feed/components/FeedScrollCounter.tsx` (props `scrolled`, `total`, `round`), styled per design.md Decisions 12 and 17 and `mockup.md`. Its root is a `flex min-w-0 flex-1 items-center gap-2 ml-2` group holding, in order:
   - when `round > 1`, a pill `Round {round}` in `shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-neutral-700 dark:text-neutral-300`;
   - `<Progress value={(scrolled / total) * 100} aria-hidden className="min-w-12 flex-1" />`;
   - the count `{scrolled}/{total}` in `shrink-0 text-sm font-medium text-muted-foreground tabular-nums`, with no spaces.
 
   No animation on the text, no live region and no `aria-label`. Verify with `pnpm --filter web exec tsc -b`.
 
-- [ ] 1.7 Wire it up in `apps/web/src/features/feed/components/FeedContainer.tsx`:
+- [x] 1.7 Wire it up in `apps/web/src/features/feed/components/FeedContainer.tsx`:
   - a `headerRef` on the sticky `<header>`;
   - `total` from the latest page (`data.pages.at(-1)?.data?.total ?? 0`);
   - `useFeedScrollCounter`, and `ref={observeCard}` on each `FeedItem`;
@@ -63,7 +66,7 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
 
   The row stays `h-12`. Nothing in this group may call `refetch`, `fetchNextPage` or invalidate the feed for the counter. Verify with `pnpm --filter web exec tsc -b`.
 
-- [ ] 1.8 Browser check, as U15 at phone and desktop width, in light and dark, against `mockup/A · In the Feed title row (chosen).png`, `mockup/Desktop · A.png` and `mockup/F · Track fills the title row.png`:
+- [x] 1.8 Browser check, as U15 at phone and desktop width, in light and dark, against `mockup/A · In the Feed title row (chosen).png`, `mockup/Desktop · A.png` and `mockup/F · Track fills the title row.png`:
   - **Placement:** the count sits at the right of the "Feed" row, and the header height and note input are unchanged.
   - **Bar:** the bar runs from just after "Feed" to the count, and its filled part matches `n/15` (e.g. a third at `5/15`), on phone and desktop.
   - **First page:** the count equals the number of cards at least half visible.
@@ -73,14 +76,16 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
   - **Tall card:** a 1000-character note made as U15 counts once it covers half of the scroll area.
   - **Requests:** the network panel shows no `GET /api/v1/feed` beyond the sentinel's pages while scrolling.
   - **Screen reader:** the counter's accessibility node is the plain text `n/15`, with no live region, and the bar isn't in the accessibility tree (no `progressbar` node).
-- [ ] 1.9 Browser check of reset and visibility:
+  - _Note (apply):_ the app has no theme switch (dark styles only apply under a `.dark` class that nothing sets), so dark was checked by adding `.dark` to `<html>` by hand. The browser pane was hidden (about 2 fps), so a real fling couldn't be judged; a frame-stepped fast scroll (60 px per frame) counted every card it passed. The tall note was 909 characters on 70 lines (1519 px tall against a 662 px area): not counted at 300 px visible, counted at 340 px. The bar has `aria-hidden="true"`; the pane's tree tool is DOM-based and still lists it, so the browser's real accessibility tree wasn't inspected. The only live region on the page is the existing toaster. The generated Progress doesn't pass `value` to the Radix root, so it reports `data-state="indeterminate"`; harmless while it's `aria-hidden`.
+- [x] 1.9 Browser check of reset and visibility:
   - **Reload:** after a reload, the counter starts again from the first page's half visible cards.
   - **Dashboard round trip:** after going to Dashboard and back, it starts again.
   - **Loading:** while the first page loads (throttle the network), only "Feed" shows, with no bar.
   - **First page error:** with the API stopped and the page reloaded, only "Feed" shows next to the error.
   - **No notes:** as U0, only "Feed" shows above the empty state.
   - **Next page error:** as U15, the counter and the bar keep their values after the API is stopped and the sentinel's next page fails.
-- [ ] 1.10 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+  - _Note (apply):_ with the API stopped before a reload, `auth/me` fails and the app never reaches the feed, so the first page error was reached by opening Dashboard, stopping the API, then opening Feed. Loading was checked by sampling the title row on every DOM change during the Dashboard → Feed trip instead of throttling: "Feed" alone, then the count. For one frame after the first page renders the count reads `0/15`, until the observer's first callback.
+- [x] 1.10 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## 2. The total follows created and deleted notes
 

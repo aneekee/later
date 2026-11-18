@@ -1,5 +1,25 @@
 import type { GetFeedSuccessResponse, NoteEntity } from '@later/types';
 
+import type { FeedScrollState } from '../types/feed.types';
+
+/**
+ * Counts a card that just became half visible as Scrolled (CONTEXT.md):
+ * a note the user scrolled to in the current visit to the feed.
+ * A note counts at most once.
+ */
+export const countScrolledCard = (
+  state: FeedScrollState,
+  noteId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- rounds will use it
+  _total: number,
+): FeedScrollState => {
+  if (state.counted.has(noteId)) {
+    return state;
+  }
+
+  return { ...state, counted: new Set(state.counted).add(noteId) };
+};
+
 /**
  * Flattens the feed pages. A note returned again in a later page
  * is rendered only at its latest position.
