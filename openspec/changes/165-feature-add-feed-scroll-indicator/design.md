@@ -85,7 +85,7 @@ The state lives in a hook used by `FeedContainer`, as plain React state. It star
 
 ### 7. Rounds are in scope, and a round flips on the next repeated card
 
-When the counted set covers the total, the counter holds at `N/N`. The next card that newly qualifies and is already in the set starts the next round: the set becomes `{ that id }`, so the count is 1, and the round goes up by 1. Cards that stay in view across the flip don't count again until they leave and come back. A short feed (10 or fewer notes) never serves a repeat, so it stays at `N/N`.
+When the counted set covers the total, the counter holds at `N/N`. The next card that newly qualifies and is already in the set starts the next round: the set becomes `{ that id }`, so the count is 1, and the round goes up by 1. Cards that stay in view across the flip don't count again until they leave and come back. A short feed (10 or fewer notes) never serves a repeat, so it stays at `N/N` until the user scrolls back to a card that already counted; that card starts the next round, as in any feed. A counted card that a growing note input covered and then uncovers counts as coming back too (the owner kept this rule during apply, 2026-11-18).
 
 - _Rejected: leaving rounds out and capping at `N/N`._ With about 15 notes the cap is reached after two pages, so small accounts would sit at `N/N` for most of their visit.
 - _Rejected: flipping to round 2 at once, at `0/N`._ It would happen while the user is still looking at round 1's last card, and `N/N` would never show.
