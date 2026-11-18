@@ -10,6 +10,7 @@ The gate is `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`,
 - [x] 1.2 Create the migration with `pnpm --filter api db:migrate:local --name add_note_tier`. Verify that the new `apps/api/prisma/migrations/*_add_note_tier/migration.sql` contains only `CREATE TYPE "note_tier" AS ENUM ('S', 'A', 'B', 'C', 'D');` and `ALTER TABLE "notes" ADD COLUMN "tier" "note_tier";`: no DEFAULT, no NOT NULL, and no change to `rating`.
 
   > Note (QA): a second migration, `add_note_tier_default`, sets `DEFAULT 'D'` (`@default(D)`) for new rows only; existing rows stay NULL for the backfill (design.md Decision 4).
+
 - [x] 1.3 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## 2. API: tiers in the notes module and the feed order

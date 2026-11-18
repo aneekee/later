@@ -1,12 +1,14 @@
 # Tasks
 
 The groups run in order, one commit each, and none can run in parallel:
+
 - group 2 changes how group 1's count is derived;
 - group 3 extends group 1's counting function.
 
 Every group touches only `apps/web/src/features/feed`, except that group 1 adds `apps/web/src/shared/components/ui/progress.tsx`. Group 2 also touches `FeedNoteInput`, which lives in `features/feed` too.
 
 **Setup**
+
 - **Gate:** from the repo root, run `pnpm --filter api exec prisma generate && pnpm build && pnpm lint`.
 - **Servers:** for browser checks, start the `api` and `web` servers from `.claude/launch.json` (ports 3000 and 5175), with local Postgres running (`docker compose up -d` in `apps/api`).
 - **Screen sizes:** use the browser pane's `mobile` preset (375 px) and desktop (1280 px wide), in both light and dark.
@@ -16,6 +18,7 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
   - **U0** with no notes.
 
   Create notes with curl: `POST /api/v1/notes` with `{"content":"Test note <n>"}` and the user's `access_token` cookie. Never use a real account.
+
 - **Mock PNGs** are in `openspec/changes/165-feature-add-feed-scroll-indicator/mockup/`.
 
 ## 1. Count scrolled cards and show the counter
@@ -26,12 +29,14 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
   - U0: an empty `data.items` and `data.total` 0.
 
   Note it in the commit message if anything differs.
+
 - [ ] 1.2 Add the pure counting function to `apps/web/src/features/feed/utils/feed.utils.ts`:
   - The state type is `FeedScrollState = { counted: Set<string>; round: number }`, in `features/feed/types/feed.types.ts`.
   - `countScrolledCard(state, noteId, total)` returns a new state with `noteId` added, or the same state when the id is already counted (rounds come in group 3).
   - Add a doc comment naming Scrolled from `CONTEXT.md`.
 
   Verify with `pnpm --filter web exec tsc -b`.
+
 - [ ] 1.3 Create `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts` (design.md Decision 14). It takes `scrollRef`, `headerRef` and `total`, and returns `{ scrolled, round, observeCard }`. It owns:
   - one `IntersectionObserver` with `root: scrollRef.current`, `rootMargin` `-<header height>px 0px 0px 0px`, and thresholds every 0.02 from 0 to 1;
   - a `ResizeObserver` on the header that rebuilds the observer when the height changes;
@@ -40,6 +45,7 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
   - `observeCard`, a stable ref callback that reads `data-note-id`, observes the element and unobserves it on cleanup.
 
   `scrolled` is `Math.min(counted.size, total)`. All of this is React state inside the hook, with no Redux. Verify with `pnpm --filter web exec tsc -b`.
+
 - [ ] 1.4 In `apps/web/src/features/feed/components/FeedItem.tsx`, accept a `ref` prop (React 19) and put it, with `data-note-id={item.id}`, on the `Card` root. Verify with `pnpm --filter web exec tsc -b`.
 - [ ] 1.5 Add the shadcn Progress (design.md Decision 17): run `pnpm --filter web exec shadcn add progress`, then in `apps/web/src/shared/components/ui/progress.tsx` change the bogus `import { cn } from "cn"` to `@/shared/lib/utils` and check that `package.json` gained no bogus dependency. Keep everything else as generated, `transition-all` included. Verify with `pnpm --filter web exec tsc -b`.
 - [ ] 1.6 Create `apps/web/src/features/feed/components/FeedScrollCounter.tsx` (props `scrolled`, `total`, `round`), styled per design.md Decisions 12 and 17 and `mockup.md`. Its root is a `flex min-w-0 flex-1 items-center gap-2 ml-2` group holding, in order:
@@ -48,6 +54,7 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
   - the count `{scrolled}/{total}` in `shrink-0 text-sm font-medium text-muted-foreground tabular-nums`, with no spaces.
 
   No animation on the text, no live region and no `aria-label`. Verify with `pnpm --filter web exec tsc -b`.
+
 - [ ] 1.7 Wire it up in `apps/web/src/features/feed/components/FeedContainer.tsx`:
   - a `headerRef` on the sticky `<header>`;
   - `total` from the latest page (`data.pages.at(-1)?.data?.total ?? 0`);
@@ -55,6 +62,7 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
   - the title row becomes `justify-between gap-3`, with `FeedScrollCounter` filling the rest of it after the `h1`, shown only when `hasPages && total > 0` (Decision 8).
 
   The row stays `h-12`. Nothing in this group may call `refetch`, `fetchNextPage` or invalidate the feed for the counter. Verify with `pnpm --filter web exec tsc -b`.
+
 - [ ] 1.8 Browser check, as U15 at phone and desktop width, in light and dark, against `mockup/A · In the Feed title row (chosen).png`, `mockup/Desktop · A.png` and `mockup/F · Track fills the title row.png`:
   - **Placement:** the count sits at the right of the "Feed" row, and the header height and note input are unchanged.
   - **Bar:** the bar runs from just after "Feed" to the count, and its filled part matches `n/15` (e.g. a third at `5/15`), on phone and desktop.
@@ -94,6 +102,7 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
   - any other known id returns the state unchanged.
 
   Update the doc comment to name Round. Verify with `pnpm --filter web exec tsc -b`.
+
 - [ ] 3.2 Browser check as U15, against `mockup/Counter states (A).png`, `mockup/F · Track fills the title row.png` and, in dark, `mockup/A · Dark, round 2.png`:
   - **End of round 1:** scrolling the last uncounted note shows `15/15` with a full bar and no pill, and it holds while those cards stay in view.
   - **Round 2:** the first repeated card that becomes half visible shows the `Round 2` pill, then the bar back at 1/15, then `1/15`.
