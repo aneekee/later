@@ -28,3 +28,8 @@ export const FEED_TIERS = Object.keys(FEED_TIER_STYLES) as NoteTier[];
 
 // tier changes are sent to BE in one request after this pause
 export const FEED_TIER_DEBOUNCE_MS = 600;
+
+export const FEED_SCROLL_OBSERVER_THRESHOLDS = Array.from(
+  { length: 51 },
+  (_, i) => i / 50,
+);

@@ -9,53 +9,24 @@ import {
 
 import type { NoteEntity } from '@later/types';
 
+import { FEED_SCROLL_OBSERVER_THRESHOLDS } from '../const/feed.constants';
 import type { FeedScrollState } from '../types/feed.types';
-import { countScrolledCard } from '../utils/feed.utils';
-
-// every 2%, so the callback fires as a card's visibility changes
-const THRESHOLDS = Array.from({ length: 51 }, (_, i) => i / 50);
+import { countScrolledCard, isHalfVisible } from '../utils/feed.utils';
 
 interface Params {
   scrollRef: RefObject<HTMLElement | null>;
   headerRef: RefObject<HTMLElement | null>;
-  // the loaded feed items, deduped
   items: NoteEntity[];
-  // the number of loaded feed pages
   pageCount: number;
-  // the latest page's total
-  total: number;
+  latestPageTotal: number;
 }
 
-const qualifies = (entry: IntersectionObserverEntry) => {
-  if (!entry.isIntersecting) {
-    return false;
-  }
-
-  // a card taller than the area counts once it covers half of it
-  const areaHeight = entry.rootBounds?.height ?? 0;
-  return (
-    entry.intersectionRatio >= 0.5 ||
-    (areaHeight > 0 && entry.intersectionRect.height >= areaHeight / 2)
-  );
-};
-
-/**
- * Counts Scrolled notes (CONTEXT.md): a card counts once it's at least half
- * visible in the scroll container below the sticky header.
- * One IntersectionObserver for all cards; cards register via observeCard.
- * The observer is rebuilt when the header height changes (the note input grows),
- * the set of qualifying ids survives rebuilds, so only a not qualifying →
- * qualifying change counts.
- * Scrolled is the number of counted notes still among the loaded items, so a
- * deleted note drops out. The total is the latest page's total plus the notes
- * created since that page loaded (noteCreated).
- */
 export const useFeedScrollCounter = ({
   scrollRef,
   headerRef,
   items,
   pageCount,
-  total: pageTotal,
+  latestPageTotal,
 }: Params) => {
   const [state, setState] = useState<FeedScrollState>(() => ({
     counted: new Set(),
@@ -64,16 +35,18 @@ export const useFeedScrollCounter = ({
   const [headerHeight, setHeaderHeight] = useState<number | null>(null);
   const [created, setCreated] = useState({ created: 0, pageCount });
 
-  // a new page's total already includes the notes created before it
-  const total =
-    pageTotal + (created.pageCount === pageCount ? created.created : 0);
+  const createdSinceLatestPage =
+    created.pageCount === pageCount ? created.created : 0;
+  const total = latestPageTotal + createdSinceLatestPage;
 
-  // prune the notes that left the loaded items (deleted), during render
   const itemIds = useMemo(() => new Set(items.map((item) => item.id)), [items]);
-  const [prunedFor, setPrunedFor] = useState(itemIds);
-  if (prunedFor !== itemIds) {
-    setPrunedFor(itemIds);
-    if ([...state.counted].some((noteId) => !itemIds.has(noteId))) {
+  const [prunedDeletedFor, setPrunedDeletedFor] = useState(itemIds);
+  if (prunedDeletedFor !== itemIds) {
+    setPrunedDeletedFor(itemIds);
+    const hasDeletedCounted = [...state.counted].some(
+      (noteId) => !itemIds.has(noteId),
+    );
+    if (hasDeletedCounted) {
       setState({
         ...state,
         counted: new Set(
@@ -123,7 +96,7 @@ export const useFeedScrollCounter = ({
             return;
           }
 
-          if (!qualifies(entry)) {
+          if (!isHalfVisible(entry)) {
             qualifyingRef.current.delete(noteId);
           } else if (!qualifyingRef.current.has(noteId)) {
             qualifyingRef.current.add(noteId);
@@ -144,7 +117,7 @@ export const useFeedScrollCounter = ({
       {
         root: scrollRef.current,
         rootMargin: `-${String(headerHeight)}px 0px 0px 0px`,
-        threshold: THRESHOLDS,
+        threshold: FEED_SCROLL_OBSERVER_THRESHOLDS,
       },
     );
 
@@ -159,7 +132,6 @@ export const useFeedScrollCounter = ({
     };
   }, [scrollRef, headerHeight]);
 
-  // stable ref callback for the cards, reads data-note-id
   const observeCard = useCallback((card: HTMLElement | null) => {
     if (!card) {
       return;

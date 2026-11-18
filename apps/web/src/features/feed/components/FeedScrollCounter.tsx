@@ -6,11 +6,6 @@ interface Props {
   round: number;
 }
 
-/**
- * Scrolled/total of the current visit to the feed, with a progress bar.
- * Plain text for screen readers (no live region); the bar is hidden from them.
- * Render only when total > 0.
- */
 export const FeedScrollCounter = ({ scrolled, total, round }: Props) => {
   return (
     <div className="ml-2 flex min-w-0 flex-1 items-center gap-2">

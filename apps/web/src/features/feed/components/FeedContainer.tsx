@@ -42,7 +42,7 @@ export const FeedContainer = () => {
       headerRef,
       items,
       pageCount,
-      total: data?.pages.at(-1)?.data?.total ?? 0,
+      latestPageTotal: data?.pages.at(-1)?.data?.total ?? 0,
     });
   // the loaded pages are never refetched, so an error with pages is a next page error
   const isFetchNextPageError = isError && hasPages;
@@ -97,13 +97,13 @@ export const FeedContainer = () => {
         >
           <div className="flex h-12 items-center justify-between gap-3 px-1 md:px-0">
             <h1 className="text-lg font-semibold">Feed</h1>
-            {hasPages && total > 0 && (
+            {hasPages && total > 0 ? (
               <FeedScrollCounter
                 scrolled={scrolled}
                 total={total}
                 round={round}
               />
-            )}
+            ) : null}
           </div>
           <FeedNoteInput onCreated={noteCreated} />
         </header>

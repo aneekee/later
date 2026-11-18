@@ -2,13 +2,18 @@ import type { GetFeedSuccessResponse, NoteEntity } from '@later/types';
 
 import type { FeedScrollState } from '../types/feed.types';
 
-/**
- * Counts a card that just became half visible as Scrolled (CONTEXT.md):
- * a note the user scrolled to in the current visit to the feed.
- * A note counts at most once per Round (CONTEXT.md): once every note has been
- * scrolled (counted covers the total), the next already counted note starts
- * the next round with only that note counted.
- */
+export const isHalfVisible = (entry: IntersectionObserverEntry) => {
+  if (!entry.isIntersecting) {
+    return false;
+  }
+
+  const areaHeight = entry.rootBounds?.height ?? 0;
+  const coversHalfOfArea =
+    areaHeight > 0 && entry.intersectionRect.height >= areaHeight / 2;
+
+  return entry.intersectionRatio >= 0.5 || coversHalfOfArea;
+};
+
 export const countScrolledCard = (
   state: FeedScrollState,
   noteId: string,
@@ -18,7 +23,8 @@ export const countScrolledCard = (
     return { ...state, counted: new Set(state.counted).add(noteId) };
   }
 
-  if (state.counted.size >= total) {
+  const isRoundComplete = state.counted.size >= total;
+  if (isRoundComplete) {
     return { counted: new Set([noteId]), round: state.round + 1 };
   }
 
