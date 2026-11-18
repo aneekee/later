@@ -5,19 +5,24 @@ import type { FeedScrollState } from '../types/feed.types';
 /**
  * Counts a card that just became half visible as Scrolled (CONTEXT.md):
  * a note the user scrolled to in the current visit to the feed.
- * A note counts at most once.
+ * A note counts at most once per Round (CONTEXT.md): once every note has been
+ * scrolled (counted covers the total), the next already counted note starts
+ * the next round with only that note counted.
  */
 export const countScrolledCard = (
   state: FeedScrollState,
   noteId: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- rounds will use it
-  _total: number,
+  total: number,
 ): FeedScrollState => {
-  if (state.counted.has(noteId)) {
-    return state;
+  if (!state.counted.has(noteId)) {
+    return { ...state, counted: new Set(state.counted).add(noteId) };
   }
 
-  return { ...state, counted: new Set(state.counted).add(noteId) };
+  if (state.counted.size >= total) {
+    return { counted: new Set([noteId]), round: state.round + 1 };
+  }
+
+  return state;
 };
 
 /**

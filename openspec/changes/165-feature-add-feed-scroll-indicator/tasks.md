@@ -103,20 +103,22 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
 
 ## 3. Rounds
 
-- [ ] 3.1 In `apps/web/src/features/feed/utils/feed.utils.ts`, extend `countScrolledCard` (design.md Decisions 7 and 15):
+- [x] 3.1 In `apps/web/src/features/feed/utils/feed.utils.ts`, extend `countScrolledCard` (design.md Decisions 7 and 15):
   - a known id when `counted.size >= total` returns `{ counted: new Set([noteId]), round: round + 1 }`;
   - any other known id returns the state unchanged.
 
   Update the doc comment to name Round. Verify with `pnpm --filter web exec tsc -b`.
 
-- [ ] 3.2 Browser check as U15, against `mockup/Counter states (A).png`, `mockup/F · Track fills the title row.png` and, in dark, `mockup/A · Dark, round 2.png`:
+- [x] 3.2 Browser check as U15, against `mockup/Counter states (A).png`, `mockup/F · Track fills the title row.png` and, in dark, `mockup/A · Dark, round 2.png`:
   - **End of round 1:** scrolling the last uncounted note shows `15/15` with a full bar and no pill, and it holds while those cards stay in view.
   - **Round 2:** the first repeated card that becomes half visible shows the `Round 2` pill, then the bar back at 1/15, then `1/15`.
   - **Round 3:** scrolling on through round 2 starts `Round 3` and `1/15` the same way.
   - **Reload:** after a reload, the pill is gone and the count starts again.
   - **Header resize:** at `15/15`, typing a multi-line note (the header grows) doesn't start a round.
-- [ ] 3.3 Browser check as U8: at the end of the feed the counter stays `8/8` with a full bar and no pill, and no round 2 starts.
-- [ ] 3.4 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+  - _Note (apply):_ observed `15/15` (full, no pill) → `Round 2` + `1/15` (6.7%) → … → `Round 2` `15/15` → `Round 3` + `1/15`. Pill colors are neutral-700 on #f5f5f5 and neutral-300 on #262626. Growing the header at `15/15` (102 → 252 px) doesn't start a round. **Open question for the owner:** a header tall enough to cover a counted card, shrinking back (text cleared without sending), re-reveals that card, and at `15/15` that starts `Round 2` with no scrolling. That follows the spec's rule ("a card that already counted becomes half visible"), so the code is unchanged. On the way to round 3 the feed stalled at the bottom (a page of only repeats doesn't grow the list, so the sentinel never leaves the view); that's the existing sentinel behavior, outside this change. Scrolling up and back down went on.
+- [x] 3.3 Browser check as U8: at the end of the feed the counter stays `8/8` with a full bar and no pill, and no round 2 starts.
+  - _Note (apply):_ observed `4/8` → … → `8/8` (full bar, no pill) at "That's all for now", with one feed request. **Open question for the owner:** scrolling back up after `8/8` starts `Round 2` (`1/8`, `2/8`, …), because a counted card becomes half visible again. design.md Decision 7 says a short feed "stays at N/N", assuming only re-served notes repeat. The spec rule allows the scroll-back flip, and the "Short feed" scenario only covers the end of the feed. Code unchanged.
+- [x] 3.4 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## Workflow follow-up
 
