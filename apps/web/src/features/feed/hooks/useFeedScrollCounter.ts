@@ -1,10 +1,13 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type RefObject,
 } from 'react';
+
+import type { NoteEntity } from '@later/types';
 
 import type { FeedScrollState } from '../types/feed.types';
 import { countScrolledCard } from '../utils/feed.utils';
@@ -15,6 +18,11 @@ const THRESHOLDS = Array.from({ length: 51 }, (_, i) => i / 50);
 interface Params {
   scrollRef: RefObject<HTMLElement | null>;
   headerRef: RefObject<HTMLElement | null>;
+  // the loaded feed items, deduped
+  items: NoteEntity[];
+  // the number of loaded feed pages
+  pageCount: number;
+  // the latest page's total
   total: number;
 }
 
@@ -38,17 +46,42 @@ const qualifies = (entry: IntersectionObserverEntry) => {
  * The observer is rebuilt when the header height changes (the note input grows),
  * the set of qualifying ids survives rebuilds, so only a not qualifying →
  * qualifying change counts.
+ * Scrolled is the number of counted notes still among the loaded items, so a
+ * deleted note drops out. The total is the latest page's total plus the notes
+ * created since that page loaded (noteCreated).
  */
 export const useFeedScrollCounter = ({
   scrollRef,
   headerRef,
-  total,
+  items,
+  pageCount,
+  total: pageTotal,
 }: Params) => {
   const [state, setState] = useState<FeedScrollState>(() => ({
     counted: new Set(),
     round: 1,
   }));
   const [headerHeight, setHeaderHeight] = useState<number | null>(null);
+  const [created, setCreated] = useState({ created: 0, pageCount });
+
+  // a new page's total already includes the notes created before it
+  const total =
+    pageTotal + (created.pageCount === pageCount ? created.created : 0);
+
+  // prune the notes that left the loaded items (deleted), during render
+  const itemIds = useMemo(() => new Set(items.map((item) => item.id)), [items]);
+  const [prunedFor, setPrunedFor] = useState(itemIds);
+  if (prunedFor !== itemIds) {
+    setPrunedFor(itemIds);
+    if ([...state.counted].some((noteId) => !itemIds.has(noteId))) {
+      setState({
+        ...state,
+        counted: new Set(
+          [...state.counted].filter((noteId) => itemIds.has(noteId)),
+        ),
+      });
+    }
+  }
 
   const totalRef = useRef(total);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -141,9 +174,22 @@ export const useFeedScrollCounter = ({
     };
   }, []);
 
+  const noteCreated = useCallback(() => {
+    setCreated((prev) => ({
+      created: (prev.pageCount === pageCount ? prev.created : 0) + 1,
+      pageCount,
+    }));
+  }, [pageCount]);
+
+  const scrolled = [...state.counted].filter((noteId) =>
+    itemIds.has(noteId),
+  ).length;
+
   return {
-    scrolled: Math.min(state.counted.size, total),
+    scrolled: Math.min(scrolled, total),
+    total,
     round: state.round,
     observeCard,
+    noteCreated,
   };
 };

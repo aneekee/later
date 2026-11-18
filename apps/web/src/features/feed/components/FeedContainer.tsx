@@ -33,14 +33,17 @@ export const FeedContainer = () => {
 
   const items = useMemo(() => dedupeKeepLast(data?.pages ?? []), [data]);
 
-  const hasPages = !!data?.pages.length;
-  const total = data?.pages.at(-1)?.data?.total ?? 0;
+  const pageCount = data?.pages.length ?? 0;
+  const hasPages = pageCount > 0;
 
-  const { scrolled, round, observeCard } = useFeedScrollCounter({
-    scrollRef,
-    headerRef,
-    total,
-  });
+  const { scrolled, total, round, observeCard, noteCreated } =
+    useFeedScrollCounter({
+      scrollRef,
+      headerRef,
+      items,
+      pageCount,
+      total: data?.pages.at(-1)?.data?.total ?? 0,
+    });
   // the loaded pages are never refetched, so an error with pages is a next page error
   const isFetchNextPageError = isError && hasPages;
 
@@ -102,7 +105,7 @@ export const FeedContainer = () => {
               />
             )}
           </div>
-          <FeedNoteInput />
+          <FeedNoteInput onCreated={noteCreated} />
         </header>
         <div className="flex flex-1 flex-col gap-3 px-3 pt-1 pb-3 md:px-4">
           {renderContent()}

@@ -9,11 +9,15 @@ import { useDisplayErrorToast } from '@/shared/hooks/useDisplayErrorToast';
 
 import { FEED_NOTE_MAX_LENGTH } from '../const/feed.constants';
 
+interface Props {
+  onCreated?: () => void;
+}
+
 /**
  * Creates a note; it's created as seen, so the feed returns it at the end of the rotation.
  * Pessimistic: the text is cleared only after the note is created
  */
-export const FeedNoteInput = () => {
+export const FeedNoteInput = ({ onCreated }: Props) => {
   const [content, setContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -26,6 +30,7 @@ export const FeedNoteInput = () => {
   const onNoteSubmit = async () => {
     try {
       await createNote({ body: { content } }).unwrap();
+      onCreated?.();
       setContent('');
       // the Send button takes the focus on click, keep typing the next note
       textareaRef.current?.focus();

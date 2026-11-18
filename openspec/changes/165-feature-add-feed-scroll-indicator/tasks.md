@@ -89,16 +89,17 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
 
 ## 2. The total follows created and deleted notes
 
-- [ ] 2.1 In `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts`, take the loaded `items` and derive `scrolled` as the number of `counted` ids still among the item ids, capped at `total`. Prune ids that left `items` from `counted` (design.md Decision 5). Add `noteCreated()`, which stores `{ created, pageCount }`. The extra total is `created` while `pageCount` equals `data.pages.length`, and 0 otherwise (Decision 16, derived during render with no reset effect). The hook now takes `pageCount` and the latest page's `total`, and returns the combined total. Verify with `pnpm --filter web exec tsc -b`.
-- [ ] 2.2 In `apps/web/src/features/feed/components/FeedNoteInput.tsx`, add an optional `onCreated?: () => void` and call it right after `createNote(...).unwrap()` succeeds. In `FeedContainer.tsx`, pass `items` and the page count to the hook, and pass `noteCreated` as `onCreated`. Don't touch `features/notes/api/notes.api.ts`: create still doesn't patch the feed cache. Verify with `pnpm --filter web exec tsc -b`.
-- [ ] 2.3 Browser check as U15:
+- [x] 2.1 In `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts`, take the loaded `items` and derive `scrolled` as the number of `counted` ids still among the item ids, capped at `total`. Prune ids that left `items` from `counted` (design.md Decision 5). Add `noteCreated()`, which stores `{ created, pageCount }`. The extra total is `created` while `pageCount` equals `data.pages.length`, and 0 otherwise (Decision 16, derived during render with no reset effect). The hook now takes `pageCount` and the latest page's `total`, and returns the combined total. Verify with `pnpm --filter web exec tsc -b`.
+- [x] 2.2 In `apps/web/src/features/feed/components/FeedNoteInput.tsx`, add an optional `onCreated?: () => void` and call it right after `createNote(...).unwrap()` succeeds. In `FeedContainer.tsx`, pass `items` and the page count to the hook, and pass `noteCreated` as `onCreated`. Don't touch `features/notes/api/notes.api.ts`: create still doesn't patch the feed cache. Verify with `pnpm --filter web exec tsc -b`.
+- [x] 2.3 Browser check as U15:
   - **Create:** from `n/15`, creating a note shows `n/16` at once.
   - **Next page after a create:** once the next page loads (its `total` is 16), the total stays 16.
   - **Delete a counted note:** deleting a counted note shows `(n-1)/15`.
   - **Delete an uncounted note:** deleting a card that only peeks in at the bottom (never half visible) shows `n/15`, with only the total dropping.
   - **Bar:** after each of these, the bar's fill matches the new count.
-- [ ] 2.4 Browser check as U8: scroll to the end ("That's all for now") at `8/8`, then create a note. The counter shows `8/9`, and the network panel shows no `GET /api/v1/feed` after the create.
-- [ ] 2.5 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+  - _Note (apply):_ observed `4/15` → create → `4/16`; page 2 loaded → `10/16`; delete a counted note → `9/15` (bar 60%); after a reload, delete the card at 39% → `4/15` → `4/14` (bar 28.6%). U15 was topped back up to 15 notes by curl afterwards.
+- [x] 2.4 Browser check as U8: scroll to the end ("That's all for now") at `8/8`, then create a note. The counter shows `8/9`, and the network panel shows no `GET /api/v1/feed` after the create.
+- [x] 2.5 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## 3. Rounds
 
