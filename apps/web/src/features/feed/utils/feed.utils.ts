@@ -2,16 +2,18 @@ import type { GetFeedSuccessResponse, NoteEntity } from '@later/types';
 
 import type { FeedScrollState } from '../types/feed.types';
 
-export const isHalfVisible = (entry: IntersectionObserverEntry) => {
-  if (!entry.isIntersecting) {
-    return false;
-  }
+export const isHalfVisible = (
+  card: DOMRectReadOnly,
+  areaTop: number,
+  areaBottom: number,
+) => {
+  const areaHeight = areaBottom - areaTop;
+  const visibleHeight =
+    Math.min(card.bottom, areaBottom) - Math.max(card.top, areaTop);
 
-  const areaHeight = entry.rootBounds?.height ?? 0;
-  const coversHalfOfArea =
-    areaHeight > 0 && entry.intersectionRect.height >= areaHeight / 2;
-
-  return entry.intersectionRatio >= 0.5 || coversHalfOfArea;
+  return (
+    visibleHeight > 0 && visibleHeight >= Math.min(card.height, areaHeight) / 2
+  );
 };
 
 export const countScrolledCard = (

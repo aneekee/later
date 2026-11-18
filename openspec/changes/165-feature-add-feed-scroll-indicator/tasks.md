@@ -126,9 +126,10 @@ Every group touches only `apps/web/src/features/feed`, except that group 1 adds 
 
 Findings 4, 5, 7 and 8 and the `0/N` flash are deferred and stay as they are. No code comments.
 
-- [ ] 4.1 In `apps/web/src/features/feed/components/FeedItem.tsx`, wrap `FeedItem` in `memo` (design.md Decision 18). Confirm that its props stay the same references across a count: `item` from `dedupeKeepLast`, and `ref`, which is the stable `observeCard`. Verify with `pnpm --filter web exec tsc -b`.
-- [ ] 4.2 In `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts`, derive `scrolled` as `Math.min(state.counted.size, total)` and drop the per-render filter. Keep the render-time prune of deleted notes (Decisions 5 and 15).
-- [ ] 4.3 In the same hook, replace the rebuilt observer (design.md Decision 14):
+- [x] 4.1 In `apps/web/src/features/feed/components/FeedItem.tsx`, wrap `FeedItem` in `memo` (design.md Decision 18). Confirm that its props stay the same references across a count: `item` from `dedupeKeepLast`, and `ref`, which is the stable `observeCard`. Verify with `pnpm --filter web exec tsc -b`.
+  - _Note (apply):_ `FeedItem` is `memo(FeedItemCard)`, and React 19's `memo` passes `ref` through as a prop. The cards still register and count (4.4).
+- [x] 4.2 In `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts`, derive `scrolled` as `Math.min(state.counted.size, total)` and drop the per-render filter. Keep the render-time prune of deleted notes (Decisions 5 and 15).
+- [x] 4.3 In the same hook, replace the rebuilt observer (design.md Decision 14):
   - remove the `headerHeight` state, the `ResizeObserver` and the rebuild;
   - create one `IntersectionObserver` in an effect with `root: scrollRef.current`, no `rootMargin` and `threshold: [0, 0.5]` (the constant in `const/feed.constants.ts` replaces the 51-step list). It keeps a map of the mounted cards that intersect the scroll container, and ignores entries for cards that aren't mounted;
   - check the cards in that map on each observer callback and on the scroll container's passive `scroll` event, skipping a card whose top relative to the container hasn't moved since its last check;
@@ -136,16 +137,25 @@ Findings 4, 5, 7 and 8 and the `0/N` flash are deferred and stay as they are. No
   - keep `observerRef`, the set of mounted cards and `qualifyingRef`, which are still needed (Decision 14).
 
   Verify with `pnpm --filter web exec tsc -b`.
+  - _Note (apply):_ the header's bottom edge is read with `getBoundingClientRect` at check time, not kept in a ref by a `ResizeObserver`: the check already reads rects, so the `ResizeObserver` went away too.
 
-- [ ] 4.4 Browser check:
+- [x] 4.4 Browser check:
   - **M1, tall card:** as `t165_u300`, the `Tall2` note (500 lines) counts at about 331 px visible at 375×812, and counts at all at 568×320 (about 85 px).
   - **Normal scroll:** as U15, the first page, card coming into view, less than half visible, card under the sticky header, and card coming out from under the header on a scroll back.
   - **Rounds:** `15/15`, then `Round 2` and `1/15`; a scroll back after `N/N` starts the next round.
   - **Create and delete:** `n/15` → `n/16`; deleting a counted note → `(n-1)/15`.
   - **Note input grows and shrinks:** at `15/15`, a draft that covers a counted card, cleared without scrolling, starts no round. A card that never counted, covered by a draft, then uncovered and scrolled to half visible, counts.
   - **Requests:** no `GET /api/v1/feed` after a create, a tier change or a delete.
-- [ ] 4.5 Render check: with a render counter on `FeedItem` (temporary, not committed) or the React Profiler, a count re-renders no `FeedItem`, where before it re-rendered all of them.
-- [ ] 4.6 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+  - _Note (apply):_ the pane was hidden (about 1 frame a second), so each step is one scroll and a 1 s wait. Observed:
+    - **M1, 375×812:** `Tall2` (10 079 px) at 205 → 315 → 319 → 323 → 327 px stays `3/301`, and at 331 px shows `4/301` (before: 425 px). **568×320:** 73 → 81 px `2/301`, then 85/85 px → `3/301`, with `Tall2` in the counted set (before: never).
+    - **Short card from the bottom:** 58, 62, 66 of 70 px no count, 70 px +1. **Out from under the header:** 40, 48, 56, 64 of 70 px no count, 72 px +1. The same below a header grown to 252 px.
+    - **Rounds:** `15/15` → a scroll back → `Round 2`; `Round 2 | 15/15` → `Round 3 | 1/15`.
+    - **Note input:** at `Round 2 | 15/15`, a 9-line draft (header 102 → 252 px, `scrollTop` 20 → 170) covered a counted card (123 → 0 px); clearing it (back to 123 px) left `Round 2 | 15/15`. A never-counted card at 40/70 px, covered and uncovered, didn't count, then counted at 72 px on the scroll.
+    - **Create / delete:** `Round 3 | 5/15` → create → `5/16`, one POST, no feed request. Deleting a counted card pruned it (`counted.size` equals the shown count); the card below slid up and counted (QA's O1), so it showed `5/15`, bar 33%. No feed request. The tier change wasn't rechecked (no code on its path changed).
+    - At the end of U15's feed the sentinel storm QA reported (X1) showed again (57 feed requests in all, cards stayed 15); it's outside this change.
+- [x] 4.5 Render check: with a render counter on `FeedItem` (temporary, not committed) or the React Profiler, a count re-renders no `FeedItem`, where before it re-rendered all of them.
+  - _Note (apply):_ with a temporary counter in `FeedItem` (dev, StrictMode renders twice), one scroll that counted `4/15` → `6/15` gave 20 `FeedItem` renders before (all 10 cards) and 0 after; a second scroll `6/15` → `8/15` also gave 0.
+- [x] 4.6 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## Workflow follow-up
 

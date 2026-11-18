@@ -1,4 +1,4 @@
-import { useState, type Ref } from 'react';
+import { memo, useState, type Ref } from 'react';
 import { Trash2Icon } from 'lucide-react';
 
 import type { NoteEntity } from '@later/types';
@@ -23,7 +23,7 @@ interface Props {
   ref?: Ref<HTMLDivElement>;
 }
 
-export const FeedItem = ({ item, ref }: Props) => {
+const FeedItemCard = ({ item, ref }: Props) => {
   const { tier, change, cancel } = useBatchedTier(item);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
@@ -65,3 +65,5 @@ export const FeedItem = ({ item, ref }: Props) => {
     </Card>
   );
 };
+
+export const FeedItem = memo(FeedItemCard);

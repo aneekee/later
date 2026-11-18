@@ -32,7 +32,6 @@ export const useFeedScrollCounter = ({
     counted: new Set(),
     round: 1,
   }));
-  const [headerHeight, setHeaderHeight] = useState<number | null>(null);
   const [created, setCreated] = useState({ created: 0, pageCount });
 
   const createdSinceLatestPage =
@@ -59,6 +58,7 @@ export const useFeedScrollCounter = ({
   const totalRef = useRef(total);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const cardsRef = useRef(new Set<HTMLElement>());
+  const cardsInViewRef = useRef(new Map<HTMLElement, number | null>());
   const qualifyingRef = useRef(new Set<string>());
 
   useEffect(() => {
@@ -66,71 +66,82 @@ export const useFeedScrollCounter = ({
   }, [total]);
 
   useEffect(() => {
-    const header = headerRef.current;
-    if (!header) {
+    const root = scrollRef.current;
+    if (!root) {
       return;
     }
 
-    const resizeObserver = new ResizeObserver(() => {
-      setHeaderHeight(header.offsetHeight);
-    });
+    const checkCardsInView = () => {
+      const rootRect = root.getBoundingClientRect();
+      const areaTop =
+        headerRef.current?.getBoundingClientRect().bottom ?? rootRect.top;
+      const newlyQualifying: string[] = [];
 
-    resizeObserver.observe(header);
-    return () => {
-      resizeObserver.disconnect();
+      cardsInViewRef.current.forEach((lastTop, card) => {
+        const noteId = card.dataset.noteId;
+        const rect = card.getBoundingClientRect();
+        const top = rect.top - rootRect.top;
+        if (!noteId || top === lastTop) {
+          return;
+        }
+
+        cardsInViewRef.current.set(card, top);
+        if (!isHalfVisible(rect, areaTop, rootRect.bottom)) {
+          qualifyingRef.current.delete(noteId);
+        } else if (!qualifyingRef.current.has(noteId)) {
+          qualifyingRef.current.add(noteId);
+          newlyQualifying.push(noteId);
+        }
+      });
+
+      if (newlyQualifying.length) {
+        setState((prev) =>
+          newlyQualifying.reduce(
+            (next, noteId) => countScrolledCard(next, noteId, totalRef.current),
+            prev,
+          ),
+        );
+      }
     };
-  }, [headerRef]);
-
-  useEffect(() => {
-    if (headerHeight === null) {
-      return;
-    }
 
     const observer = new IntersectionObserver(
       (entries) => {
-        const newlyQualifying: string[] = [];
-
         entries.forEach((entry) => {
-          const noteId = (entry.target as HTMLElement).dataset.noteId;
-          if (!noteId) {
+          const card = entry.target as HTMLElement;
+          const isMounted = cardsRef.current.has(card);
+
+          if (entry.isIntersecting && isMounted) {
+            if (!cardsInViewRef.current.has(card)) {
+              cardsInViewRef.current.set(card, null);
+            }
             return;
           }
 
-          if (!isHalfVisible(entry)) {
-            qualifyingRef.current.delete(noteId);
-          } else if (!qualifyingRef.current.has(noteId)) {
-            qualifyingRef.current.add(noteId);
-            newlyQualifying.push(noteId);
+          cardsInViewRef.current.delete(card);
+          if (card.dataset.noteId) {
+            qualifyingRef.current.delete(card.dataset.noteId);
           }
         });
 
-        if (newlyQualifying.length) {
-          setState((prev) =>
-            newlyQualifying.reduce(
-              (next, noteId) =>
-                countScrolledCard(next, noteId, totalRef.current),
-              prev,
-            ),
-          );
-        }
+        checkCardsInView();
       },
-      {
-        root: scrollRef.current,
-        rootMargin: `-${String(headerHeight)}px 0px 0px 0px`,
-        threshold: FEED_SCROLL_OBSERVER_THRESHOLDS,
-      },
+      { root, threshold: FEED_SCROLL_OBSERVER_THRESHOLDS },
     );
 
     observerRef.current = observer;
     cardsRef.current.forEach((card) => {
       observer.observe(card);
     });
+    root.addEventListener('scroll', checkCardsInView, { passive: true });
 
+    const cardsInView = cardsInViewRef.current;
     return () => {
+      root.removeEventListener('scroll', checkCardsInView);
       observer.disconnect();
       observerRef.current = null;
+      cardsInView.clear();
     };
-  }, [scrollRef, headerHeight]);
+  }, [scrollRef, headerRef]);
 
   const observeCard = useCallback((card: HTMLElement | null) => {
     if (!card) {
@@ -142,6 +153,7 @@ export const useFeedScrollCounter = ({
 
     return () => {
       cardsRef.current.delete(card);
+      cardsInViewRef.current.delete(card);
       observerRef.current?.unobserve(card);
     };
   }, []);
@@ -153,12 +165,8 @@ export const useFeedScrollCounter = ({
     }));
   }, [pageCount]);
 
-  const scrolled = [...state.counted].filter((noteId) =>
-    itemIds.has(noteId),
-  ).length;
-
   return {
-    scrolled: Math.min(scrolled, total),
+    scrolled: Math.min(state.counted.size, total),
     total,
     round: state.round,
     observeCard,
