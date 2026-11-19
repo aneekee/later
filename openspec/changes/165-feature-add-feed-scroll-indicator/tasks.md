@@ -4,7 +4,8 @@ The groups run in order, one commit each, and none can run in parallel:
 
 - group 2 changes how group 1's count is derived;
 - group 3 extends group 1's counting function;
-- group 4 reworks group 1's hook after the PR #177 review (design.md Decisions 7, 14, 15 and 18).
+- group 4 reworks group 1's hook after the PR #177 review (design.md Decisions 7, 14, 15 and 18);
+- group 5 replaces group 4's per-card observer with a check that finds the cards in view itself (design.md Decisions 14, 15 and 18).
 
 Every group touches only `apps/web/src/features/feed`, except that group 1 adds `apps/web/src/shared/components/ui/progress.tsx`. Group 2 also touches `FeedNoteInput`, which lives in `features/feed` too.
 
@@ -128,6 +129,7 @@ Findings 4, 5, 7 and 8 and the `0/N` flash are deferred and stay as they are. No
 
 - [x] 4.1 In `apps/web/src/features/feed/components/FeedItem.tsx`, wrap `FeedItem` in `memo` (design.md Decision 18). Confirm that its props stay the same references across a count: `item` from `dedupeKeepLast`, and `ref`, which is the stable `observeCard`. Verify with `pnpm --filter web exec tsc -b`.
   - _Note (apply):_ `FeedItem` is `memo(FeedItemCard)`, and React 19's `memo` passes `ref` through as a prop. The cards still register and count (4.4).
+  - _Note (owner review):_ group 5 (5.2) removes the `ref` prop; `memo` stays.
 - [x] 4.2 In `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts`, derive `scrolled` as `Math.min(state.counted.size, total)` and drop the per-render filter. Keep the render-time prune of deleted notes (Decisions 5 and 15).
 - [x] 4.3 In the same hook, replace the rebuilt observer (design.md Decision 14):
   - remove the `headerHeight` state, the `ResizeObserver` and the rebuild;
@@ -138,6 +140,7 @@ Findings 4, 5, 7 and 8 and the `0/N` flash are deferred and stay as they are. No
 
   Verify with `pnpm --filter web exec tsc -b`.
   - _Note (apply):_ the header's bottom edge is read with `getBoundingClientRect` at check time, not kept in a ref by a `ResizeObserver`: the check already reads rects, so the `ResizeObserver` went away too.
+  - _Note (owner review):_ group 5 (5.1) replaces the observer, the set of mounted cards and the threshold constant.
 
 - [x] 4.4 Browser check:
   - **M1, tall card:** as `t165_u300`, the `Tall2` note (500 lines) counts at about 331 px visible at 375×812, and counts at all at 568×320 (about 85 px).
@@ -156,6 +159,30 @@ Findings 4, 5, 7 and 8 and the `0/N` flash are deferred and stay as they are. No
 - [x] 4.5 Render check: with a render counter on `FeedItem` (temporary, not committed) or the React Profiler, a count re-renders no `FeedItem`, where before it re-rendered all of them.
   - _Note (apply):_ with a temporary counter in `FeedItem` (dev, StrictMode renders twice), one scroll that counted `4/15` → `6/15` gave 20 `FeedItem` renders before (all 10 cards) and 0 after; a second scroll `6/15` → `8/15` also gave 0.
 - [x] 4.6 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+
+## 5. Find the cards in view without a ref per card (owner review of PR #177)
+
+No `IntersectionObserver` for the cards and no `ref` on `FeedItem`. Rounds, `countScrolledCard`, the prune of deleted notes, `total`/`noteCreated` and when the counter shows stay as they are. No code comments.
+
+- [ ] 5.1 In `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts` (design.md Decision 14):
+  - take a `listRef` to the list wrapper, next to `scrollRef` and `headerRef`;
+  - remove `observeCard`, `observerRef`, the set of mounted cards and the map of cards in view, and `FEED_SCROLL_OBSERVER_THRESHOLDS` from `const/feed.constants.ts`;
+  - add a function to `utils/feed.utils.ts` that binary-searches the list's direct children by their rects for the first one whose bottom is below the container's top, then walks forward to the container's bottom and returns the `data-note-id` cards with their rects;
+  - run the check on the scroll container's passive `scroll` event, at most once per animation frame, and on one `ResizeObserver` of the list, the header and the scroll container;
+  - keep the last top per note id: skip a card whose top relative to the container hasn't moved, and drop the cards that are no longer in view from it and from `qualifyingRef`.
+
+  Verify with `pnpm --filter web exec tsc -b`.
+
+- [ ] 5.2 In `apps/web/src/features/feed/components/FeedItem.tsx`, remove the `ref` prop and keep `data-note-id` on the `Card` and `memo`. In `FeedContainer.tsx`, put `listRef` on the list wrapper, pass it to the hook and stop passing `ref` to `FeedItem`. Verify with `pnpm --filter web exec tsc -b`.
+- [ ] 5.3 Browser check:
+  - **Normal scroll:** as `t165_u25`, the first page counts the half-visible cards, and scrolling counts a card at half visible, also coming out from under the header.
+  - **Tall card:** as `t165_u300`, `Tall2` counts at about 331 px visible at 375×812, and counts at 568×320.
+  - **Delete:** deleting a counted note → `(n-1)/N-1`; deleting an uncounted one → `n/N-1`; a card the delete pulls up to half visible counts with no scroll.
+  - **Rounds:** reaching `N/N`, then the next repeated card shows `Round 2` and `1/N`.
+  - **Note input:** typing a multi-line draft and clearing it doesn't change the count.
+  - **Requests:** no `GET /api/v1/feed` beyond the sentinel's pages.
+- [ ] 5.4 Render check: with a temporary render counter in `FeedItem` (not committed), a count re-renders no `FeedItem`.
+- [ ] 5.5 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## Workflow follow-up
 

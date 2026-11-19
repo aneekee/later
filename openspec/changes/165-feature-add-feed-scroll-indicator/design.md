@@ -146,30 +146,22 @@ The text just changes. `tabular-nums` keeps the width steady while digits change
 - _Rejected: animating the digits._ It flickers on every card during a fast scroll.
 - _Rejected: removing `transition-all` from the generated `progress.tsx`._ The owner chose the component exactly as `shadcn add` writes it.
 
-### 14. One IntersectionObserver for the hook's lifetime, and a check of the cards in view as they move
+### 14. One check of the cards in view, found by their position in the list
 
-`useFeedScrollCounter` (in `features/feed/hooks`) holds the state. It splits the work in two (revised after the PR #177 review, findings 3 and 6, and QA's M1):
+`useFeedScrollCounter` (in `features/feed/hooks`) holds the state. It finds the cards in the DOM, so no card registers with it (revised after the owner's review of PR #177: no observer per card and no `ref` on each card). It takes three refs: `scrollRef`, `headerRef` and `listRef`, the wrapper whose direct children are the cards.
 
-- **Which cards are in view:** one `IntersectionObserver`, created once with `root: scrollRef`, no `rootMargin` and `threshold: [0, 0.5]`. It never changes, so it isn't rebuilt when the header resizes. It keeps the set of cards that intersect the scroll container, a handful at a time.
-- **Whether a card qualifies:** a check of only the cards in that set. It reads each card's rect, the scroll container's rect and the header's bottom edge, and works out the visible height below the header. A card qualifies when that height is at least half of the smaller of the card's height and the area's height (Decision 2: half the card, or half the area for a tall card). The geometry is a pure function in `feed.utils.ts`.
-- **When the check runs:** on each observer callback, and on the scroll container's passive `scroll` event, which fires at most once per frame.
-- **Header resizes change nothing by themselves (Decision 7).** The check skips a card whose top, relative to the scroll container, is the same as at its last check. Scroll anchoring keeps the cards still on screen when the header resizes (Context), so the `scroll` event it fires re-checks nothing. Scrolling or a layout change moves the cards, so they're checked against the header's height at that moment, and no card can get stuck: a card the header uncovered counts on the next scroll that moves it.
-- **The `0.5` threshold** is there for layout changes without a scroll. When a delete slides the next card up past half visible, the callback runs the check, and that card counts at once, as before.
+- **Which cards are in view:** the cards are the list's direct children with `data-note-id`, stacked top to bottom in DOM order. A binary search on the children's rects finds the first child whose bottom is below the scroll container's top. From there the check walks forward until a child starts below the container's bottom. That's about 9 rect reads for 300 cards, plus the handful in view. The list's other children (skeleton, spinner, errors, end and sentinel) sit in the same stack, and the `data-note-id` test skips them. The geometry is a pure function in `feed.utils.ts`.
+- **Whether a card qualifies:** the check reads the card's rect, the scroll container's rect and the header's bottom edge, and works out the visible height below the header. A card qualifies when that height is at least half of the smaller of the card's height and the area's height (Decision 2: half the card, or half the area for a tall card). This is `isHalfVisible` in `feed.utils.ts`.
+- **When the check runs:** on the scroll container's passive `scroll` event, at most once per animation frame, and on one `ResizeObserver` of the list, the header and the scroll container. The `ResizeObserver` covers the layout changes that come without a scroll: a page loading, a delete pulling the next card up, the note input growing or shrinking, and the window resizing. It also fires once when it starts, which runs the first check. When the cards are shorter than the scroll container, `flex-1` stretches the list, so a delete doesn't resize it; but then every card is already fully in view and has counted.
+- **Header resizes change nothing by themselves (Decision 7).** The check skips a card whose top, relative to the scroll container, is the same as at its last check. Scroll anchoring keeps the cards still on screen when the header resizes (Context), so the check that the resize and its `scroll` event run re-checks nothing. Scrolling or a layout change moves the cards, so they're checked against the header's height at that moment, and no card can get stuck: a card the header uncovered counts on the next scroll that moves it.
+- **Leaving:** a card that's no longer among the cards in view, because it scrolled out or was deleted, loses its last top and stops qualifying.
 
-A card counts only when it goes from not qualifying to qualifying. A card that leaves the scroll container stops qualifying.
+A card counts only when it goes from not qualifying to qualifying. `FeedItem` takes only `item`, and puts `data-note-id` on its `Card` root.
 
-The hook returns a stable ref callback. Each card registers through it: `FeedItem` takes a `ref` (a React 19 ref prop) and passes it to the `Card` root, along with `data-note-id`. The callback adds the element to the hook's set of mounted cards and observes it, and its cleanup removes and unobserves it. The set of mounted cards is still needed for two things:
-
-- the observer is created in an effect, which runs after the ref callbacks of the cards that mount in the same commit, so those cards are observed when it's created;
-- an observer entry delivered after its card unmounted is ignored, so a removed note can't be counted again.
-
-A card that dedupe moves keeps its DOM node, so it stays observed.
-
-- _Rejected: rebuilding the observer with `rootMargin: -<header height>px` on each header resize (the first build)._ Every typed line re-observed every card and re-rendered the feed. It also needed the qualifying set to survive rebuilds, and it started a round when clearing a draft uncovered a counted card.
-- _Rejected: the observer alone, with no `rootMargin`, and the header maths in its callback (review direction 3b as written)._ The callback fires only when a card's share of the whole scroll container crosses a threshold. A card sliding out from under the header stays fully inside the container, so it crosses none, and on a scroll back it would never count.
-- _Rejected: a dense threshold list (every 0.02)._ About 50 callbacks per card per pass, for every card. It still missed very tall cards: on a 10 000 px card, 2% is 200 px, so the check ran too rarely (QA's M1: it counted at 425 px instead of 331 px, and never on a 568×320 screen).
-- _Rejected: a second observer per tall card, at `(area / 2) / card height`._ That threshold depends on the header's height and on the card's height, so it would need rebuilding again.
-- _Rejected: a scroll listener over every card._ Its layout reads grow with the loaded cards, up to a few hundred. The observer keeps the check to the cards in view.
+- _Rejected: one `IntersectionObserver` over every card, registered through a stable ref callback passed to each `FeedItem` (group 4)._ Every card needed a `ref` prop, and the hook kept the observer, a set of mounted cards and a map of the cards in view in refs, plus a guard for entries delivered after a card unmounted, only to learn which cards are on screen. The layout already says that, and a `0.5` threshold was needed just to catch a delete pulling a card up.
+- _Rejected: measuring every card on each check._ Its layout reads grow with the loaded cards, up to a few hundred. The binary search keeps them to about `log2(cards)` plus the cards in view.
+- _Rejected: rebuilding an observer with `rootMargin: -<header height>px` on each header resize (the first build)._ Every typed line re-observed every card and re-rendered the feed. It also needed the qualifying set to survive rebuilds, and it started a round when clearing a draft uncovered a counted card.
+- _Rejected: an observer with a dense threshold list (every 0.02)._ About 50 callbacks per card per pass, for every card. It still missed very tall cards: on a 10 000 px card, 2% is 200 px, so the check ran too rarely (QA's M1: it counted at 425 px instead of 331 px, and never on a 568×320 screen).
 - _Rejected: one observer per card, in `FeedItem`._ It means as many observers as cards, and the round logic would still need a shared owner.
 
 ### 15. The counting rules are one pure function in `feed.utils.ts`
@@ -180,9 +172,9 @@ A card that dedupe moves keeps its DOM node, so it stays observed.
 - a known id when `counted.size >= total` starts the next round with only that id;
 - any other known id changes nothing.
 
-The hook calls it on each newly qualifying card. The scrolled count shown is `counted.size`, capped at the total. This is the same number the round check reads, so the count can't show less than `N/N` when a round flips. The prune (Decision 5) keeps `counted` to loaded notes, and the hook adds only ids of mounted cards (Decision 14).
+The hook calls it on each newly qualifying card. The scrolled count shown is `counted.size`, capped at the total. This is the same number the round check reads, so the count can't show less than `N/N` when a round flips. The prune (Decision 5) keeps `counted` to loaded notes, and the hook counts only ids of cards in the DOM (Decision 14).
 
-- _Rejected: putting the rules inline in the hook's observer callback._ They'd be mixed with the browser plumbing and harder to read and check.
+- _Rejected: putting the rules inline in the hook's check._ They'd be mixed with the browser plumbing and harder to read and check.
 - _Rejected: showing the counted ids still in `items`, filtered on each render (the first build)._ The shown count and the round check could disagree. For example, with one stale id the counter would show `299/300` while the round check saw 300 and flipped (PR #177 review, finding 2).
 
 ### 16. Creates reach the counter through a callback
@@ -204,7 +196,7 @@ The hook calls it on each newly qualifying card. The scrolled count shown is `co
 
 ### 18. A count re-renders the header only, not the cards
 
-The counter's state lives in the hook in `FeedContainer` (Decision 6), so each count re-renders `FeedContainer`. `FeedItem` is wrapped in `memo`. Its props don't change when the count does: `item` keeps its reference through the cache's structural sharing and `dedupeKeepLast`'s `filter`, and `ref` is the hook's stable `observeCard`. So a count skips every card. A tier change still re-renders its own card, because the cache patch gives that `item` a new reference.
+The counter's state lives in the hook in `FeedContainer` (Decision 6), so each count re-renders `FeedContainer`. `FeedItem` is wrapped in `memo`. Its only prop, `item`, doesn't change when the count does: it keeps its reference through the cache's structural sharing and `dedupeKeepLast`'s `filter`. No ref is passed to the cards (Decision 14). So a count skips every card. A tier change still re-renders its own card, because the cache patch gives that `item` a new reference.
 
 - _Rejected: moving the counter state into a store that only `FeedScrollCounter` subscribes to (`useSyncExternalStore`)._ `FeedContainer` wouldn't re-render at all, but it's more machinery than one `memo`, and the remaining re-render is the header and a list of skipped cards.
 
@@ -213,9 +205,9 @@ The counter's state lives in the hook in `FeedContainer` (Decision 6), so each c
 - [A create that finishes while the next page's request is in flight can be counted twice, or not at all, until the following page.] → Accepted: it's off by 1 for one page, and the next page's `total` corrects it.
 - [Notes deleted in another tab or device stay in the loaded items, so the counted set can be larger than a later page's `total`.] → The shown count is capped at the total, and a round ends at `counted.size >= total`.
 - [A very fast fling can skip a card that is never painted at least half visible in any frame.] → Accepted: the spec only asks to count cards that were half visible "for a moment".
-- [The check reads layout on each scroll frame.] → Only for the cards in view (a handful), the scroll container and the header, while the scroll has just left layout clean. The observer's two thresholds fire about twice per card per pass.
+- [The check reads layout on each scroll frame.] → At most once per frame, for about `log2(cards)` children in the binary search plus the cards in view, the scroll container and the header, while the scroll has just left layout clean.
 - [A card the grown header covers is still marked qualifying until something moves it.] → If the user scrolls while it's covered, it stops qualifying. Clearing the draft and scrolling again then counts it as coming back, and at `N/N` that starts a round. Accepted: the user scrolled it back into view.
-- [A tall card that crosses half the area through a layout change, without a scroll, waits for the next scroll or observer callback.] → Accepted: deletes and page loads rarely do that, and the next scroll frame counts it.
+- [A layout change that resizes none of the list, the header and the scroll container doesn't run the check.] → None is known: a card's own size change resizes the list. Accepted: the next scroll frame checks the cards.
 - [In light mode the bar's empty track (`bg-muted` on the white header) is barely visible, so early in a round the bar is a short dark dash on its own.] → Accepted: it's the plain component's look, and dark mode shows the whole track.
 - [At 1–2% the fill is a sliver (`1/300` is under 1 px), and 99% looks full.] → Accepted: the count next to it gives the exact value.
 
