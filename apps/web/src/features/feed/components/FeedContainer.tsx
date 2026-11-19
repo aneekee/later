@@ -19,7 +19,6 @@ import { FeedSkeleton } from './FeedSkeleton';
 export const FeedContainer = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
 
   const {
     data,
@@ -37,14 +36,14 @@ export const FeedContainer = () => {
   const pageCount = data?.pages.length ?? 0;
   const hasPages = pageCount > 0;
 
-  const { scrolled, total, round, noteCreated } = useFeedScrollCounter({
-    scrollRef,
-    headerRef,
-    listRef,
-    items,
-    pageCount,
-    latestPageTotal: data?.pages.at(-1)?.data?.total ?? 0,
-  });
+  const { scrolled, total, round, observeCard, noteCreated } =
+    useFeedScrollCounter({
+      scrollRef,
+      headerRef,
+      items,
+      pageCount,
+      latestPageTotal: data?.pages.at(-1)?.data?.total ?? 0,
+    });
   // the loaded pages are never refetched, so an error with pages is a next page error
   const isFetchNextPageError = isError && hasPages;
 
@@ -73,7 +72,7 @@ export const FeedContainer = () => {
     return (
       <>
         {items.map((item) => (
-          <FeedItem key={item.id} item={item} />
+          <FeedItem key={item.id} ref={observeCard} item={item} />
         ))}
         {isFetchingNextPage && (
           <div className="flex justify-center py-4">
@@ -108,10 +107,7 @@ export const FeedContainer = () => {
           </div>
           <FeedNoteInput onCreated={noteCreated} />
         </header>
-        <div
-          ref={listRef}
-          className="flex flex-1 flex-col gap-3 px-3 pt-1 pb-3 md:px-4"
-        >
+        <div className="flex flex-1 flex-col gap-3 px-3 pt-1 pb-3 md:px-4">
           {renderContent()}
         </div>
       </div>

@@ -16,38 +16,6 @@ export const isHalfVisible = (
   );
 };
 
-export const findCardsInView = (
-  list: HTMLElement,
-  areaTop: number,
-  areaBottom: number,
-) => {
-  const children = list.children;
-  let low = 0;
-  let high = children.length;
-  while (low < high) {
-    const middle = Math.floor((low + high) / 2);
-    if (children[middle].getBoundingClientRect().bottom <= areaTop) {
-      low = middle + 1;
-    } else {
-      high = middle;
-    }
-  }
-
-  const cards: { noteId: string; rect: DOMRect }[] = [];
-  for (let index = low; index < children.length; index++) {
-    const child = children[index];
-    const rect = child.getBoundingClientRect();
-    if (rect.top >= areaBottom) {
-      break;
-    }
-    if (child instanceof HTMLElement && child.dataset.noteId) {
-      cards.push({ noteId: child.dataset.noteId, rect });
-    }
-  }
-
-  return cards;
-};
-
 export const countScrolledCard = (
   state: FeedScrollState,
   noteId: string,
