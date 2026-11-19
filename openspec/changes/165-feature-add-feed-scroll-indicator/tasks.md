@@ -164,7 +164,7 @@ Findings 4, 5, 7 and 8 and the `0/N` flash are deferred and stay as they are. No
 
 No `IntersectionObserver` for the cards and no `ref` on `FeedItem`. Rounds, `countScrolledCard`, the prune of deleted notes, `total`/`noteCreated` and when the counter shows stay as they are. No code comments.
 
-- [ ] 5.1 In `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts` (design.md Decision 14):
+- [x] 5.1 In `apps/web/src/features/feed/hooks/useFeedScrollCounter.ts` (design.md Decision 14):
   - take a `listRef` to the list wrapper, next to `scrollRef` and `headerRef`;
   - remove `observeCard`, `observerRef`, the set of mounted cards and the map of cards in view, and `FEED_SCROLL_OBSERVER_THRESHOLDS` from `const/feed.constants.ts`;
   - add a function to `utils/feed.utils.ts` that binary-searches the list's direct children by their rects for the first one whose bottom is below the container's top, then walks forward to the container's bottom and returns the `data-note-id` cards with their rects;
@@ -173,16 +173,25 @@ No `IntersectionObserver` for the cards and no `ref` on `FeedItem`. Rounds, `cou
 
   Verify with `pnpm --filter web exec tsc -b`.
 
-- [ ] 5.2 In `apps/web/src/features/feed/components/FeedItem.tsx`, remove the `ref` prop and keep `data-note-id` on the `Card` and `memo`. In `FeedContainer.tsx`, put `listRef` on the list wrapper, pass it to the hook and stop passing `ref` to `FeedItem`. Verify with `pnpm --filter web exec tsc -b`.
-- [ ] 5.3 Browser check:
+- [x] 5.2 In `apps/web/src/features/feed/components/FeedItem.tsx`, remove the `ref` prop and keep `data-note-id` on the `Card` and `memo`. In `FeedContainer.tsx`, put `listRef` on the list wrapper, pass it to the hook and stop passing `ref` to `FeedItem`. Verify with `pnpm --filter web exec tsc -b`.
+- [x] 5.3 Browser check:
   - **Normal scroll:** as `t165_u25`, the first page counts the half-visible cards, and scrolling counts a card at half visible, also coming out from under the header.
   - **Tall card:** as `t165_u300`, `Tall2` counts at about 331 px visible at 375×812, and counts at 568×320.
   - **Delete:** deleting a counted note → `(n-1)/N-1`; deleting an uncounted one → `n/N-1`; a card the delete pulls up to half visible counts with no scroll.
   - **Rounds:** reaching `N/N`, then the next repeated card shows `Round 2` and `1/N`.
   - **Note input:** typing a multi-line draft and clearing it doesn't change the count.
   - **Requests:** no `GET /api/v1/feed` beyond the sentinel's pages.
-- [ ] 5.4 Render check: with a temporary render counter in `FeedItem` (not committed), a count re-renders no `FeedItem`.
-- [ ] 5.5 Gate: prisma generate, `pnpm build`, `pnpm lint`.
+  - _Note (apply):_ the pane ran at 60 fps once shown (hidden, it ran no animation frames and the page didn't render). Each step is one scroll and 2–3 frames. Observed:
+    - **Normal scroll, `t165_u25` at 375×812:** the first page showed `4/25` with 4 cards half visible; the 5th card at 64 and 68 of 139 px no count, 70 px → `5/25`. After a jump that left a card at 33 px under the header, scrolling back counted it at 73 px, not at 65 px.
+    - **Delete:** a card peeking at 40 px (never counted) → `10/25` → `10/24`. A counted card above a card at 40 px → `10/23`: the counted id was pruned, and the pulled-up card counted with no scroll (a 1 px scroll afterwards counted nothing more).
+    - **Note input:** a 9-line draft (area 662 → 512 px, `scrollTop` 892 → 1042) and clearing it left `10/23`. At `23/23`, a draft that covered a counted card, cleared without scrolling, left `23/23`.
+    - **Rounds:** `23/23` one card at a time, then a scroll back → `Round 2` `1/23`, bar at 3/23 after two more.
+    - **Tall card, `t165_u300`:** with 301 cards loaded, `Tall2` (10 079 px) at 375×812 counted between 328 and 332 px (`134/301` → `135/301`). At 568×320 (area 170 px), after `301/301` and `Round 2` `1/301`, it counted between 84 and 88 px.
+    - **Requests:** not rechecked; the hook makes no request and the create and delete paths didn't change.
+    - `t165_u25` was topped back up to 25 notes by curl afterwards.
+- [x] 5.4 Render check: with a temporary render counter in `FeedItem` (not committed), a count re-renders no `FeedItem`.
+  - _Note (apply):_ a scroll that counted `Round 2 5/23` → `7/23` gave 0 `FeedItem` renders (the first try counted 46 = 23 cards × 2, the Fast Refresh of the counter edit itself).
+- [x] 5.5 Gate: prisma generate, `pnpm build`, `pnpm lint`.
 
 ## Workflow follow-up
 
