@@ -1,5 +1,38 @@
 import type { GetFeedSuccessResponse, NoteEntity } from '@later/types';
 
+import type { FeedScrollState } from '../types/feed.types';
+
+export const isHalfVisible = (
+  card: DOMRectReadOnly,
+  areaTop: number,
+  areaBottom: number,
+) => {
+  const areaHeight = areaBottom - areaTop;
+  const visibleHeight =
+    Math.min(card.bottom, areaBottom) - Math.max(card.top, areaTop);
+
+  return (
+    visibleHeight > 0 && visibleHeight >= Math.min(card.height, areaHeight) / 2
+  );
+};
+
+export const countScrolledCard = (
+  state: FeedScrollState,
+  noteId: string,
+  total: number,
+): FeedScrollState => {
+  if (!state.counted.has(noteId)) {
+    return { ...state, counted: new Set(state.counted).add(noteId) };
+  }
+
+  const isRoundComplete = state.counted.size >= total;
+  if (isRoundComplete) {
+    return { counted: new Set([noteId]), round: state.round + 1 };
+  }
+
+  return state;
+};
+
 /**
  * Flattens the feed pages. A note returned again in a later page
  * is rendered only at its latest position.

@@ -4,6 +4,7 @@ import { Spinner } from '@/shared/components/ui/spinner';
 
 import { useFeedInfiniteQuery } from '../api/feed.api';
 import { FEED_PAGE_SIZE } from '../const/feed.constants';
+import { useFeedScrollCounter } from '../hooks/useFeedScrollCounter';
 import { dedupeKeepLast } from '../utils/feed.utils';
 import { FeedEmpty } from './FeedEmpty';
 import { FeedEnd } from './FeedEnd';
@@ -11,11 +12,13 @@ import { FeedError } from './FeedError';
 import { FeedItem } from './FeedItem';
 import { FeedLoadMoreError } from './FeedLoadMoreError';
 import { FeedNoteInput } from './FeedNoteInput';
+import { FeedScrollCounter } from './FeedScrollCounter';
 import { FeedSentinel } from './FeedSentinel';
 import { FeedSkeleton } from './FeedSkeleton';
 
 export const FeedContainer = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   const {
     data,
@@ -30,7 +33,17 @@ export const FeedContainer = () => {
 
   const items = useMemo(() => dedupeKeepLast(data?.pages ?? []), [data]);
 
-  const hasPages = !!data?.pages.length;
+  const pageCount = data?.pages.length ?? 0;
+  const hasPages = pageCount > 0;
+
+  const { scrolled, total, round, observeCard, noteCreated } =
+    useFeedScrollCounter({
+      scrollRef,
+      headerRef,
+      items,
+      pageCount,
+      latestPageTotal: data?.pages.at(-1)?.data?.total ?? 0,
+    });
   // the loaded pages are never refetched, so an error with pages is a next page error
   const isFetchNextPageError = isError && hasPages;
 
@@ -59,7 +72,7 @@ export const FeedContainer = () => {
     return (
       <>
         {items.map((item) => (
-          <FeedItem key={item.id} item={item} />
+          <FeedItem key={item.id} ref={observeCard} item={item} />
         ))}
         {isFetchingNextPage && (
           <div className="flex justify-center py-4">
@@ -78,11 +91,21 @@ export const FeedContainer = () => {
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto">
       <div className="mx-auto flex min-h-full w-full max-w-150 flex-col">
-        <header className="sticky top-0 z-10 flex shrink-0 flex-col bg-background/80 px-3 pb-3 backdrop-blur md:px-4">
-          <div className="flex h-12 items-center px-1 md:px-0">
+        <header
+          ref={headerRef}
+          className="sticky top-0 z-10 flex shrink-0 flex-col bg-background/80 px-3 pb-3 backdrop-blur md:px-4"
+        >
+          <div className="flex h-12 items-center justify-between gap-3 px-1 md:px-0">
             <h1 className="text-lg font-semibold">Feed</h1>
+            {hasPages && total > 0 ? (
+              <FeedScrollCounter
+                scrolled={scrolled}
+                total={total}
+                round={round}
+              />
+            ) : null}
           </div>
-          <FeedNoteInput />
+          <FeedNoteInput onCreated={noteCreated} />
         </header>
         <div className="flex flex-1 flex-col gap-3 px-3 pt-1 pb-3 md:px-4">
           {renderContent()}

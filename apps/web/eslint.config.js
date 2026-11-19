@@ -58,6 +58,13 @@ export default defineConfig([
     },
   },
   {
+    files: ['src/shared/components/ui/progress.tsx'],
+    rules: {
+      '@typescript-eslint/restrict-template-expressions': 'warn',
+      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+    },
+  },
+  {
     files: ['src/shared/hooks/use-mobile.ts'],
     rules: {
       '@typescript-eslint/restrict-template-expressions': 'warn',
