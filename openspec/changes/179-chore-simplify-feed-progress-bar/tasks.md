@@ -18,25 +18,25 @@ Group 1 is the owner's checkpoint (design.md Decision 2). Its commit counts by p
 
 ## 1. Revert per-card counting, count by page (checkpoint)
 
-- [ ] 1.1 Remove #165's per-card plumbing (design.md Decisions 4 and 9). Verify with `pnpm --filter web exec tsc -b`.
+- [x] 1.1 Remove #165's per-card plumbing (design.md Decisions 4 and 9). Verify with `pnpm --filter web exec tsc -b`.
   - `components/FeedItem.tsx`: drop the `ref` prop and `data-note-id`, keep `memo`.
   - `components/FeedContainer.tsx`: drop `observeCard` and `headerRef`.
   - `utils/feed.utils.ts`: drop `isHalfVisible` and `countScrolledCard`.
   - `types/feed.types.ts`: drop `FeedScrollState`.
   - `const/feed.constants.ts`: drop `FEED_SCROLL_OBSERVER_THRESHOLDS`.
-- [ ] 1.2 Add `toFeedRound(count, total)` to `utils/feed.utils.ts` (design.md Decision 7). It returns `{ round, scrolled }`, where:
+- [x] 1.2 Add `toFeedRound(count, total)` to `utils/feed.utils.ts` (design.md Decision 7). It returns `{ round, scrolled }`, where:
   - `round = max(1, ceil(count / total))` and `scrolled = count - (round - 1) x total`;
   - for `total` 0 it returns round 1 and `scrolled` 0.
 
   Add a doc comment naming **Round** from `CONTEXT.md`. Verify with `pnpm --filter web exec tsc -b`.
 
-- [ ] 1.3 Rewrite `hooks/useFeedScrollCounter.ts` for the page rule (design.md Decision 3). Verify with `pnpm --filter web exec tsc -b`.
+- [x] 1.3 Rewrite `hooks/useFeedScrollCounter.ts` for the page rule (design.md Decision 3). Verify with `pnpm --filter web exec tsc -b`.
   - **Inputs:** `served` (the sum of the loaded pages' `items.length`), the latest page's `items.length`, `hasNextPage`, `pageCount` and the latest page's `total`.
   - **Count:** `served - latestPageItems` while `hasNextPage`, `served` otherwise, then passed through `toFeedRound`.
   - **Keep:** the `noteCreated` / created-since-latest-page total logic unchanged.
   - **Returns:** `{ scrolled, total, round, noteCreated }`.
   - **In `FeedContainer.tsx`:** compute `served` from `data.pages`, and pass these in. `FeedScrollCounter` and its visibility condition stay as they are.
-- [ ] 1.4 Browser check of the checkpoint, at phone and desktop width:
+- [x] 1.4 Browser check of the checkpoint, at phone and desktop width:
   - **U15:**
     - `0/15` on the first page;
     - `10/15` once page 2 loads;
@@ -47,7 +47,7 @@ Group 1 is the owner's checkpoint (design.md Decision 2). Its commit counts by p
   - **U8:** `8/8` with a full bar, no pill and "That's all for now".
   - **U0:** only "Feed", above the empty state.
   - **Requests:** the network panel shows no `GET /api/v1/feed` beyond the sentinel's pages.
-- [ ] 1.5 Gate: prisma generate, `pnpm build`, `pnpm lint`. Commit, then hand over to the owner for the checkpoint.
+- [x] 1.5 Gate: prisma generate, `pnpm build`, `pnpm lint`. Commit, then hand over to the owner for the checkpoint.
 
 ## 2. Count by scroll position
 

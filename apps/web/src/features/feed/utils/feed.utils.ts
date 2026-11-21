@@ -1,36 +1,17 @@
 import type { GetFeedSuccessResponse, NoteEntity } from '@later/types';
 
-import type { FeedScrollState } from '../types/feed.types';
-
-export const isHalfVisible = (
-  card: DOMRectReadOnly,
-  areaTop: number,
-  areaBottom: number,
-) => {
-  const areaHeight = areaBottom - areaTop;
-  const visibleHeight =
-    Math.min(card.bottom, areaBottom) - Math.max(card.top, areaTop);
-
-  return (
-    visibleHeight > 0 && visibleHeight >= Math.min(card.height, areaHeight) / 2
-  );
-};
-
-export const countScrolledCard = (
-  state: FeedScrollState,
-  noteId: string,
-  total: number,
-): FeedScrollState => {
-  if (!state.counted.has(noteId)) {
-    return { ...state, counted: new Set(state.counted).add(noteId) };
+/**
+ * Splits the scrolled count of a feed visit into its Round and the notes
+ * scrolled in that round. A count of exactly total stays total/total
+ * in the current round, the next note starts the next round at 1.
+ */
+export const toFeedRound = (count: number, total: number) => {
+  if (total <= 0) {
+    return { round: 1, scrolled: 0 };
   }
 
-  const isRoundComplete = state.counted.size >= total;
-  if (isRoundComplete) {
-    return { counted: new Set([noteId]), round: state.round + 1 };
-  }
-
-  return state;
+  const round = Math.max(1, Math.ceil(count / total));
+  return { round, scrolled: count - (round - 1) * total };
 };
 
 /**

@@ -18,7 +18,6 @@ import { FeedSkeleton } from './FeedSkeleton';
 
 export const FeedContainer = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLElement>(null);
 
   const {
     data,
@@ -35,15 +34,25 @@ export const FeedContainer = () => {
 
   const pageCount = data?.pages.length ?? 0;
   const hasPages = pageCount > 0;
+  const latestPage = data?.pages.at(-1)?.data;
 
-  const { scrolled, total, round, observeCard, noteCreated } =
-    useFeedScrollCounter({
-      scrollRef,
-      headerRef,
-      items,
-      pageCount,
-      latestPageTotal: data?.pages.at(-1)?.data?.total ?? 0,
-    });
+  // not deduped: a note served again counts again
+  const served = useMemo(
+    () =>
+      (data?.pages ?? []).reduce(
+        (sum, page) => sum + (page.data?.items.length ?? 0),
+        0,
+      ),
+    [data],
+  );
+
+  const { scrolled, total, round, noteCreated } = useFeedScrollCounter({
+    served,
+    latestPageItems: latestPage?.items.length ?? 0,
+    hasNextPage,
+    pageCount,
+    latestPageTotal: latestPage?.total ?? 0,
+  });
   // the loaded pages are never refetched, so an error with pages is a next page error
   const isFetchNextPageError = isError && hasPages;
 
@@ -72,7 +81,7 @@ export const FeedContainer = () => {
     return (
       <>
         {items.map((item) => (
-          <FeedItem key={item.id} ref={observeCard} item={item} />
+          <FeedItem key={item.id} item={item} />
         ))}
         {isFetchingNextPage && (
           <div className="flex justify-center py-4">
@@ -91,10 +100,7 @@ export const FeedContainer = () => {
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto">
       <div className="mx-auto flex min-h-full w-full max-w-150 flex-col">
-        <header
-          ref={headerRef}
-          className="sticky top-0 z-10 flex shrink-0 flex-col bg-background/80 px-3 pb-3 backdrop-blur md:px-4"
-        >
+        <header className="sticky top-0 z-10 flex shrink-0 flex-col bg-background/80 px-3 pb-3 backdrop-blur md:px-4">
           <div className="flex h-12 items-center justify-between gap-3 px-1 md:px-0">
             <h1 className="text-lg font-semibold">Feed</h1>
             {hasPages && total > 0 ? (
