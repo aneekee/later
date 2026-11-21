@@ -24,11 +24,11 @@ _Avoid_: read, viewed, resolved
 The order in which the feed cycles through notes: never-seen notes first, then the ones unseen for the longest, adjusted by tier.
 
 **Scrolled**:
-A note the user has scrolled to in the current visit to the feed, as opposed to Seen, which is about the server serving it. It lasts only for that visit and isn't stored.
+An estimate of how many notes the user has scrolled past in the current visit to the feed, read from the scroll position over the loaded notes, as opposed to Seen, which is about the server serving them. It lasts only for that visit and isn't stored.
 _Avoid_: seen, viewed, read
 
 **Round**:
-One pass of a feed visit through all of the user's notes. A new round starts once every note has been scrolled and a note comes back.
+One pass of a feed visit through all of the user's notes. A new round starts each time the Scrolled count passes the number of the user's notes.
 _Avoid_: cycle, lap
 
 **Tier**:
