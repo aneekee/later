@@ -51,8 +51,8 @@ Group 1 is the owner's checkpoint (design.md Decision 2). Its commit counts by p
 
 ## 2. Count by scroll position
 
-- [ ] 2.1 In `components/FeedContainer.tsx`, wrap the mapped `FeedItem`s in one `div` with a `cardsRef`, styled `flex flex-col gap-3`, so the layout and the spacing to the spinner, error and `FeedEnd` are unchanged (design.md Decision 5). Verify with `pnpm --filter web exec tsc -b` and by eye in the browser: no layout shift.
-- [ ] 2.2 Rework `hooks/useFeedScrollCounter.ts` for the ratio (design.md Decisions 4, 6 and 8). Verify with `pnpm --filter web exec tsc -b`.
+- [x] 2.1 In `components/FeedContainer.tsx`, wrap the mapped `FeedItem`s in one `div` with a `cardsRef`, styled `flex flex-col gap-3`, so the layout and the spacing to the spinner, error and `FeedEnd` are unchanged (design.md Decision 5). Verify with `pnpm --filter web exec tsc -b` and by eye in the browser: no layout shift.
+- [x] 2.2 Rework `hooks/useFeedScrollCounter.ts` for the ratio (design.md Decisions 4, 6 and 8). Verify with `pnpm --filter web exec tsc -b`.
   - **State:** `seen`, a number.
   - **`measure()`:**
     - `ratio = clamp((scrollRef.bottom - cardsRef.top) / cardsRef.height, 0, 1)`, both from `getBoundingClientRect`;
@@ -67,8 +67,8 @@ Group 1 is the owner's checkpoint (design.md Decision 2). Its commit counts by p
     - drop the page-rule inputs that are no longer needed;
     - keep `noteCreated`;
     - clean up the listener, the observer and any pending frame on unmount.
-- [ ] 2.3 In `CONTEXT.md`, redefine **Scrolled** as the counter's estimate from the scroll position over the loaded cards, rather than distinct cards that were half visible. Keep its _Avoid_ line. Check that **Round** still reads true, and reword it if not. Verify by reading both entries against `specs/feed`.
-- [ ] 2.4 Browser check of the scroll-position rule as U15, at phone and desktop width:
+- [x] 2.3 In `CONTEXT.md`, redefine **Scrolled** as the counter's estimate from the scroll position over the loaded cards, rather than distinct cards that were half visible. Keep its _Avoid_ line. Check that **Round** still reads true, and reword it if not. Verify by reading both entries against `specs/feed`.
+- [x] 2.4 Browser check of the scroll-position rule as U15, at phone and desktop width:
   - **First page:** with the bottom of the scroll area a third of the way into the 4th card, the count is `3/15`.
   - **Scrolling down:** once half of the 4th card is above the bottom, it's `4/15`.
   - **Scrolling back up:** scrolling up two cards lowers it by 2.
@@ -77,7 +77,8 @@ Group 1 is the owner's checkpoint (design.md Decision 2). Its commit counts by p
   - **Under the sticky header:** cards hidden under the header count.
   - **Tall card:** create a 1000-character note as U15 and scroll until it comes around. The count moves by several while it passes the bottom of the scroll area. Delete the note afterwards so U15 has 15 one-line notes again.
   - **Requests:** the network panel shows no `GET /api/v1/feed` beyond the sentinel's pages while scrolling.
-- [ ] 2.5 Browser check of rounds, the total, resizing and restarting:
+  - _Note (apply):_ at 1280×640 as U15: `3/15` with the line at 27% of card 4, `3/15` at 45%, `4/15` at 55%; `7/15` → up two cards → `5/15`; `10/15` at the end of card 10. Phone (375 px) as U8: `4/8` → `5/8` at 55% of card 5 → `7/8` → `5/8` → `8/8`. The next page, loaded but not in view, and the tall card were checked on U30 (see 2.5's note): `10/30` at the end of card 10 and still `10/30` after page 2 loads below; a 1000-character card (339 px vs 139 px) moved the count by about 2 as it passed the line. Cards under the sticky header count throughout, since the line is the bottom of the scroll area. Requests: only the sentinel's pages, apart from the X1 storm noted under 2.5.
+- [x] 2.5 Browser check of rounds, the total, resizing and restarting:
   - **Rounds, U15:**
     - `15/15` with a full bar and no pill at the end of the 15th served card;
     - `Round 2`, `1/15` past the middle of the next card;
@@ -96,7 +97,8 @@ Group 1 is the owner's checkpoint (design.md Decision 2). Its commit counts by p
     - a reload at `Round 2` starts again in round 1 from the first page's position;
     - going to Dashboard and back does the same.
   - **Visibility:** while the first page loads, on a first-page error and as U0, the title row shows only "Feed". After a next-page error the counter keeps its value.
-- [ ] 2.6 Gate: prisma generate, `pnpm build`, `pnpm lint`. Commit.
+  - _Note (apply):_ checked on a 30-note user (U30) for rounds, the total, the next page and the tall card, because on U15 any page load at the bottom of the loaded cards sets off #165's X1 sentinel storm (tens of feed requests, the count racing through rounds). Group 1's wrapper-free layout storms the same way, so it's pre-existing and outside this change (FeedSentinel is out of scope). Observed on U30 at 1280×640: `30/30` with a full bar at the end of the 30th card; page 4 (notes 1–10 again) kept `30/30`; `Round 2`, `1/30` past the middle of the next card; back up one card `30/30`; `Round 3`, `1/30` after another 30. Create `5/31` → `5/32`, and the total stayed after the next page; delete above the line `5/32` → `4/31`, below `4/31` → `4/30`, bar matching. Resize mid-feed: a 7-line note grew the header by 120 px with scroll anchoring keeping the cards in place, `12/30` held, and one card of scroll gave `13/30`. U8: `8/8` at the end, no round 2, and a 10-line note at `8/8` kept `8/8`. Restart: Dashboard and back from `Round 2`, `8/30` gave `3/30` with no pill, and so did a reload. First-page error (API stopped after reaching the Dashboard) shows only "Feed"; a next-page error keeps `10/30`. U0 wasn't re-run: its visibility condition is unchanged since 1.4.
+- [x] 2.6 Gate: prisma generate, `pnpm build`, `pnpm lint`. Commit.
 
 ## Workflow follow-up
 

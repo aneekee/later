@@ -46,13 +46,14 @@ export const FeedContainer = () => {
     [data],
   );
 
-  const { scrolled, total, round, noteCreated } = useFeedScrollCounter({
-    served,
-    latestPageItems: latestPage?.items.length ?? 0,
-    hasNextPage,
-    pageCount,
-    latestPageTotal: latestPage?.total ?? 0,
-  });
+  const { scrolled, total, round, cardsRef, noteCreated } =
+    useFeedScrollCounter({
+      scrollRef,
+      served,
+      rendered: items.length,
+      pageCount,
+      latestPageTotal: latestPage?.total ?? 0,
+    });
   // the loaded pages are never refetched, so an error with pages is a next page error
   const isFetchNextPageError = isError && hasPages;
 
@@ -80,9 +81,11 @@ export const FeedContainer = () => {
 
     return (
       <>
-        {items.map((item) => (
-          <FeedItem key={item.id} item={item} />
-        ))}
+        <div ref={cardsRef} className="flex flex-col gap-3">
+          {items.map((item) => (
+            <FeedItem key={item.id} item={item} />
+          ))}
+        </div>
         {isFetchingNextPage && (
           <div className="flex justify-center py-4">
             <Spinner />
