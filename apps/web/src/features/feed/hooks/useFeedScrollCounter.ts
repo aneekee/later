@@ -8,7 +8,7 @@ import {
 
 import { toFeedRound } from '../utils/feed.utils';
 
-interface Params {
+interface Props {
   scrollRef: RefObject<HTMLElement | null>;
   served: number;
   rendered: number;
@@ -27,7 +27,7 @@ export const useFeedScrollCounter = ({
   rendered,
   pageCount,
   latestPageTotal,
-}: Params) => {
+}: Props) => {
   const [cards, setCards] = useState<HTMLElement | null>(null);
   const [seen, setSeen] = useState(0);
   const seenRef = useRef(seen);
@@ -70,9 +70,11 @@ export const useFeedScrollCounter = ({
       });
     };
 
-    // fires on an appended page, a deleted card or a card changing height
+    // fires on an appended page, a deleted card or a card changing height,
+    // and on the scroll area changing height (e.g. resizing the window)
     const observer = new ResizeObserver(measure);
     observer.observe(cards);
+    observer.observe(root);
     root.addEventListener('scroll', onScroll, { passive: true });
     measure();
 

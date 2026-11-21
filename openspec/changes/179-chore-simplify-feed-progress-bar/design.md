@@ -108,7 +108,7 @@ Exactly `total` shows `N/N` in round 1, and the next note shows `Round 2`, `1/N`
 
 ### 8. Store the seen cards, derive everything else in render
 
-- **The state:** the hook keeps one piece of state, `seen`, a number. It recomputes it on the scroll container's `scroll` event (passive, throttled to one `requestAnimationFrame`) and from a `ResizeObserver` on the wrapper. The observer fires when a page is appended, a card is deleted or a card changes height. `setState` only runs when the number changes.
+- **The state:** the hook keeps one piece of state, `seen`, a number. It recomputes it on the scroll container's `scroll` event (passive, throttled to one `requestAnimationFrame`) and from a `ResizeObserver` on the wrapper and on the scroll container. The observer fires when a page is appended, a card is deleted or a card changes height, and when the scroll area changes height (a window resize moves its bottom without a `scroll` event). `setState` only runs when the number changes.
 - **The render:** `served` and `rendered` come from the props on every render. So in the frame between appending a page and the next measurement, `served - rendered` and the stale `seen` still add up to the old count, and nothing flashes. A delete shows the old count for that frame, then the new one.
 - **Typing a long note:** the header's growth triggers neither event. With scroll anchoring the cards don't move on screen, and without it (browsers that lack anchoring) no event fires until the user scrolls. Either way the spec's resize requirement holds.
 - _Rejected: storing the ratio._ After a page append, the stale ratio times the new `rendered` would flash a count a page too high.
