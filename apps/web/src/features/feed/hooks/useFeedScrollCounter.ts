@@ -1,41 +1,19 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type RefObject,
-} from 'react';
-
-import { toFeedRound } from '../utils/feed.utils';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
 interface Props {
   scrollRef: RefObject<HTMLElement | null>;
-  served: number;
-  rendered: number;
-  pageCount: number;
-  latestPageTotal: number;
+  // the visit total: the first page's total, lowered by deletes
+  total: number;
 }
 
 /**
  * Estimates the Scrolled notes from the scroll position: the share of the
- * cards wrapper above the bottom of the scroll area, times the rendered cards,
- * plus the served notes no longer rendered (moved down by a later round).
+ * cards wrapper above the bottom of the scroll area, times the rendered cards.
  */
-export const useFeedScrollCounter = ({
-  scrollRef,
-  served,
-  rendered,
-  pageCount,
-  latestPageTotal,
-}: Props) => {
+export const useFeedScrollCounter = ({ scrollRef, total }: Props) => {
   const [cards, setCards] = useState<HTMLElement | null>(null);
   const [seen, setSeen] = useState(0);
   const seenRef = useRef(seen);
-  const [created, setCreated] = useState({ created: 0, pageCount });
-
-  const createdSinceLatestPage =
-    created.pageCount === pageCount ? created.created : 0;
-  const total = latestPageTotal + createdSinceLatestPage;
 
   // the wrapper mounts after the first page loads, so the effect is keyed on it
   useEffect(() => {
@@ -85,14 +63,5 @@ export const useFeedScrollCounter = ({
     };
   }, [scrollRef, cards]);
 
-  const { scrolled, round } = toFeedRound(served - rendered + seen, total);
-
-  const noteCreated = useCallback(() => {
-    setCreated((prev) => ({
-      created: (prev.pageCount === pageCount ? prev.created : 0) + 1,
-      pageCount,
-    }));
-  }, [pageCount]);
-
-  return { scrolled, total, round, cardsRef: setCards, noteCreated };
+  return { scrolled: seen, total, cardsRef: setCards };
 };

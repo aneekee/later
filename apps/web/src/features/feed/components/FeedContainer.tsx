@@ -32,28 +32,13 @@ export const FeedContainer = () => {
 
   const items = useMemo(() => dedupeKeepLast(data?.pages ?? []), [data]);
 
-  const pageCount = data?.pages.length ?? 0;
-  const hasPages = pageCount > 0;
-  const latestPage = data?.pages.at(-1)?.data;
+  const hasPages = (data?.pages.length ?? 0) > 0;
 
-  // not deduped: a note served again counts again
-  const served = useMemo(
-    () =>
-      (data?.pages ?? []).reduce(
-        (sum, page) => sum + (page.data?.items.length ?? 0),
-        0,
-      ),
-    [data],
-  );
-
-  const { scrolled, total, round, cardsRef, noteCreated } =
-    useFeedScrollCounter({
-      scrollRef,
-      served,
-      rendered: items.length,
-      pageCount,
-      latestPageTotal: latestPage?.total ?? 0,
-    });
+  // the visit total: creates don't change it, deletes patch it (removeFeedItem)
+  const { scrolled, total, cardsRef } = useFeedScrollCounter({
+    scrollRef,
+    total: data?.pages[0]?.data?.total ?? 0,
+  });
   // the loaded pages are never refetched, so an error with pages is a next page error
   const isFetchNextPageError = isError && hasPages;
 
@@ -107,14 +92,10 @@ export const FeedContainer = () => {
           <div className="flex h-12 items-center justify-between gap-3 px-1 md:px-0">
             <h1 className="text-lg font-semibold">Feed</h1>
             {hasPages && total > 0 ? (
-              <FeedScrollCounter
-                scrolled={scrolled}
-                total={total}
-                round={round}
-              />
+              <FeedScrollCounter scrolled={scrolled} total={total} />
             ) : null}
           </div>
-          <FeedNoteInput onCreated={noteCreated} />
+          <FeedNoteInput />
         </header>
         <div className="flex flex-1 flex-col gap-3 px-3 pt-1 pb-3 md:px-4">
           {renderContent()}

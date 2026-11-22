@@ -1,20 +1,6 @@
 import type { GetFeedSuccessResponse, NoteEntity } from '@later/types';
 
 /**
- * Splits the scrolled count of a feed visit into its Round and the notes
- * scrolled in that round. A count of exactly total stays total/total
- * in the current round, the next note starts the next round at 1.
- */
-export const toFeedRound = (count: number, total: number) => {
-  if (total <= 0) {
-    return { round: 1, scrolled: 0 };
-  }
-
-  const round = Math.max(1, Math.ceil(count / total));
-  return { round, scrolled: count - (round - 1) * total };
-};
-
-/**
  * Flattens the feed pages. A note returned again in a later page
  * is rendered only at its latest position.
  */
