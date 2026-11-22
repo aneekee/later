@@ -4,6 +4,7 @@ import type { GetFeedSuccessResponse } from '@later/types';
 
 import { baseQueryWithCookies } from '@/shared/api/api';
 
+import { FEED_PAGE_SIZE } from '../const/feed.constants';
 import type { GetFeedParams } from '../types/feed.types';
 
 /**
@@ -26,17 +27,38 @@ export const feedApiEndpoints = feedApi.injectEndpoints({
   endpoints: (builder) => ({
     feed: builder.infiniteQuery<GetFeedSuccessResponse, GetFeedParams, number>({
       infiniteQueryOptions: {
-        initialPageParam: 1,
-        // the page param is a counter only, BE always returns the next stalest notes
-        getNextPageParam: (lastPage, _allPages, lastPageParam) => {
-          const total = lastPage.data?.total ?? 0;
-          const pageSize = lastPage.data?.items.length ?? 0;
-          return total > pageSize ? lastPageParam + 1 : undefined;
+        initialPageParam: FEED_PAGE_SIZE,
+        /**
+         * A visit goes through the notes once, then ends. The page param is
+         * the requested page size: the notes left, at most queryArg.pageSize,
+         * BE always returns the next stalest notes. The visit total is the
+         * first page's total (deletes lower it, creates don't). The last
+         * page's total bounds it too, so the visit ends even if notes are
+         * deleted elsewhere.
+         */
+        getNextPageParam: (
+          lastPage,
+          allPages,
+          _lastPageParam,
+          _allPageParams,
+          queryArg,
+        ) => {
+          const visitTotal = allPages[0]?.data?.total ?? 0;
+          const fetched = allPages.reduce(
+            (sum, page) => sum + (page.data?.items.length ?? 0),
+            0,
+          );
+          const remaining =
+            Math.min(visitTotal, lastPage.data?.total ?? 0) - fetched;
+
+          return remaining > 0
+            ? Math.min(queryArg.pageSize, remaining)
+            : undefined;
         },
       },
-      query: ({ queryArg }) => {
+      query: ({ pageParam }) => {
         const queryParams = new URLSearchParams({
-          pageSize: queryArg.pageSize.toString(),
+          pageSize: pageParam.toString(),
         });
 
         return {
