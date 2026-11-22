@@ -36,6 +36,14 @@ Browser checks use the local stack (`docker compose up -d`, `pnpm dev`) and a lo
   - Follow-up (owner's call): the requirement is renamed to "A Feed visit ends once every note was fetched", and the progress bar requirement drops "(or the round pill)". Spec wording only, no code change.
 - [x] 3.3 Gate: `pnpm build`, `pnpm lint`.
 
+## 4. Review follow-up: a visit never serves a note twice (design D5a)
+
+- [x] 4.1 Add `since` to `GetFeedQueryParams` and `servedAt` / `left` to `FeedPage` (`packages/types`). Add the optional ISO 8601 `since` to `GetFeedDto`, and have `FeedService.getNextPage` filter on it, mark seen at `servedAt` and return `left`.
+- [x] 4.2 In `feed.api.ts`, make the page param `{ pageSize, since? }`, send `since` after the first page, and bound `remaining` by the last page's `left`.
+- [x] 4.3 Gate: `pnpm --filter api exec prisma generate`, `pnpm build`, `pnpm lint`, `pnpm --filter web exec tsc -b`, `pnpm --filter api test`.
+- [x] 4.4 Browser, mixed tiers (scenario: Mixed tiers): on a user with 10 S and 5 D notes, finish one visit, reload within a minute, wait 10 s and scroll to the bottom. Verify `pageSize=5&since=…` returns the D notes and the counter reaches `15/15`.
+  - Note: checked at 1280×640 on `qa180_mixed` (5 S, 5 A, 5 D), with one full visit by curl first and a 16 s wait after page 1. The requests were `pageSize=10`, then `pageSize=5&since=…`. The feed showed 15 distinct cards, `15/15` and "That's all for now", and scrolling at the end made no further request.
+
 ## Workflow follow-up
 
 - Run `/opsx:verify`, then `/opsx:archive` as the PR's last commit.

@@ -5,7 +5,7 @@ import type { GetFeedSuccessResponse } from '@later/types';
 import { baseQueryWithCookies } from '@/shared/api/api';
 
 import { FEED_PAGE_SIZE } from '../const/feed.constants';
-import type { GetFeedParams } from '../types/feed.types';
+import type { FeedPageParam, GetFeedParams } from '../types/feed.types';
 
 /**
  * The feed request is not idempotent: every fetched page is marked as seen on BE.
@@ -25,16 +25,22 @@ export const feedApi = createApi({
 
 export const feedApiEndpoints = feedApi.injectEndpoints({
   endpoints: (builder) => ({
-    feed: builder.infiniteQuery<GetFeedSuccessResponse, GetFeedParams, number>({
+    feed: builder.infiniteQuery<
+      GetFeedSuccessResponse,
+      GetFeedParams,
+      FeedPageParam
+    >({
       infiniteQueryOptions: {
-        initialPageParam: FEED_PAGE_SIZE,
+        initialPageParam: { pageSize: FEED_PAGE_SIZE },
         /**
-         * A visit goes through the notes once, then ends. The page param is
-         * the requested page size: the notes left, at most queryArg.pageSize,
-         * BE always returns the next stalest notes. The visit total is the
-         * first page's total (deletes lower it, creates don't). The last
-         * page's total bounds it too, so the visit ends even if notes are
-         * deleted elsewhere.
+         * A visit goes through the notes once, then ends. The page param asks
+         * for the notes left, at most queryArg.pageSize, and passes the first
+         * page's servedAt as `since`, so BE skips the notes already served in
+         * the visit (a just-served S note can outrank an older D note within
+         * seconds). The visit total is the first page's total (deletes lower
+         * it, creates don't). The last page's total bounds it too, and BE's
+         * `left` ends the visit once nothing is left to serve, e.g. when
+         * another tab served or deleted the rest.
          */
         getNextPageParam: (
           lastPage,
@@ -48,18 +54,27 @@ export const feedApiEndpoints = feedApi.injectEndpoints({
             (sum, page) => sum + (page.data?.items.length ?? 0),
             0,
           );
-          const remaining =
-            Math.min(visitTotal, lastPage.data?.total ?? 0) - fetched;
+          const remaining = Math.min(
+            visitTotal - fetched,
+            (lastPage.data?.total ?? 0) - fetched,
+            lastPage.data?.left ?? 0,
+          );
 
           return remaining > 0
-            ? Math.min(queryArg.pageSize, remaining)
+            ? {
+                pageSize: Math.min(queryArg.pageSize, remaining),
+                since: allPages[0]?.data?.servedAt,
+              }
             : undefined;
         },
       },
       query: ({ pageParam }) => {
         const queryParams = new URLSearchParams({
-          pageSize: pageParam.toString(),
+          pageSize: pageParam.pageSize.toString(),
         });
+        if (pageParam.since) {
+          queryParams.set('since', pageParam.since);
+        }
 
         return {
           url: `v1/feed?${queryParams}`,

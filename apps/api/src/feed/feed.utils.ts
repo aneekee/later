@@ -3,19 +3,35 @@ import { Prisma } from 'generated/prisma/client';
 import { FEED_TIER_FACTOR } from './feed.constants';
 
 /**
+ * The user's notes; with `since` (the visit's start), only those not seen since,
+ * i.e. not served yet in this visit.
  * Prisma equivalent of buildFeedWhereSql, keep them in sync
  */
-export function buildFeedWhere(userId: string): Prisma.NoteWhereInput {
-  return { userId };
+export function buildFeedWhere(
+  userId: string,
+  since?: Date,
+): Prisma.NoteWhereInput {
+  if (!since) {
+    return { userId };
+  }
+
+  return { userId, OR: [{ seenAt: null }, { seenAt: { lt: since } }] };
 }
 
 /**
  * Raw SQL equivalent of buildFeedWhere, keep them in sync.
  * Expects `notes n`
  */
-export function buildFeedWhereSql(userId: string): Prisma.Sql {
+export function buildFeedWhereSql(userId: string, since?: Date): Prisma.Sql {
+  if (!since) {
+    return Prisma.sql`
+      WHERE n.user_id = ${userId}
+    `;
+  }
+
   return Prisma.sql`
     WHERE n.user_id = ${userId}
+      AND (n.seen_at IS NULL OR n.seen_at < ${since})
   `;
 }
 

@@ -17,13 +17,14 @@ The owner wants a simple fix that makes the code smaller, not one that adds guar
 - **The visit total comes from the first page.** It is the first page's `data.total`, lowered by notes deleted during the visit. Notes created during the visit don't change it, and they aren't fetched until the next visit.
 - **The counter follows the visit total.** It no longer adds created notes: at `8/8`, creating a note keeps `8/8`. It counts only the cards shown above the bottom of the scroll area.
 - **Rounds are removed.** There is no `Round <n>` pill, and the count never goes past the total. **BREAKING** for the feed spec: the endless queue and the round requirement go.
+- **A visit never serves a note twice (added after review of PR 182).** The API's tier factor can rank a just-served S note above an older D note within seconds, so page 2 could repeat page 1 and end the visit early. Each feed page now returns `servedAt` and `left`. Later pages send `since` (the first page's `servedAt`), so the API skips notes already served in the visit, and the web app ends the visit once `left` is 0.
 - **The dedupe stays as a safety net.** A note served twice in one visit, which can happen when another tab or device moves the rotation, is still rendered once, at its latest position.
 - **`CONTEXT.md`:** **Feed** is no longer an endless queue within a visit, and **Round** is retired.
 
 **Out of scope**
 
 - The spinner moving the sentinel out of view and back in. After this change it only happens while a page adds new cards, so it can't loop, and the markup stays as it is.
-- Any API change: the rotation order, the tie-break by tier and creation time, `pageSize` limits (1 to 50) and `data.total` stay as they are.
+- Other API changes: the rotation order, the tie-break by tier and creation time, `pageSize` limits (1 to 50) and `data.total` stay as they are. The only API change is the optional `since` param and the `servedAt` and `left` fields.
 - Fetching notes created during the visit (the ask allows ignoring them).
 - Notes created, deleted or served by another tab or device during a visit. The dedupe keeps the list valid, and the counter may be off until the next visit.
 - The counter's place, look and progress bar, other than the removed round pill.

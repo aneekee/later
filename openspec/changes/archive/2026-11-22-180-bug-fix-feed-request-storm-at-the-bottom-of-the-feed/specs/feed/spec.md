@@ -36,7 +36,7 @@ The web app SHALL stop requesting feed pages once the current visit to the Feed 
 
 ### Requirement: The last page asks only for the notes left
 
-Each feed page request from the web app SHALL send `pageSize` equal to the smaller of 10 and the visit total minus the number of notes the visit has fetched so far. Notes deleted during the visit SHALL count neither in the visit total nor in the fetched notes.
+Each feed page request from the web app SHALL send `pageSize` equal to the smallest of 10, the visit total minus the number of notes the visit has fetched so far, and the previous page's `data.left`. Notes deleted during the visit SHALL count neither in the visit total nor in the fetched notes.
 
 #### Scenario: Request sizes for 15 notes
 
@@ -59,6 +59,38 @@ Each feed page request from the web app SHALL send `pageSize` equal to the small
 - **WHEN** a user with 15 notes has just been served 10 of them and calls `GET /api/v1/feed?pageSize=5`
 - **THEN** `data.items` holds the 5 notes that were not just served
 - **AND** `data.total` is 15
+
+### Requirement: Each feed page carries the visit's start and the notes left
+
+Every `GET /api/v1/feed` response SHALL include `data.servedAt`, the time (ISO 8601) at which the page's notes were marked seen, and `data.left`, the number of the user's notes not served in the visit yet, after this page. A request with `since` SHALL skip the notes last seen at or after `since`, and `data.left` SHALL count the notes never seen or last seen before it. Without `since`, the page's own `servedAt` is the visit's start.
+
+#### Scenario: The API skips notes served in the visit
+
+- **WHEN** a user with 15 notes was served 10 of them at time T and calls `GET /api/v1/feed?pageSize=10&since=T`
+- **THEN** `data.items` holds the 5 other notes
+- **AND** `data.left` is 0 and `data.total` is 15
+
+#### Scenario: First page
+
+- **WHEN** a user with 15 notes calls `GET /api/v1/feed?pageSize=10` with no `since`
+- **THEN** `data.items` holds 10 notes, `data.left` is 5, and `data.servedAt` is the time they were marked seen
+
+### Requirement: A Feed visit never serves a note twice
+
+After the first page, each feed page request from the web app SHALL send `since` set to the first page's `servedAt`, and the web app SHALL request no more pages once a page has `data.left` 0.
+
+#### Scenario: Mixed tiers
+
+- **WHEN** a user has 10 S notes and 5 D notes, all last seen a minute ago, opens the Feed page, and scrolls to the very bottom 10 seconds later
+- **THEN** the first page serves the 10 S notes and the second request is `GET /api/v1/feed?pageSize=5&since=<the first page's servedAt>`
+- **AND** the second page holds the 5 D notes, though the S notes now count as more stale
+- **AND** the feed shows 15 cards, each note once, the counter reaches `15/15`, and "That's all for now" shows
+
+#### Scenario: Another tab served the rest
+
+- **WHEN** a visit has fetched 10 of 15 notes and another tab or device serves the other 5 before this visit asks for them
+- **THEN** the next page comes back empty with `data.left` 0
+- **AND** the web app shows "That's all for now" and requests no more pages
 
 ### Requirement: The counter's total is the visit total
 

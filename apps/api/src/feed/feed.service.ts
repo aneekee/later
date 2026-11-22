@@ -17,15 +17,21 @@ export class FeedService {
 
   /**
    * Returns the next feed page and marks it as seen,
-   * so the next call returns the following notes
+   * so the next call returns the following notes.
+   * With `since` (the visit's start, the first page's servedAt), notes already
+   * served in the visit are skipped: the tier factor can rank a just-served
+   * high-tier note above an older low-tier one within seconds.
    */
   async getNextPage(dto: GetFeedServiceDto) {
+    const servedAt = new Date();
+    const visitStart = dto.since ?? servedAt;
+
     return this.prismaService.$transaction(async (tx) => {
       // the order is an expression, Prisma orderBy can't express it
       const rows = await tx.$queryRaw<{ id: string }[]>(
         Prisma.sql`
           SELECT n.id FROM notes n
-          ${buildFeedWhereSql(dto.userId)}
+          ${buildFeedWhereSql(dto.userId, dto.since)}
           ${buildFeedOrderSql()}
           LIMIT ${dto.pageSize}
         `,
@@ -41,16 +47,22 @@ export class FeedService {
 
       await tx.note.updateMany({
         where: { id: { in: ids } },
-        data: { seenAt: new Date() },
+        data: { seenAt: servedAt },
       });
 
       const total = await tx.note.count({
         where: buildFeedWhere(dto.userId),
       });
+      // after the update, so this page's notes don't count
+      const left = await tx.note.count({
+        where: buildFeedWhere(dto.userId, visitStart),
+      });
 
       return {
         items: orderedNotes.map(mapToNoteEntity),
         total,
+        servedAt: servedAt.toISOString(),
+        left,
       };
     });
   }

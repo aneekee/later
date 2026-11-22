@@ -23,6 +23,7 @@ export class FeedController {
     const page = await this.feedService.getNextPage({
       userId,
       pageSize: dto.pageSize,
+      since: dto.since ? new Date(dto.since) : undefined,
     });
 
     return {

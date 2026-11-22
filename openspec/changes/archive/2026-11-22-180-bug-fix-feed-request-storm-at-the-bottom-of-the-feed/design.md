@@ -71,6 +71,19 @@ When another tab or device serves or deletes notes during the visit, the API can
 
 - *Rejected:* delete it. That saves a few lines, but a multi-tab visit could then render a note twice and warn about duplicate keys.
 
+### D5a. Skip notes already served in the visit (added after review of PR 182)
+
+The rotation multiplies staleness by the tier factor, so 10 seconds after page 1 serves S notes, they count as 160 s stale, while D notes seen a minute earlier count as 70 s. Page 2 then repeats S notes, the stop rule counts them as fetched, and the visit ends with D notes never shown. QA reproduced this with 5 S, 5 A and 5 D notes.
+
+- Each page's response gets `servedAt` (the time its notes were marked seen) and `left` (the user's notes not served in the visit yet, counted after the page is marked seen).
+- Later pages send `since` = the first page's `servedAt`. The API adds `seen_at IS NULL OR seen_at < since` to the feed filter (`buildFeedWhere` / `buildFeedWhereSql`). `total` keeps counting every note.
+- `getNextPageParam` also takes the minimum with the last page's `left`, so an empty page (another tab served the rest) ends the visit instead of looping. `left` comes from the API, so `removeFeedItem` patches don't affect it.
+- The page param becomes `{ pageSize, since? }`. The query arg and cache key stay `{ pageSize: FEED_PAGE_SIZE }`.
+
+- *Rejected:* count unique ids only. Repeats would then keep `remaining` above 0, and the visit could loop on pages of repeats.
+- *Rejected:* send the served ids. The URL grows with the visit.
+- *Rejected:* a cooldown in the ranking for just-served notes. It adds an arbitrary window and changes the rotation outside the visit.
+
 ### D6. Docs
 
 `CONTEXT.md` is updated with the `domain-modeling` skill:
@@ -87,4 +100,4 @@ When another tab or device serves or deletes notes during the visit, the API can
 
 ## Migration Plan
 
-Web only. Ship with the normal Vercel deploy, and roll back by reverting the PR. There is no API, data or migration step.
+Ship the web with the normal Vercel deploy, and roll back by reverting the PR. The API gets an optional `since` param and two response fields, with no data or migration step. Deploy the API first: an older API rejects `since` (`forbidNonWhitelisted`).
