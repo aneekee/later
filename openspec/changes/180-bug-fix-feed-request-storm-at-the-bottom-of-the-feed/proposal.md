@@ -12,8 +12,8 @@ The owner wants a simple fix that makes the code smaller, not one that adds guar
 
 ## What Changes
 
-- **A Feed visit ends after one round.** Once the visit has fetched as many notes as the visit total, the web app requests no more pages and shows "That's all for now". A reload, or leaving the Feed page and coming back, starts a new visit, which continues the rotation on the API. Without a next page, the sentinel has nothing to fetch, so the storm can't start.
-- **The last page asks only for the notes left.** Each request's `pageSize` is the smaller of 10 and the visit total minus the notes fetched so far. So 15 notes load as 10 + 5, and the round shows each note once.
+- **A Feed visit ends once every note was fetched.** Once the visit has fetched as many notes as the visit total, the web app requests no more pages and shows "That's all for now". A reload, or leaving the Feed page and coming back, starts a new visit, which continues the rotation on the API. Without a next page, the sentinel has nothing to fetch, so the storm can't start.
+- **The last page asks only for the notes left.** Each request's `pageSize` is the smaller of 10 and the visit total minus the notes fetched so far. So 15 notes load as 10 + 5, and the visit shows each note once.
 - **The visit total comes from the first page.** It is the first page's `data.total`, lowered by notes deleted during the visit. Notes created during the visit don't change it, and they aren't fetched until the next visit.
 - **The counter follows the visit total.** It no longer adds created notes: at `8/8`, creating a note keeps `8/8`. It counts only the cards shown above the bottom of the scroll area.
 - **Rounds are removed.** There is no `Round <n>` pill, and the count never goes past the total. **BREAKING** for the feed spec: the endless queue and the round requirement go.
@@ -38,9 +38,9 @@ The owner wants a simple fix that makes the code smaller, not one that adds guar
 ### Modified Capabilities
 
 - `feed`:
-  - A new requirement says a Feed visit ends after one round, and that its last page asks only for the notes left.
+  - A new requirement says a Feed visit ends once every note was fetched, and that its last page asks only for the notes left.
   - The counter's total follows deleted notes only, and the scrolled count no longer adds notes from earlier rounds.
-  - The round requirement is removed, and the restart and never-requests requirements lose their round and created-note wording.
+  - The round requirement is removed, and the progress bar, restart and never-requests requirements lose their round and created-note wording.
 
 ## Impact
 

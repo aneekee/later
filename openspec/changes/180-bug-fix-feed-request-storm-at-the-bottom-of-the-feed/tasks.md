@@ -4,7 +4,7 @@ Groups 1, 2 and 3 touch different files and can run in parallel, each in its own
 
 Browser checks use the local stack (`docker compose up -d`, `pnpm dev`) and a local user with the stated number of notes, all in one tier, e.g. `t179_u15` for 15. Create notes for other counts as needed. Watch `GET /api/v1/feed` in the network tab.
 
-## 1. The feed visit ends after one round
+## 1. The feed visit ends once every note was fetched
 
 - [x] 1.1 In `apps/web/src/features/feed/api/feed.api.ts`, make the page param the requested page size (design D2): set `initialPageParam: FEED_PAGE_SIZE`, have `query` send `pageSize: pageParam`, and have `getNextPageParam` return `min(queryArg.pageSize, min(allPages[0] total, lastPage total) - fetched)` while that is above 0, else `undefined`. Rewrite the "page param is a counter" comment to describe the one-round visit. Verify `pnpm check-types` passes.
   - Note: `pnpm check-types` runs no task (no package defines `check-types`), so the type checks in this change use `pnpm --filter web exec tsc -b` instead.
@@ -33,6 +33,7 @@ Browser checks use the local stack (`docker compose up -d`, `pnpm dev`) and a lo
   - Note: **Scrolled** already didn't mention rounds, so it is unchanged.
 - [x] 3.2 In `openspec/specs/feed/spec.md`, edit the Purpose line only, so it no longer says "endless queue" (for example: "Serves a user's own notes stalest first, adjusted by each note's tier, one round per visit, and lets the user re-tier a note straight from its feed card"). Verify `openspec validate 180-bug-fix-feed-request-storm-at-the-bottom-of-the-feed --strict` passes.
   - Note: the example wording used "one round per visit", but 3.1 retires Round, so the Purpose says "going through them once per visit". The delta requirement title "A Feed visit ends after one round" still uses the word. It was left as is, because renaming it changes the spec. That's the owner's call before archive.
+  - Follow-up (owner's call): the requirement is renamed to "A Feed visit ends once every note was fetched", and the progress bar requirement drops "(or the round pill)". Spec wording only, no code change.
 - [x] 3.3 Gate: `pnpm build`, `pnpm lint`.
 
 ## Workflow follow-up

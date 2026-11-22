@@ -2,7 +2,7 @@
 
 ## ADDED Requirements
 
-### Requirement: A Feed visit ends after one round
+### Requirement: A Feed visit ends once every note was fetched
 
 The web app SHALL stop requesting feed pages once the current visit to the Feed page has fetched as many notes as the visit total. It SHALL then show "That's all for now" below the last card and SHALL NOT request the feed again during that visit, however the user scrolls and whatever notes they create.
 
@@ -88,9 +88,28 @@ The counter's total SHALL be the visit total: the `total` of the visit's first f
 
 - **WHEN** the bottom of the scroll area reaches the end of the last card of a visit, out of 300 notes
 - **THEN** the counter shows `300/300` and the bar is full
-- **AND** no round pill shows
+- **AND** nothing shows between "Feed" and the bar
 
 ## MODIFIED Requirements
+
+### Requirement: The scroll counter has a progress bar
+
+A progress bar SHALL fill the "Feed" title row's space between the title and the count, and its filled part SHALL be scrolled ÷ total of its length. The bar SHALL be hidden from screen readers.
+
+#### Scenario: Bar on phone
+
+- **WHEN** the feed is open on a 375 px wide screen, with 12 notes scrolled out of 300
+- **THEN** a progress bar runs from just after "Feed" to the count, with its first 4% filled
+
+#### Scenario: Bar on desktop
+
+- **WHEN** the feed is open on a 1280 px wide screen, with 12 notes scrolled out of 300
+- **THEN** a progress bar runs from just after "Feed" to the count in the feed column's title row, with its first 4% filled
+
+#### Scenario: Bar and screen readers
+
+- **WHEN** a screen reader reaches the counter showing `12/300`
+- **THEN** it reads nothing for the bar
 
 ### Requirement: The scrolled count follows the scroll position
 
@@ -179,9 +198,9 @@ Counting scrolled notes, creating a note and deleting a note SHALL NOT request, 
 
 ### Requirement: The counter starts a new round after every note was scrolled
 
-**Reason**: A Feed visit now ends after one round (issue #180), so the scrolled count never goes past the total, and no `Round <n>` pill is shown.
+**Reason**: A Feed visit now ends once every note was fetched (issue #180), so the scrolled count never goes past the total, and no pill shows before the bar.
 
-**Migration**: None for users: reload the page or come back to the Feed page to go through the notes again. See "A Feed visit ends after one round".
+**Migration**: None for users: reload the page or come back to the Feed page to go through the notes again. See "A Feed visit ends once every note was fetched".
 
 ### Requirement: The counter's total follows created and deleted notes
 

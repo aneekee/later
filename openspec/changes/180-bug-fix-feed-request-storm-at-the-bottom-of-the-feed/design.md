@@ -22,7 +22,7 @@ See proposal.md (Why) for the storm and its three causes. The current web code:
 
 ## Decisions
 
-### D1. A Feed visit ends after one round
+### D1. A Feed visit ends once every note was fetched
 
 `getNextPageParam` returns `undefined` once the notes fetched in the visit reach the visit total, so `hasNextPage` turns false, `FeedEnd` renders, and the sentinel's guard blocks every later call.
 
