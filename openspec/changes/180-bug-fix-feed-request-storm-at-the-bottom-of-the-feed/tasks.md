@@ -29,9 +29,11 @@ Browser checks use the local stack (`docker compose up -d`, `pnpm dev`) and a lo
 
 ## 3. Docs
 
-- [ ] 3.1 With the `domain-modeling` skill, update `CONTEXT.md`: **Feed** stays a rotation on the API, but one visit goes through the notes once and then ends. **Scrolled** no longer refers to rounds. Move **Round** to "Retired terms" as "Removed in #180". Verify `grep -n "endless\|Round" CONTEXT.md` shows only the retired entry.
-- [ ] 3.2 In `openspec/specs/feed/spec.md`, edit the Purpose line only, so it no longer says "endless queue" (for example: "Serves a user's own notes stalest first, adjusted by each note's tier, one round per visit, and lets the user re-tier a note straight from its feed card"). Verify `openspec validate 180-bug-fix-feed-request-storm-at-the-bottom-of-the-feed --strict` passes.
-- [ ] 3.3 Gate: `pnpm build`, `pnpm lint`.
+- [x] 3.1 With the `domain-modeling` skill, update `CONTEXT.md`: **Feed** stays a rotation on the API, but one visit goes through the notes once and then ends. **Scrolled** no longer refers to rounds. Move **Round** to "Retired terms" as "Removed in #180". Verify `grep -n "endless\|Round" CONTEXT.md` shows only the retired entry.
+  - Note: **Scrolled** already didn't mention rounds, so it is unchanged.
+- [x] 3.2 In `openspec/specs/feed/spec.md`, edit the Purpose line only, so it no longer says "endless queue" (for example: "Serves a user's own notes stalest first, adjusted by each note's tier, one round per visit, and lets the user re-tier a note straight from its feed card"). Verify `openspec validate 180-bug-fix-feed-request-storm-at-the-bottom-of-the-feed --strict` passes.
+  - Note: the example wording used "one round per visit", but 3.1 retires Round, so the Purpose says "going through them once per visit". The delta requirement title "A Feed visit ends after one round" still uses the word. It was left as is, because renaming it changes the spec. That's the owner's call before archive.
+- [x] 3.3 Gate: `pnpm build`, `pnpm lint`.
 
 ## Workflow follow-up
 

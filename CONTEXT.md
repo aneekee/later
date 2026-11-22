@@ -13,7 +13,7 @@ A short text a user saves to come back to later. Text is the only kind today.
 _Avoid_: message, item, post
 
 **Feed**:
-A user's endless queue of their own notes, served stalest first, one page at a time.
+A user's own notes, served stalest first, one page at a time. The rotation never ends, but one visit to the feed goes through the notes once and then ends.
 _Avoid_: inbox, timeline, chat
 
 **Seen**:
@@ -26,10 +26,6 @@ The order in which the feed cycles through notes: never-seen notes first, then t
 **Scrolled**:
 An estimate of how many notes the user has scrolled past in the current visit to the feed, read from the scroll position over the loaded notes, as opposed to Seen, which is about the server serving them. It lasts only for that visit and isn't stored.
 _Avoid_: seen, viewed, read
-
-**Round**:
-One pass of a feed visit through all of the user's notes. A new round starts each time the Scrolled count passes the number of the user's notes.
-_Avoid_: cycle, lap
 
 **Tier**:
 One of a fixed, ordered set of grades on a note: S, A, B, C, D, with S the highest. New notes are D; a higher tier brings the note back sooner in the rotation.
@@ -45,3 +41,4 @@ Don't use these in code, specs or UI text.
 
 - Removed in #157: Message, Chat, Inbox and Resolution no longer exist.
 - Removed in #151: Rating (the numeric 0 to 10000 grade), Upvote and Downvote. A note has a Tier instead.
+- Removed in #180: Round. A feed visit goes through the notes once and then ends, so there is no second pass to name.

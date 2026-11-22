@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Serves a user's own notes as an endless queue, stalest first adjusted by each note's tier, and lets the user re-tier a note straight from its feed card.
+Serves a user's own notes stalest first, adjusted by each note's tier, going through them once per visit, and lets the user re-tier a note straight from its feed card.
 
 ## Requirements
 
